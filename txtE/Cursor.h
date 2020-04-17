@@ -72,6 +72,30 @@ protected:
         return ret_pos;
     }
 
+    int find_count(const std::string& pattern, size_t from_pos, size_t until_pos, function<size_t(const string&, const string&, size_t)> func)
+    {
+        int count = 0;
+        for (; check_range(from_pos) == true;)
+        {
+            from_pos = func(text, pattern, from_pos);
+
+            if (check_range(from_pos) == true && from_pos <= until_pos)
+            {
+                count++;
+                from_pos += 1;
+                continue;
+            }
+            break;
+        }
+
+        return count;
+    }
+
+    inline void set_eof()
+    {
+        pos = string::npos;
+    }
+
 public:
     Cursor(Text& t) :text(t.text)
     {
@@ -225,6 +249,50 @@ public:
         return *this;
     }
 
+    // pattern1 = {, pattern2 =}, moves pos to } ; {{ }}
+    Cursor& move_to(const string& pattern1, const string& pattern2, function<size_t(const string&, const string&, size_t)> func)
+    {
+        if (!func)
+        {
+            throw runtime_error("Find function in move_to is NULL.");
+        }
+
+        size_t pos_orig = pos;
+        size_t pos1, pos2;
+        int count = 1;
+
+        set_eof(); 
+        pos1 = func(text, pattern1, pos_orig);//{
+        pos1 += 1;
+        if (check_range(pos1) == false)
+        {
+            
+            return *this;
+        }
+
+        for (; count > 0 && check_range(pos2) == true; )
+        {
+            pos2 = func(text, pattern2, pos1); //}
+            if (check_range(pos2) == false)
+            {
+                break;
+            }
+            count -= 1;
+            count += find_count(pattern1, pos1, pos2, func);// count { between { }
+            if (count == 0)
+            {
+                break;
+            }
+            pos1 = pos2 + 1;
+        }
+        if (count == 0)
+        {
+            pos = pos2;
+            check_range();
+        }
+        return *this;
+    }
+
     Cursor& move_to_end(const string& pattern, function<size_t(const string&, const string&, size_t)> func)
     {
         if (!func)
@@ -250,7 +318,7 @@ public:
         if (is_eof() == false)
             pos += pattern.size();
         check_range();
-//        TRACE_ << "pattern = " << pattern ENDLTRACE_;
+        //        TRACE_ << "pattern = " << pattern ENDLTRACE_;
 
         return *this;
     }
@@ -563,12 +631,16 @@ public:
 
     bool check_range()
     {
-        if (pos == string::npos || min_ <= pos && pos <= max_)
+        return check_range(pos);
+    }
+
+    bool check_range(size_t& p)
+    {
+        if (p != string::npos && min_ <= p && p <= max_)
             return true;
-
-        TRACE_ << "Cursor is out of range " << "min = " << min_ << "max = " << max_ ENDLTRACE_
-
-            pos = string::npos;
+        TRACE_ << "position is out of range " << "min = " << min_ << "max = " << max_ ENDLTRACE_
+        p = string::npos;
         return false;
     }
+
 };

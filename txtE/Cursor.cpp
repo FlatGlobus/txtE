@@ -6,6 +6,7 @@ m->add(chaiscript::fun(&Cursor::inc), "inc");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(size_t)>(&Cursor::move_to)), "move_to");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&, function<size_t(const string&, const string&, size_t)>)>(&Cursor::move_to)), "move_to");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const std::vector<chaiscript::Boxed_Value>&, function<size_t(const string&, const string&, size_t)>)>(&Cursor::move_to)), "move_to");
+m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&, const string&, function<size_t(const string&, const string&, size_t)>)>(&Cursor::move_to)), "move_to");
 
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&, function<size_t(const string&, const string&, size_t)>)>(&Cursor::move_to_end)), "move_to_end");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const std::vector<chaiscript::Boxed_Value>&, function<size_t(const string&, const string&, size_t)>)>(&Cursor::move_to_end)), "move_to_end");
