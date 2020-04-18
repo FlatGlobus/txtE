@@ -8,6 +8,9 @@ m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&, function<s
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const std::vector<chaiscript::Boxed_Value>&, function<size_t(const string&, const string&, size_t)>)>(&Cursor::move_to)), "move_to");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&, const string&, function<size_t(const string&, const string&, size_t)>)>(&Cursor::move_to)), "move_to");
 
+m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&)>(&Cursor::move_while)), "move_while");
+m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&)>(&Cursor::move_until)), "move_until");
+
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&, function<size_t(const string&, const string&, size_t)>)>(&Cursor::move_to_end)), "move_to_end");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const std::vector<chaiscript::Boxed_Value>&, function<size_t(const string&, const string&, size_t)>)>(&Cursor::move_to_end)), "move_to_end");
 

@@ -34,15 +34,6 @@ size_t Text::load(const string& file_name)
         text += temp;
     }
 
-    //ifstream in(file_name, ios::in | ios::binary);
-    //if (in)
-    //{
-    //    ostringstream contents;
-    //    contents << in.rdbuf();
-    //    in.close();
-    //    text = contents.str();
-    //}
-
     return text.size();
 }
 
@@ -178,9 +169,9 @@ void Text::insert_line(Cursor& start, const string& str)
     }
 }
 
-void Text::add(const Text&)
+void Text::add(const Text& t)
 {
-
+    text += t.text;
 }
 
 void Text::add(const string& str)
@@ -218,7 +209,8 @@ Cursor Text::erase_line(Cursor& pos)
     return ret;
 }
 
-Cursor Text::diff(string& str, Cursor&)
+//TODO diff
+Cursor Text::diff(string& str, Cursor& c)
 {
     Cursor cur(str);
 

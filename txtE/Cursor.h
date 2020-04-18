@@ -37,7 +37,7 @@ protected:
         {
             if (pattern.find(text[i]) != string::npos)
             {
-                return pos = i + 1;// set pos to first letter of the word
+                return pos = i + 1;
             }
         }
         return pos = string::npos;
@@ -249,7 +249,7 @@ public:
         return *this;
     }
 
-    // pattern1 = {, pattern2 =}, moves pos to } ; {{ }}
+    // pattern1 = {, pattern2 =}, moves pos to } ; from here ->{ {abcd} ->}<- to here }
     Cursor& move_to(const string& pattern1, const string& pattern2, function<size_t(const string&, const string&, size_t)> func)
     {
         if (!func)
@@ -289,6 +289,30 @@ public:
         {
             pos = pos2;
             check_range();
+        }
+        return *this;
+    }
+
+    Cursor& move_while(const string& pattern)
+    {
+        for (; check_range(); pos++)
+        {
+            if (pattern.find(text[pos]) != string::npos)
+            {
+                break;
+            }
+        }
+        return *this;
+    }
+
+    Cursor& move_until(const string& pattern)
+    {
+        for (; check_range(); pos++)
+        {
+            if (pattern.find(text[pos]) == string::npos)
+            {
+                break;
+            }
         }
         return *this;
     }
