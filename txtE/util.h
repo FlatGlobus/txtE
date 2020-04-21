@@ -5,6 +5,7 @@
 #include <chaiscript/chaiscript.hpp>
 #include <list>
 #include <tchar.h>
+#include <boost/algorithm/string/replace.hpp>
 
 //////////////////////////////////////////////////////////////////////////
 //https://habr.com/ru/post/131977/
@@ -26,10 +27,43 @@ protected:
 };
 
 extern bool enable_trace;
+extern size_t _MAX_TRACE_TEXT_SIZE;
 
-#define TRACE_ if (enable_trace) { std::cout <<  __FUNCTION__ << " pos = " << pos << " text = \"" << (!is_eof(pos) ? text.substr(pos, std::min((size_t)16, text.size() - pos)): "EOF") << "\" " 
-#define ENDLTRACE_ << endl;}
-#define ENDTRACE_ ;}
+inline std::string _text_at(const std::string & text, size_t pos)
+{
+    std::string _s;
+    if (pos < text.size())
+    {
+        _s = text.substr(pos, std::min(_MAX_TRACE_TEXT_SIZE, text.size() - pos));
+        boost::replace_all(_s, "\r", "");
+    }
+    else
+    {
+        _s = "EOF";
+    }
+
+    return _s;
+}
+
+class _Trace
+{
+    const char* func_name;
+public:
+    _Trace(const char* s):func_name(s)
+    {
+        if (enable_trace) std::cout << "---> " << func_name << std::endl;
+    }
+    ~_Trace()
+    {
+        if (enable_trace) std::cout << "<--- " << func_name << std::endl << std::endl;
+    }
+};
+
+#define TRACE_FUNC _Trace _tTr(__FUNCTION__);
+#define TRACE_POS(pos_val) if(enable_trace) { std::cout << "pos = " << pos_val << "\n" << "text = \"" << _text_at(text, pos_val) << "\"" << std::endl;}
+#define TRACE_OUT if (enable_trace) { std::cout
+#define TRACE_END << endl;}
+//////////////////////////////////////////////////////////////////////////
 
 class ChaiEngine
 {

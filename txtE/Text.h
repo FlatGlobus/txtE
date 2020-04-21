@@ -26,9 +26,7 @@ public:
     string get_to_endl(Cursor&);
     string get_line(Cursor& start);
     string get_word(Cursor& start);
-
-    string get_until(Cursor&, const string& pattern);
-    string get_between(Cursor&, const string& pattern1, const string& pattern2);
+    string get_between(Cursor&, Cursor&);
 
     void set(Cursor&, const string&);
     void set_line(Cursor&, const string&);
@@ -44,6 +42,7 @@ public:
 
     size_t size();
     void erase(Cursor& pos, size_t count);
+    void erase_between(Cursor& from, Cursor& to);
     Cursor erase_line(Cursor& pos);
     void clear();
 

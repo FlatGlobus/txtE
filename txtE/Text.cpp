@@ -17,7 +17,7 @@ Text::~Text()
 
 void Text::check_cursor(Cursor& c)
 {
-    if (AreEqual(c.get_string(), text) == false)
+    if (AreEqual(c.get_text(), text) == false)
     {
         throw runtime_error("Cursor object : \"" + c.get_name() + "\" is created for other Text object.");
     }
@@ -25,6 +25,7 @@ void Text::check_cursor(Cursor& c)
 
 size_t Text::load(const string& file_name)
 {
+    TRACE_FUNC;
     text.clear();
     ifstream in(file_name, ios::in | ios::binary);
     string temp;
@@ -39,6 +40,7 @@ size_t Text::load(const string& file_name)
 
 size_t Text::write(const string& file_name)
 {
+    TRACE_FUNC;
     ofstream out(file_name, ios::out);
     if (out)
     {
@@ -53,6 +55,7 @@ size_t Text::write(const string& file_name)
 
 string Text::get(Cursor& start, size_t count)
 {
+    TRACE_FUNC;
     check_cursor(start);
     string str;
     if (is_eof(start.get_pos() + count) == false)
@@ -68,6 +71,7 @@ string Text::get(Cursor& start, size_t count)
 
 string Text::get_to_endl(Cursor& start)
 {
+    TRACE_FUNC;
     check_cursor(start);
     string str;
     size_t pos = text.find(ENDL, start);
@@ -80,6 +84,7 @@ string Text::get_to_endl(Cursor& start)
 
 string Text::get_line(Cursor& start)
 {
+    TRACE_FUNC;
     check_cursor(start);
     string str;
     size_t spos = text.rfind(ENDL, start);
@@ -94,6 +99,7 @@ string Text::get_line(Cursor& start)
 
 string Text::get_word(Cursor& pos)
 {
+    TRACE_FUNC;
     check_cursor(pos);
     Cursor s(*this);
     Cursor e(*this);
@@ -110,34 +116,19 @@ string Text::get_word(Cursor& pos)
     return "";
 }
 
-string Text::get_until(Cursor& pos, const string& pattern)
+string Text::get_between(Cursor& start, Cursor& end)
 {
-    check_cursor(pos);
-    pos.check_range();
-    size_t end = text.find(pattern, pos);
-    if (end != string::npos)
-    {
-        return text.substr(pos, end - pos);
-    }
-
-    return "";
-}
-
-string Text::get_between(Cursor& pos, const string& pattern1, const string& pattern2)
-{
-    check_cursor(pos);
-    Cursor start(pos);
-    Cursor end(pos);
-
-    if (start.move_to_end(pattern1, strfun::find).is_eof() == false && end.move_to(start).is_eof() == false && end.move_to(pattern2, strfun::find).is_eof() == false)
-    {
+    TRACE_FUNC;
+    check_cursor(start);
+    check_cursor(end);
+    if(start.check_range() && end.check_range() && start < end)
         return text.substr(start, end - start);
-    }
     return "";
 }
 
 void Text::set(Cursor& pos, const string& str)
 {
+    TRACE_FUNC;
     check_cursor(pos);
     for (size_t i = 0; i < str.size() && (pos + i) < text.size(); i++)
         text[pos + i] = str[i];
@@ -145,6 +136,7 @@ void Text::set(Cursor& pos, const string& str)
 
 void Text::set_line(Cursor& pos, const string& str)
 {
+    TRACE_FUNC;
     check_cursor(pos);
     Cursor start_line = erase_line(pos);
     if (start_line.is_eof() == false)
@@ -155,12 +147,14 @@ void Text::set_line(Cursor& pos, const string& str)
 
 void Text::insert(Cursor& start, const string& str)
 {
+    TRACE_FUNC;
     check_cursor(start);
     text.insert(start, str);
 }
 
 void Text::insert_line(Cursor& start, const string& str)
 {
+    TRACE_FUNC;
     check_cursor(start);
     size_t pos = text.find(ENDL, start);
     if (pos != string::npos)
@@ -171,11 +165,13 @@ void Text::insert_line(Cursor& start, const string& str)
 
 void Text::add(const Text& t)
 {
+    TRACE_FUNC;
     text += t.text;
 }
 
 void Text::add(const string& str)
 {
+    TRACE_FUNC;
     text += str;
 }
 
@@ -186,12 +182,14 @@ size_t Text::size()
 
 void Text::erase(Cursor& pos, size_t count)
 {
+    TRACE_FUNC;
     check_cursor(pos);
     text.erase(pos, count);
 }
 
 Cursor Text::erase_line(Cursor& pos)
 {
+    TRACE_FUNC;
     check_cursor(pos);
     Cursor ret(pos);
     size_t spos = text.rfind(ENDL, pos);
@@ -212,6 +210,7 @@ Cursor Text::erase_line(Cursor& pos)
 //TODO diff
 Cursor Text::diff(string& str, Cursor& c)
 {
+    TRACE_FUNC;
     Cursor cur(str);
 
     return cur;
@@ -224,6 +223,7 @@ Cursor Text::diff(Text& t, Cursor& pos)
 
 void Text::clear()
 {
+    TRACE_FUNC;
     text.clear();
 }
 
@@ -246,7 +246,6 @@ m->add(chaiscript::fun(&Text::get), "get");
 m->add(chaiscript::fun(&Text::get_line), "get_line");
 m->add(chaiscript::fun(&Text::get_word), "get_word");
 m->add(chaiscript::fun(&Text::get_to_endl), "get_to_endl");
-m->add(chaiscript::fun(&Text::get_until), "get_until");
 m->add(chaiscript::fun(&Text::get_between), "get_between");
 
 m->add(chaiscript::fun(&Text::set), "set");

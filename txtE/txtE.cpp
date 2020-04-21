@@ -4,7 +4,7 @@
 
 namespace po = boost::program_options;
 using namespace std;
-bool enable_trace = false;
+
 
 int main(int argc, char* argv[])
 {

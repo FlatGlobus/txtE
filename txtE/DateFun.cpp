@@ -58,16 +58,19 @@ using namespace boost::gregorian;
 
 date add_monts(date& d, const months& m)
 {
+    TRACE_FUNC;
     return d += m;
 }
 
 date add_years(date& d, const years& y)
 {
+    TRACE_FUNC;
     return d += y;
 }
 
 date add_days(date& d, const days& da)
 {
+    TRACE_FUNC;
     return d += da;
 }
 

@@ -8,6 +8,7 @@ namespace strfun
 {
     size_t regex_search(const std::string& str, const std::string& pattern, size_t pos)
     {
+        TRACE_FUNC;
         std::regex re(pattern);
         std::smatch sm;
         if (std::regex_search(str.begin() + pos, str.end(), sm, re) == true)
@@ -17,46 +18,55 @@ namespace strfun
 
     size_t find(const std::string& str, const std::string& pattern, size_t pos)
     {
+        TRACE_FUNC;
         return str.find(pattern, pos);
     }
 
     size_t rfind(const std::string& str, const std::string& pattern, size_t pos)
     {
+        TRACE_FUNC;
         return str.rfind(pattern, pos);
     }
 
     size_t find_first_not_of(const std::string& str, const std::string& pattern, size_t pos)
     {
+        TRACE_FUNC;
         return str.find_first_not_of(pattern, pos);
     }
 
     size_t find_last_of(const std::string& str, const std::string& pattern, size_t pos)
     {
+        TRACE_FUNC;
         return str.find_last_of(pattern, pos);
     }
 
     size_t find_last_not_of(const std::string& str, const std::string& pattern, size_t pos)
     {
+        TRACE_FUNC;
         return str.find_last_not_of(pattern, pos);
     }
 
     void remove_to_end(std::string& str, size_t pos)
     {
+        TRACE_FUNC;
         str = str.substr(0, pos);
     }
 
     void remove_to_pos(std::string& str, size_t pos)
     {
+        TRACE_FUNC;
         str = str.substr(pos, str.size() - pos);
     }
 
     bool is_sign_end_of_sentence(unsigned char c)
     {
+        TRACE_FUNC;
         return c == '.' || c == '?' || c == '!';
     }
 
     std::string insert(std::string& str, std::string& instr, size_t pos)
     {
+        TRACE_FUNC;
         std::string ret(str);
         ret.insert(pos, instr);
         return ret;
@@ -64,6 +74,7 @@ namespace strfun
 
     std::string erase(std::string& str, size_t pos, size_t count)
     {
+        TRACE_FUNC;
         std::string ret(str);
         ret.erase(pos, count);
         return ret;
@@ -71,6 +82,7 @@ namespace strfun
 
     std::string removeDuplicates(const std::string& str, const std::string& pattern)
     {
+        TRACE_FUNC;
         std::string ret;
         for (int i = 0; i < str.size(); i++)
         {

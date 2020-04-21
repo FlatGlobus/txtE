@@ -167,7 +167,6 @@
     <ClCompile Include="StrFun.cpp" />
     <ClCompile Include="StrtkFun.cpp" />
     <ClCompile Include="Text.cpp" />
-    <ClCompile Include="things.cpp" />
     <ClCompile Include="txtE.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
