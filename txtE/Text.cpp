@@ -26,10 +26,17 @@ void Text::check_cursor(Cursor& c)
 size_t Text::load(const string& file_name)
 {
     TRACE_FUNC;
+    TRACE_OUT << "filename = " << file_name TRACE_END;
     text.clear();
-    ifstream in(file_name, ios::in | ios::binary);
-    string temp;
 
+    ifstream in(file_name, ios::in | ios::binary);
+    if (!in)
+    {
+        TRACE_OUT << "error opening file" TRACE_END;
+        return 0;
+    }
+
+    string temp;
     while (getline(in, temp))
     {
         text += temp;
@@ -41,14 +48,18 @@ size_t Text::load(const string& file_name)
 size_t Text::write(const string& file_name)
 {
     TRACE_FUNC;
+    TRACE_OUT << "filename = " << file_name TRACE_END;
+
     ofstream out(file_name, ios::out);
-    if (out)
+    if (!out)
     {
-        ostringstream contents;
-        out << text;
-        out.close();
-        return text.size();
+        TRACE_OUT << "error writing file" TRACE_END;
     }
+    ostringstream contents;
+    out << text;
+    out.close();
+    return text.size();
+
     return 0;
 }
 
@@ -121,7 +132,7 @@ string Text::get_between(Cursor& start, Cursor& end)
     TRACE_FUNC;
     check_cursor(start);
     check_cursor(end);
-    if(start.check_range() && end.check_range() && start < end)
+    if (start.check_range() && end.check_range() && start < end)
         return text.substr(start, end - start);
     return "";
 }
