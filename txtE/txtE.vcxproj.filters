@@ -47,9 +47,6 @@
     <ClInclude Include="Cursor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Extractor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="util.h">
       <Filter>Header Files</Filter>
     </ClInclude>

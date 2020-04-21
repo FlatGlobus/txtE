@@ -1,3 +1,6 @@
+// This file is distributed under the BSD License.
+// Copyright 2020, Vladislav Tembekov (wtlbuilder@gmail.com)
+
 #pragma once
 #include <string>
 #include <map>
