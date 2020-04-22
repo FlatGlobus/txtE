@@ -54,13 +54,12 @@ size_t Text::write(const string& file_name)
     if (!out)
     {
         TRACE_OUT << "error writing file" TRACE_END;
+        return 0;
     }
     ostringstream contents;
     out << text;
     out.close();
     return text.size();
-
-    return 0;
 }
 
 
@@ -70,14 +69,11 @@ string Text::get(Cursor& start, size_t count)
     check_cursor(start);
     string str;
     if (is_eof(start.get_pos() + count) == false)
-        str = text.substr(start, count);
-    if (enable_trace)
     {
-        cout << "Text::get(size_t " << start << ", size_t " << count << ")" << endl;
-        cout << "\tsubstr = " << str << endl;
+        str = text.substr(start, count);
     }
-
-    return str;
+    TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
+    return "";
 }
 
 string Text::get_to_endl(Cursor& start)
@@ -85,18 +81,21 @@ string Text::get_to_endl(Cursor& start)
     TRACE_FUNC;
     check_cursor(start);
     string str;
+
     size_t pos = text.find(ENDL, start);
     if (pos != string::npos)
     {
         str = text.substr(start, pos - start);
     }
-    return str;
+    TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
+    return "";
 }
 
 string Text::get_line(Cursor& start)
 {
     TRACE_FUNC;
     check_cursor(start);
+
     string str;
     size_t spos = text.rfind(ENDL, start);
     size_t epos = text.find(ENDL, start);
@@ -105,6 +104,8 @@ string Text::get_line(Cursor& start)
     {
         str = text.substr(spos, epos - spos);
     }
+
+    TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
     return str;
 }
 
@@ -115,16 +116,18 @@ string Text::get_word(Cursor& pos)
     Cursor s(*this);
     Cursor e(*this);
 
+    string str;
+
     s = pos;
     e = pos;
     s.move_to_begin_of_word();
     e.move_to_end_of_word();
     if (s.is_eof() == false && e.is_eof() == false)
     {
-        return text.substr(s, e - s);
+        str = text.substr(s, e - s);
     }
-
-    return "";
+    TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
+    return str;
 }
 
 string Text::get_between(Cursor& start, Cursor& end)
@@ -132,15 +135,23 @@ string Text::get_between(Cursor& start, Cursor& end)
     TRACE_FUNC;
     check_cursor(start);
     check_cursor(end);
+    string str;
+
     if (start.check_range() && end.check_range() && start < end)
-        return text.substr(start, end - start);
-    return "";
+    {
+        str = text.substr(start, end - start);
+    }
+
+    TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
+    return str;
 }
 
 void Text::set(Cursor& pos, const string& str)
 {
     TRACE_FUNC;
     check_cursor(pos);
+
+    TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
     for (size_t i = 0; i < str.size() && (pos + i) < text.size(); i++)
         text[pos + i] = str[i];
 }
@@ -149,6 +160,9 @@ void Text::set_line(Cursor& pos, const string& str)
 {
     TRACE_FUNC;
     check_cursor(pos);
+
+    TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
+
     Cursor start_line = erase_line(pos);
     if (start_line.is_eof() == false)
     {
@@ -160,6 +174,9 @@ void Text::insert(Cursor& start, const string& str)
 {
     TRACE_FUNC;
     check_cursor(start);
+
+    TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
+
     text.insert(start, str);
 }
 
@@ -177,6 +194,9 @@ void Text::insert_line(Cursor& start, const string& str)
 void Text::add(const Text& t)
 {
     TRACE_FUNC;
+
+    //TRACE_OUT << "text = \"" << t.text << "\"" TRACE_END;
+
     text += t.text;
 }
 
