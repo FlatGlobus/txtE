@@ -65,7 +65,7 @@ public:
 #define TRACE_FUNC _Trace _tTr(__FUNCTION__);
 #define TRACE_POS(pos_val) if(enable_trace) { std::cout << "pos = " << pos_val << "\n" << "text = \"" << _text_at(text, pos_val) << "\"" << std::endl;}
 #define TRACE_OUT if (enable_trace) { std::cout
-#define TRACE_END << endl;}
+#define TRACE_END << std::endl;}
 //////////////////////////////////////////////////////////////////////////
 
 class ChaiEngine

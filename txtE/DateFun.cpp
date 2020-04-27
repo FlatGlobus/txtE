@@ -59,25 +59,46 @@ using namespace boost::gregorian;
 date add_monts(date& d, const months& m)
 {
     TRACE_FUNC;
-    return d += m;
+
+    TRACE_OUT << "date = " << d TRACE_END;
+    TRACE_OUT << "months = " << m.number_of_months() TRACE_END;
+    
+    date ret = d + m;
+
+    TRACE_OUT << "result = " << ret TRACE_END;
+
+    return ret;
 }
 
 date add_years(date& d, const years& y)
 {
     TRACE_FUNC;
-    return d += y;
+
+    TRACE_OUT << "date = " << d TRACE_END;
+    TRACE_OUT << "years = " << y.number_of_years() TRACE_END;
+
+    date ret = d + y;
+
+    TRACE_OUT << "result = " << ret TRACE_END;
+
+    return ret;
 }
 
 date add_days(date& d, const days& da)
 {
     TRACE_FUNC;
-    return d += da;
+
+    TRACE_OUT << "date = " << d TRACE_END;
+    TRACE_OUT << "days = " << da TRACE_END;
+
+    date ret = d + da;
+
+    TRACE_OUT << "result = " << ret TRACE_END;
+
+    return ret;
 }
 
-//std::string iso_extended_string(const date& d)
-//{
-//    return to_iso_extended_string(d);
-//}
+
 
 DECLARE_MODULE(DATE)
 

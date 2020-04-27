@@ -120,7 +120,7 @@ namespace strfun
         return ret_str;
     }
 
-    std::string removeDuplicates(const std::string& str, const std::string& pattern)
+    std::string remove_duplicates(const std::string& str, const std::string& pattern)
     {
         TRACE_FUNC;
         TRACE_OUT << "input text = \"" << str << "\"" TRACE_END;
@@ -163,7 +163,7 @@ namespace strfun
     m->add(chaiscript::fun(std::isxdigit<unsigned char>), "isxdigit");
     m->add(chaiscript::fun(insert), "insert");
     m->add(chaiscript::fun(erase), "erase");
-    m->add(chaiscript::fun(removeDuplicates), "remove_duplicates");
+    m->add(chaiscript::fun(remove_duplicates), "remove_duplicates");
     m->add_global_const(chaiscript::const_var(std::string::npos), "npos");
     END_DECLARE(STR)
 }

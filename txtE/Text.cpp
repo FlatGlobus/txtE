@@ -56,6 +56,7 @@ size_t Text::write(const string& file_name)
         TRACE_OUT << "error writing file" TRACE_END;
         return 0;
     }
+
     ostringstream contents;
     out << text;
     out.close();
@@ -67,28 +68,35 @@ string Text::get(Cursor& start, size_t count)
 {
     TRACE_FUNC;
     check_cursor(start);
+
     string str;
+
     if (is_eof(start.get_pos() + count) == false)
     {
         str = text.substr(start, count);
     }
+
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
-    return "";
+
+    return str;
 }
 
 string Text::get_to_endl(Cursor& start)
 {
     TRACE_FUNC;
     check_cursor(start);
-    string str;
 
+    string str;
     size_t pos = text.find(ENDL, start);
+
     if (pos != string::npos)
     {
         str = text.substr(start, pos - start);
     }
+
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
-    return "";
+
+    return str;
 }
 
 string Text::get_line(Cursor& start)
@@ -99,6 +107,7 @@ string Text::get_line(Cursor& start)
     string str;
     size_t spos = text.rfind(ENDL, start);
     size_t epos = text.find(ENDL, start);
+
     spos = spos != string::npos ? spos + 1 : spos;
     if (spos != string::npos && epos != string::npos && (spos <= epos))
     {
@@ -106,6 +115,7 @@ string Text::get_line(Cursor& start)
     }
 
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
+
     return str;
 }
 
@@ -113,20 +123,23 @@ string Text::get_word(Cursor& pos)
 {
     TRACE_FUNC;
     check_cursor(pos);
+
     Cursor s(*this);
     Cursor e(*this);
-
     string str;
 
     s = pos;
     e = pos;
     s.move_to_begin_of_word();
     e.move_to_end_of_word();
+
     if (s.is_eof() == false && e.is_eof() == false)
     {
         str = text.substr(s, e - s);
     }
+
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
+
     return str;
 }
 
@@ -135,6 +148,7 @@ string Text::get_between(Cursor& start, Cursor& end)
     TRACE_FUNC;
     check_cursor(start);
     check_cursor(end);
+
     string str;
 
     if (start.check_range() && end.check_range() && start < end)
@@ -143,6 +157,7 @@ string Text::get_between(Cursor& start, Cursor& end)
     }
 
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
+
     return str;
 }
 
@@ -162,7 +177,6 @@ void Text::set_line(Cursor& pos, const string& str)
     check_cursor(pos);
 
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
-
     Cursor start_line = erase_line(pos);
     if (start_line.is_eof() == false)
     {
@@ -184,7 +198,9 @@ void Text::insert_line(Cursor& start, const string& str)
 {
     TRACE_FUNC;
     check_cursor(start);
+
     size_t pos = text.find(ENDL, start);
+
     if (pos != string::npos)
     {
         text.insert(pos, "\n" + str);
@@ -215,6 +231,7 @@ void Text::erase(Cursor& pos, size_t count)
 {
     TRACE_FUNC;
     check_cursor(pos);
+
     text.erase(pos, count);
 }
 
@@ -222,9 +239,11 @@ Cursor Text::erase_line(Cursor& pos)
 {
     TRACE_FUNC;
     check_cursor(pos);
+
     Cursor ret(pos);
     size_t spos = text.rfind(ENDL, pos);
     size_t epos = text.find(ENDL, pos);
+
     spos = spos != string::npos ? spos + 1 : spos;
     if (spos != string::npos && epos != string::npos && (spos <= epos))
     {
@@ -235,6 +254,7 @@ Cursor Text::erase_line(Cursor& pos)
     {
         ret = string::npos;
     }
+
     return ret;
 }
 
