@@ -4,57 +4,6 @@
 #include "util.h"
 
 using namespace boost::gregorian;
-/*int main() {
-    // . / - ' '
-    // Converting ISO Format (YYYYMMDD) String to date object
-    date d1 = date_from_iso_string("20160221");
-    std::cout << d1 << std::endl;
-    // Converting Simple Format (YYYY-MM-DD) String to date object
-    date d2_1 = from_simple_string("2016-2-21");
-    // Converting Simple Format (YYYY MM DD) String to date object
-    date d2_2 = from_simple_string("2016 2 21");
-    // Converting Simple Format (YYYY/MM/DD) String to date object
-    date d2_3 = from_simple_string("2016/2/21");
-    // Converting Simple Format (YYYY.MM.DD) String to date object
-    date d2_4 = from_simple_string("2016.2.21");
-    std::cout << d2_1 << std::endl;
-    std::cout << d2_2 << std::endl;
-    std::cout << d2_3 << std::endl;
-    std::cout << d2_4 << std::endl;
-    // Converting US Format (MM-DD-YYYY) String to date object
-    date d3_1 = from_us_string("02-21-2016");
-    // Converting US Format (MM/DD/YYYY) String to date object
-    date d3_2 = from_us_string("02/21/2016");
-    // Converting US Format (MM DD YYYY) String to date object
-    date d3_3 = from_us_string("02 21 2016");
-    // Converting US Format (MM,DD.YYYY) String to date object
-    date d3_4 = from_us_string("02,21.2016");
-    std::cout << d3_1 << std::endl;
-    std::cout << d3_2 << std::endl;
-    std::cout << d3_3 << std::endl;
-    std::cout << d3_4 << std::endl;
-    // Converting UK Format (DD-MM-YYYY) String to date object
-    date d4_1 = from_uk_string("21-02-2016");
-    // Converting UK Format (DD/MM/YYYY) String to date object
-    date d4_2 = from_uk_string("21/02/2016");
-    // Converting UK Format (DD MM YYYY) String to date object
-    date d4_3 = from_uk_string("21 02 2016");
-    // Converting UK Format (DD,MM.YYYY) String to date object
-    date d4_4 = from_uk_string("21,02.2016");
-    std::cout << d4_1 << std::endl;
-    std::cout << d4_2 << std::endl;
-    std::cout << d4_3 << std::endl;
-    std::cout << d4_4 << std::endl;
-    // Converting UK Format (DD-<MONTH>-YYYY) String to date object
-    date d5 = from_uk_string("21-FEBRUARY-2016");
-    std::cout << d5 << std::endl;
-    // Converting UK Format (DD-<MONTH>-YYYY) String to date object
-    date d6 = from_uk_string("21-FEB-2016");
-    std::cout << d6 << std::endl;
-    return 0;
-}
-
-*/
 
 date add_monts(date& d, const months& m)
 {
@@ -98,7 +47,53 @@ date add_days(date& d, const days& da)
     return ret;
 }
 
+inline date _date_from_iso_string(const std::string& s)
+{
+    TRACE_FUNC;
+    TRACE_OUT << "date = " << s TRACE_END;
 
+    date d = date_from_iso_string(s);
+
+    TRACE_OUT << "result date = " << d TRACE_END;
+
+    return d;
+}
+
+inline date _from_us_string(const std::string& s)
+{
+    TRACE_FUNC;
+    TRACE_OUT << "date = " << s TRACE_END;
+
+    date d = from_us_string(s);
+
+    TRACE_OUT << "result date = " << d TRACE_END;
+
+    return d;
+}
+
+inline date _from_simple_string(const std::string& s)
+{
+    TRACE_FUNC;
+    TRACE_OUT << "date = " << s TRACE_END;
+
+    date d = from_simple_string(s);
+
+    TRACE_OUT << "result date = " << d TRACE_END;
+
+    return d;
+}
+
+inline date _from_uk_string(const std::string& s)
+{
+    TRACE_FUNC;
+    TRACE_OUT << "date = " << s TRACE_END;
+
+    date d = from_uk_string(s);
+
+    TRACE_OUT << "result date = " << d TRACE_END;
+
+    return d;
+}
 
 DECLARE_MODULE(DATE)
 
@@ -107,18 +102,14 @@ m->add(chaiscript::fun(&date::month), "month");
 m->add(chaiscript::fun(&date::day), "day");
 m->add(chaiscript::fun(&date::day_of_week), "day_of_week");
 
-// m->add(chaiscript::fun(&date::add_years), "add_years");
-// m->add(chaiscript::fun(&date::add_months), "add_months");
-// m->add(chaiscript::fun(&date::add_days), "add_days");
-// m->add(chaiscript::fun(&date::to_string), "to_string");
-// m->add(chaiscript::fun(&date::parse), "parse");
-// m->add(chaiscript::fun(&date::operator=), "=");
+m->add(chaiscript::fun(&_date_from_iso_string), "date_from_iso_string");
+m->add(chaiscript::fun(&_from_us_string), "from_us_string");
+m->add(chaiscript::fun(&_from_simple_string), "from_simple_string");
+m->add(chaiscript::fun(&_from_uk_string), "from_uk_string");
 
 m->add(chaiscript::fun(&to_iso_extended_string), "to_iso_extended_string");
 //m->add(chaiscript::fun(&to_simple_string), "to_simple_string");
-m->add(chaiscript::fun(&from_us_string), "from_us_string");
-m->add(chaiscript::fun(&from_simple_string), "from_simple_string");
-
+//m->add(chaiscript::fun(&to_iso_string, "to_iso_string");
 
 m->add(chaiscript::constructor<date(int, int, int)>(), "date");
 m->add(chaiscript::constructor<date()>(), "date");

@@ -62,10 +62,19 @@ public:
     }
 };
 
+#define _ENABLE_TRACE  // comment this to disable tracing
+
+#ifdef _ENABLE_TRACE
 #define TRACE_FUNC _Trace _tTr(__FUNCTION__);
 #define TRACE_POS(pos_val) if(enable_trace) { std::cout << "pos = " << pos_val << "\n" << "text = \"" << _text_at(text, pos_val) << "\"" << std::endl;}
 #define TRACE_OUT if (enable_trace) { std::cout
 #define TRACE_END << std::endl;}
+#else
+#define TRACE_FUNC 
+#define TRACE_POS(pos_val) 
+#define TRACE_OUT /##/
+#define TRACE_END 
+#endif
 //////////////////////////////////////////////////////////////////////////
 
 class ChaiEngine

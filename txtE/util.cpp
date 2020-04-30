@@ -45,6 +45,9 @@ bool enable_trace = false;
 void trace(bool t)
 {
     enable_trace = t;
+#ifndef _ENABLE_TRACE
+    std::cout << "----trace is disabled----" << std::endl;
+#endif
 }
 
 void set_max_trace_text_size(size_t sz)
@@ -110,6 +113,30 @@ bool is_options_key_exist(std::vector<std::string>& program_options, const std::
     return false;
 }
 
+bool member_of(const std::string & member, const std::vector<chaiscript::Boxed_Value>& set_of_members)
+{
+    TRACE_FUNC;
+
+    chaiscript::Type_Info ut = chaiscript::user_type<std::string>();
+    for (auto p : set_of_members)
+    {
+        if (p.is_type(ut) == false)
+        {
+            TRACE_OUT << "error: a set value is not a string" TRACE_END;
+            continue;
+        }
+        
+        if (member == chaiscript::boxed_cast<std::string>(p))
+        {
+            TRACE_OUT << "value \"" << member << "\" is member of the set" TRACE_END;
+            return true;
+        }
+    }
+    TRACE_OUT << "value \"" << member << "\" is not member of the set" TRACE_END;
+
+    return false;
+}
+
 DECLARE_MODULE(THINGS)
 m->add(chaiscript::type_conversion<int, size_t>([](const int& t_bt) { return size_t(t_bt); }));
 m->add(chaiscript::fun(trace), "trace");
@@ -118,4 +145,5 @@ m->add(chaiscript::fun([]() {__debugbreak(); }), "debugbreak");
 m->add(chaiscript::fun(get_options_value), "get_options_value");
 m->add(chaiscript::fun(get_options_values), "get_options_values");
 m->add(chaiscript::fun(is_options_key_exist), "is_options_key_exist");
+m->add(chaiscript::fun(member_of), "member_of");
 END_DECLARE(THINGS)

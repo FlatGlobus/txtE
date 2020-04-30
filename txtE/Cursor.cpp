@@ -420,7 +420,7 @@ Cursor& Cursor::move_to_end(const std::vector<chaiscript::Boxed_Value>& pattern,
 
     return *this;
 }
-
+//TODO
 Cursor& Cursor::next_word(const string& pattern)
 {
     TRACE_FUNC;
