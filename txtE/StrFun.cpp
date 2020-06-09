@@ -143,11 +143,11 @@ namespace strfun
 
     DECLARE_MODULE(STR)
     m->add(chaiscript::fun(regex_search), "regex_search");
-    m->add(chaiscript::fun(find), "find");
-    m->add(chaiscript::fun(rfind), "rfind");
-    m->add(chaiscript::fun(find_first_not_of), "find_first_not_of");
-    m->add(chaiscript::fun(find_last_of), "find_last_of");
-    m->add(chaiscript::fun(find_last_not_of), "find_last_not_of");
+//    m->add(chaiscript::fun(find), "find");
+//    m->add(chaiscript::fun(rfind), "rfind");
+//    m->add(chaiscript::fun(find_first_not_of), "find_first_not_of");
+//    m->add(chaiscript::fun(find_last_of), "find_last_of");
+//    m->add(chaiscript::fun(find_last_not_of), "find_last_not_of");
     m->add(chaiscript::fun(remove_to_end), "remove_to_end");
     m->add(chaiscript::fun(std::isupper<unsigned char>), "isupper");
     m->add(chaiscript::fun(std::islower<unsigned char>), "islower");

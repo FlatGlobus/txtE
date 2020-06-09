@@ -29,6 +29,9 @@ protected:
     std::stringstream m_stream;
 };
 
+#define ENDL "\n"
+#define ENDL_SIZE 1
+
 extern bool enable_trace;
 extern size_t _MAX_TRACE_TEXT_SIZE;
 

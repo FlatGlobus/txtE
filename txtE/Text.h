@@ -6,15 +6,17 @@
 #include <string>
 #include <vector>
 #include <chaiscript/chaiscript.hpp>
+#include <tchar.h>
 
 using namespace std;
 
 class Cursor;
 
+enum class el_types { elWin, elUnix, elMac };
+
 class Text
 {
     string text;
-
 protected:
     void check_cursor(Cursor&);
     bool is_eof(size_t);
@@ -24,6 +26,7 @@ public:
 
     size_t load(const string&);
     size_t write(const string&);
+    size_t write(const string&, el_types);
 
     string get(Cursor&, size_t);
     string get_to_endl(Cursor&);

@@ -3,8 +3,17 @@
 #include <strtk/strtk.hpp>
 #include "StrFun.h"
 #include "util.h"
+#include <filesystem>
+#include <boost/algorithm/string.hpp>
+#include <algorithm>
+
+namespace fs = std::filesystem;
+
+void reset_endl(std::string& str);
+void set_endl(std::string& str, el_types t);
 
 extern bool enable_trace;
+//////////////////////////////////////////////////////////////////////////
 Text::Text()
 {
 
@@ -29,17 +38,55 @@ size_t Text::load(const string& file_name)
     TRACE_OUT << "filename = " << file_name TRACE_END;
     text.clear();
 
-    ifstream in(file_name, ios::in | ios::binary);
+    ifstream in(file_name, ios::in | ios::binary | ios::ate);
     if (!in)
     {
         TRACE_OUT << "error opening file" TRACE_END;
         return 0;
     }
 
-    string temp;
-    while (getline(in, temp))
+    ifstream::pos_type fileSize = in.tellg();
+    if (fileSize < 0)
+        return 0;
+
+    in.seekg(0, ios::beg);
+
+    vector<char> bytes(fileSize);
+    in.read(&bytes[0], fileSize);
+
+    text = string(&bytes[0], fileSize);
+    reset_endl(text);
+
+    return text.size();
+}
+
+size_t Text::write(const string& file_name, el_types t)
+{
+    TRACE_FUNC;
+    TRACE_OUT << "filename = " << file_name TRACE_END;
+
+    ofstream out(file_name, ios::out | ios::binary);
+    if (!out)
     {
-        text += temp;
+        TRACE_OUT << "error writing file" TRACE_END;
+        return 0;
+    }
+
+    fs::resize_file(file_name, 0);
+    out.seekp(0);
+
+    if (t == el_types::elWin)
+    {
+        set_endl(text, t);
+    }
+
+    ostringstream contents;
+    out << text;
+    out.close();
+    
+    if (t == el_types::elWin)
+    {
+        reset_endl(text);
     }
 
     return text.size();
@@ -47,22 +94,8 @@ size_t Text::load(const string& file_name)
 
 size_t Text::write(const string& file_name)
 {
-    TRACE_FUNC;
-    TRACE_OUT << "filename = " << file_name TRACE_END;
-
-    ofstream out(file_name, ios::out);
-    if (!out)
-    {
-        TRACE_OUT << "error writing file" TRACE_END;
-        return 0;
-    }
-
-    ostringstream contents;
-    out << text;
-    out.close();
-    return text.size();
+    return write(file_name, el_types::elWin);
 }
-
 
 string Text::get(Cursor& start, size_t count)
 {
@@ -108,7 +141,7 @@ string Text::get_line(Cursor& start)
     size_t spos = text.rfind(ENDL, start);
     size_t epos = text.find(ENDL, start);
 
-    spos = spos != string::npos ? spos + 1 : spos;
+    spos = spos != string::npos ? spos + ENDL_SIZE : spos;
     if (spos != string::npos && epos != string::npos && (spos <= epos))
     {
         str = text.substr(spos, epos - spos);
@@ -203,7 +236,7 @@ void Text::insert_line(Cursor& start, const string& str)
 
     if (pos != string::npos)
     {
-        text.insert(pos, "\n" + str);
+        text.insert(pos, ENDL + str);
     }
 }
 
@@ -235,6 +268,15 @@ void Text::erase(Cursor& pos, size_t count)
     text.erase(pos, count);
 }
 
+void Text::erase_between(Cursor& from, Cursor& to)
+{
+    TRACE_FUNC;
+    check_cursor(from);
+    check_cursor(to);
+
+    text.erase(std::min((size_t)from, (size_t)to), std::max((size_t)from, (size_t)to) - std::min((size_t)from, (size_t)to));
+}
+
 Cursor Text::erase_line(Cursor& pos)
 {
     TRACE_FUNC;
@@ -244,7 +286,7 @@ Cursor Text::erase_line(Cursor& pos)
     size_t spos = text.rfind(ENDL, pos);
     size_t epos = text.find(ENDL, pos);
 
-    spos = spos != string::npos ? spos + 1 : spos;
+    spos = spos != string::npos ? spos + ENDL_SIZE : spos;
     if (spos != string::npos && epos != string::npos && (spos <= epos))
     {
         text.erase(spos, epos - spos);
@@ -288,10 +330,32 @@ bool Text::is_eof(size_t p)
 
     return ret;
 }
+//////////////////////////////////////////////////////////////////////////
+void reset_endl(std::string & str)
+{
+    boost::erase_all(str, "\r");
+}
 
+void set_endl(std::string& str, el_types t)
+{
+    reset_endl(str);
+    switch (t)
+    {
+    case el_types::elUnix:
+    case el_types::elMac:
+        break;
+    case el_types::elWin:
+    default:
+        boost::replace_all(str, ENDL, "\r\n");
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////
 DECLARE_MODULE(TEXT)
 m->add(chaiscript::fun(&Text::load), "load");
-m->add(chaiscript::fun(&Text::write), "write");
+
+m->add(chaiscript::fun(static_cast<size_t (Text::*)(const string&)>(&Text::write)), "write");
+m->add(chaiscript::fun(static_cast<size_t(Text::*)(const string&, el_types)>(&Text::write)), "write");
 
 m->add(chaiscript::fun(&Text::get), "get");
 m->add(chaiscript::fun(&Text::get_line), "get_line");
@@ -312,4 +376,16 @@ m->add(chaiscript::fun(&Text::clear), "clear");
 
 m->add(chaiscript::constructor<Text()>(), "Text");
 m->add(chaiscript::user_type<Text>(), "Text");
+
+m->add(chaiscript::fun(&reset_endl), "reset_endl");
+
+chaiscript::utility::add_class<el_types>(*m,   "el_types",
+    {
+        { el_types::elWin, "elWin" },
+        { el_types::elUnix, "elUnix" },
+        { el_types::elMac, "elMac" }
+    }
+);
+
+
 END_DECLARE(TEXT)

@@ -136,7 +136,9 @@ bool member_of(const std::string & member, const std::vector<chaiscript::Boxed_V
 
     return false;
 }
+//////////////////////////////////////////////////////////////////////////
 
+//////////////////////////////////////////////////////////////////////////
 DECLARE_MODULE(THINGS)
 m->add(chaiscript::type_conversion<int, size_t>([](const int& t_bt) { return size_t(t_bt); }));
 m->add(chaiscript::fun(trace), "trace");
@@ -146,4 +148,5 @@ m->add(chaiscript::fun(get_options_value), "get_options_value");
 m->add(chaiscript::fun(get_options_values), "get_options_values");
 m->add(chaiscript::fun(is_options_key_exist), "is_options_key_exist");
 m->add(chaiscript::fun(member_of), "member_of");
+m->add_global_const(chaiscript::const_var(ENDL), "endl");
 END_DECLARE(THINGS)

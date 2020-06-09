@@ -95,6 +95,7 @@ inline date _from_uk_string(const std::string& s)
     return d;
 }
 
+
 DECLARE_MODULE(DATE)
 
 m->add(chaiscript::fun(&date::year), "year");

@@ -19,10 +19,10 @@ template <class T> bool AreEqual(const T& a, const T& b)
     return addressof(a) == addressof(b);
 }
 
-const TCHAR ENDL = '\r';
 const string space_pattern = " \t\n\r;:.,?!";
 using posMap = map<string, size_t>;
 using strVector = vector<string>;
+using find_func = function<size_t(const string&, const string&, size_t)>;
 
 class Cursor
 {
@@ -36,8 +36,8 @@ protected:
 
     size_t rfind_first_of(const string& pattern, size_t p);
     void check_cursor(const Cursor& c);
-    size_t multi_find(const std::vector<chaiscript::Boxed_Value>& pattern, function<size_t(const string&, const string&, size_t)> func);
-    int find_count(const std::string& pattern, size_t from_pos, size_t until_pos, function<size_t(const string&, const string&, size_t)> func);
+    size_t multi_find(const std::vector<chaiscript::Boxed_Value>& pattern, find_func func);
+    int find_count(const std::string& pattern, size_t from_pos, size_t until_pos, find_func func);
 
     inline void set_eof()
     {
@@ -49,6 +49,11 @@ public:
     Cursor(string& t);
     Cursor(const Cursor& c);
     Cursor(Cursor& c);
+
+    Cursor(Text& t, const string& pattern, find_func func);
+    Cursor(string& t, const string& pattern, find_func func);
+    Cursor(const Cursor& c, const string& pattern, find_func func);
+    Cursor(Cursor& c, const string& pattern, find_func func);
 
     Cursor& inc(size_t p);
     Cursor& operator += (size_t p);
@@ -67,16 +72,16 @@ public:
     bool operator > (size_t p);
 
     Cursor& move_to(size_t p);
-    Cursor& move_to(const string& pattern, function<size_t(const string&, const string&, size_t)> func);
-    Cursor& move_to(const std::vector<chaiscript::Boxed_Value>& pattern, function<size_t(const string&, const string&, size_t)> func);
+    Cursor& move_to(const string& pattern, find_func func);
+    Cursor& move_to(const std::vector<chaiscript::Boxed_Value>& pattern, find_func func);
     // pattern1 = {, pattern2 =}, moves pos to } ; from here ->{ {abcd} ->}<- to here }
-    Cursor& move_to(const string& pattern1, const string& pattern2, function<size_t(const string&, const string&, size_t)> func);
+    Cursor& move_to(const string& pattern1, const string& pattern2, find_func func);
 
     Cursor& move_while(const string& pattern);
     Cursor& move_until(const string& pattern);
 
-    Cursor& move_to_end(const string& pattern, function<size_t(const string&, const string&, size_t)> func);
-    Cursor& move_to_end(const std::vector<chaiscript::Boxed_Value>& pattern, function<size_t(const string&, const string&, size_t)> func);
+    Cursor& move_to_end(const string& pattern, find_func func);
+    Cursor& move_to_end(const std::vector<chaiscript::Boxed_Value>& pattern, find_func func);
 
     Cursor& next_word(const string& pattern);
     Cursor& next_word();
@@ -134,6 +139,7 @@ public:
         return name;
     }
 
+    bool set_range_limit(void);
     bool set_range_limit(size_t mi, size_t ma);
     bool set_range_limit(const string& mi, const string& ma);
 
