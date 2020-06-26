@@ -165,6 +165,7 @@
   <ItemGroup>
     <ClCompile Include="Cursor.cpp" />
     <ClCompile Include="DateFun.cpp" />
+    <ClCompile Include="Query.cpp" />
     <ClCompile Include="StrFun.cpp" />
     <ClCompile Include="StrtkFun.cpp" />
     <ClCompile Include="Text.cpp" />
@@ -173,6 +174,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Cursor.h" />
+    <ClInclude Include="Query.h" />
     <ClInclude Include="StrFun.h" />
     <ClInclude Include="Text.h" />
     <ClInclude Include="util.h" />

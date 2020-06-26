@@ -2,6 +2,7 @@
 #include <regex>
 #include "Text.h"
 #include "util.h"
+#include <ctype.h>
 ////////////////////////////////////////////////////////////
 namespace strfun
 {
@@ -149,18 +150,18 @@ namespace strfun
 //    m->add(chaiscript::fun(find_last_of), "find_last_of");
 //    m->add(chaiscript::fun(find_last_not_of), "find_last_not_of");
     m->add(chaiscript::fun(remove_to_end), "remove_to_end");
-    m->add(chaiscript::fun(std::isupper<unsigned char>), "isupper");
-    m->add(chaiscript::fun(std::islower<unsigned char>), "islower");
-    m->add(chaiscript::fun(std::iscntrl<unsigned char>), "iscntrl");
-    m->add(chaiscript::fun(std::isprint<unsigned char>), "isprint");
-    m->add(chaiscript::fun(std::isspace<unsigned char>), "isspace");
-    m->add(chaiscript::fun(std::isblank<unsigned char>), "isblank");
-    m->add(chaiscript::fun(std::isgraph<unsigned char>), "isgraph");
-    m->add(chaiscript::fun(std::ispunct<unsigned char>), "ispunct");
-    m->add(chaiscript::fun(std::isalnum<unsigned char>), "isalnum");
-    m->add(chaiscript::fun(std::isalpha<unsigned char>), "isalpha");
-    m->add(chaiscript::fun(std::isdigit<unsigned char>), "isdigit");
-    m->add(chaiscript::fun(std::isxdigit<unsigned char>), "isxdigit");
+    m->add(chaiscript::fun(static_cast<int (*)(int)>(&isupper)), "isupper");
+    m->add(chaiscript::fun(static_cast<int (*)(int)>(&islower)), "islower");
+    m->add(chaiscript::fun(static_cast<int (*)(int)>(&iscntrl)), "iscntrl");
+    m->add(chaiscript::fun(static_cast<int (*)(int)>(&isprint)), "isprint");
+    m->add(chaiscript::fun(static_cast<int (*)(int)>(&isspace)), "isspace");
+    m->add(chaiscript::fun(static_cast<int (*)(int)>(&isblank)), "isblank");
+    m->add(chaiscript::fun(static_cast<int (*)(int)>(&isgraph)), "isgraph");
+    m->add(chaiscript::fun(static_cast<int (*)(int)>(&ispunct)), "ispunct");
+    m->add(chaiscript::fun(static_cast<int (*)(int)>(&isalnum)), "isalnum");
+    m->add(chaiscript::fun(static_cast<int (*)(int)>(&isalpha)), "isalpha");
+    m->add(chaiscript::fun(static_cast<int (*)(int)>(&isdigit)), "isdigit");
+    m->add(chaiscript::fun(static_cast<int (*)(int)>(&isxdigit)), "isxdigit");
     m->add(chaiscript::fun(insert), "insert");
     m->add(chaiscript::fun(erase), "erase");
     m->add(chaiscript::fun(remove_duplicates), "remove_duplicates");

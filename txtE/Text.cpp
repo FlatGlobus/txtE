@@ -41,7 +41,7 @@ size_t Text::load(const string& file_name)
     ifstream in(file_name, ios::in | ios::binary | ios::ate);
     if (!in)
     {
-        TRACE_OUT << "error opening file" TRACE_END;
+        std::cerr << "Error loading file " << file_name <<" : " << strerror(errno);
         return 0;
     }
 
@@ -68,7 +68,7 @@ size_t Text::write(const string& file_name, el_types t)
     ofstream out(file_name, ios::out | ios::binary);
     if (!out)
     {
-        TRACE_OUT << "error writing file" TRACE_END;
+        std::cerr << "Error writing file " << file_name << " : " << strerror(errno);
         return 0;
     }
 
