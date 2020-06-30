@@ -675,6 +675,16 @@ bool Cursor::is_eof(size_t p)
     return text.size() <= p || p == string::npos;
 }
 
+bool Cursor::is_eof() const
+{
+    return is_eof(pos);
+}
+
+bool Cursor::is_eof(size_t p) const
+{
+    return text.size() <= p || p == string::npos;
+}
+
 string Cursor::to_string()
 {
     stringstream ss;
@@ -897,5 +907,7 @@ m->add(chaiscript::constructor<Cursor(Text&, const string&, find_func)>(), "Curs
 m->add(chaiscript::constructor<Cursor(string&, const string&, find_func)>(), "Cursor");
 m->add(chaiscript::constructor<Cursor(const Cursor&, const string&, find_func)>(), "Cursor");
 m->add(chaiscript::constructor<Cursor(Cursor&, const string&, find_func)>(), "Cursor");
+
+m->add(chaiscript::type_conversion<Cursor, bool>([](const Cursor& c) { return c.is_eof() == false; }));
 
 END_DECLARE(CURSOR)

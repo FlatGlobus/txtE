@@ -110,7 +110,9 @@ public:
     size_t label_size();
 
     bool is_eof();
+    bool is_eof() const;
     bool is_eof(size_t p);
+    bool is_eof(size_t p) const;
 
     operator size_t()
     {

@@ -11,13 +11,24 @@ else
 	print("false");
 }
 
-ret = "";
 cursor.begin();
-if(Query(cursor) && IsAny("18", 2, ret))
-{ 
-	print("true \"" + ret +"\"");
+if(Query(cursor) && cursor.move_to_end(" Abcd ", find)  && Is(isdigit, 3, ret))
+{
+	print("Is: true \"" + ret +"\"");
 }
 else
 {
-	print("false");
+	print("Is : false");
+}
+
+ret = "";
+cursor.begin();
+
+if(Query(cursor) && IsAny("18", 2, ret))
+{ 
+	print("IsAny:true \"" + ret +"\"");
+}
+else
+{
+	print("IsAny:false");
 }

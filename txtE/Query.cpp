@@ -3,7 +3,6 @@
 #include "Cursor.h"
 #include "Query.h"
 
-
 //////////////////////////////////////////////////////////////////////////
 Cursor* QueryBase::cursor = nullptr;
 bool QueryBase::case_insensitive = true;
@@ -86,15 +85,15 @@ bool IsAny::execute() const
         const std::string& text = cursor->get_text();
         auto pos = cursor->get_pos();
         auto i = text.begin() + pos;
-        size_t qty = 0;
+        size_t found_qty = 0;
         for (; i < text.end(); ++i)
         {
             if (pattern.find(*i) != std::string::npos)
             {
-                ++qty;
+                ++found_qty;
                 if (count != -1)
                 {
-                    if (count == qty)
+                    if (count == found_qty)
                         break;
                 }
                 else
@@ -104,9 +103,9 @@ bool IsAny::execute() const
             }
         }
 
-        if (qty > 0)
+        if (found_qty > 0)
         {
-            qty = distance(text.begin() + pos, i) + 1;
+            size_t qty = distance(text.begin() + pos, i) + 1;
             if (out != nullptr)
             {
                 *out = text.substr(pos, qty);
@@ -131,36 +130,36 @@ bool Is::execute() const
 {
     if (cursor && cursor->is_eof() == false)
     {
-        const std::string &text = cursor->get_text();
+        const std::string& text = cursor->get_text();
         auto pos = cursor->get_pos();
         auto i = text.begin() + pos;
-
+        size_t found_qty = 0;
         for (; i < text.end(); ++i)
         {
-            if (func(*i) == 0)
-                break;
+            if (func(*i) != 0)
+            {
+                ++found_qty;
+                if (count != -1)
+                {
+                    if (count == found_qty)
+                        break;
+                }
+                else
+                {
+                    break;
+                }
+            }
         }
 
-        size_t qty = distance(text.begin() + pos, i);
-        if(count == -1)
+        if (found_qty > 0)
         {
-            if (qty > 0)
+            size_t qty = distance(text.begin() + pos, i) + 1;
+            if (out != nullptr)
             {
-                cursor->inc(qty);
-                return true;
+                *out = text.substr(pos, qty);
             }
-        }
-        else
-        {
-            if (qty >= count)
-            {
-                if (out != nullptr)
-                {
-                    *out = text.substr(pos, std::min(qty, count) );
-                }
-                cursor->inc(std::min(qty, count));
-                return true;
-            }
+            cursor->inc(qty);
+            return true;
         }
     }
     return false;
@@ -171,31 +170,30 @@ bool Is::execute() const
 DECLARE_MODULE(QUERY)
 m->add(chaiscript::constructor<QueryBase()>(), "QueryBase");
 m->add(chaiscript::user_type<QueryBase>(), "QueryBase");
-m->add(chaiscript::type_conversion<QueryBase, bool>([](const QueryBase& q)-> bool { return q.execute(); }));
+m->add(chaiscript::type_conversion<QueryBase, bool>([](const QueryBase& q) { return q.execute(); }));
 
 m->add(chaiscript::constructor<Query(Cursor*)>(), "Query");
 m->add(chaiscript::constructor<Query(Cursor*, bool)>(), "Query");
 m->add(chaiscript::base_class<QueryBase, Query>());
-m->add(chaiscript::type_conversion<Query, bool>([](const Query& q)-> bool {return q.execute(); }));
+m->add(chaiscript::type_conversion<Query, bool>([](const Query& q) {return q.execute(); }));
 
 m->add(chaiscript::constructor<IsExact(const std::string&)>(), "IsExact");
 m->add(chaiscript::constructor<IsExact(const std::string&, std::string*)>(), "IsExact");
 m->add(chaiscript::user_type<IsExact>(), "IsExact");
 m->add(chaiscript::base_class<QueryBase, IsExact>());
-m->add(chaiscript::type_conversion<IsExact, bool>([](const IsExact& q)-> bool { return q.execute(); }));
+m->add(chaiscript::type_conversion<IsExact, bool>([](const IsExact& q) { return q.execute(); }));
 
 m->add(chaiscript::constructor<IsAny(const std::string&, int)>(), "IsAny");
 m->add(chaiscript::constructor<IsAny(const std::string&, int, std::string*)>(), "IsAny");
 m->add(chaiscript::user_type<IsAny>(), "IsAny");
 m->add(chaiscript::base_class<QueryBase, IsAny>());
-m->add(chaiscript::type_conversion<IsAny, bool>([](const IsAny& q)-> bool { return q.execute(); }));
+m->add(chaiscript::type_conversion<IsAny, bool>([](const IsAny& q) { return q.execute(); }));
 
 m->add(chaiscript::constructor<Is(const is_func, const int)>(), "Is");
 m->add(chaiscript::constructor<Is(const is_func, const int, std::string*)>(), "Is");
-
 m->add(chaiscript::user_type<Is>(), "Is");
 m->add(chaiscript::base_class<QueryBase, Is>());
-m->add(chaiscript::type_conversion<Is, bool>([](const Is& q)-> bool { return q.execute(); }));
+m->add(chaiscript::type_conversion<Is, bool>([](const Is& q) { return q.execute(); }));
 
 
 END_DECLARE(QUERY)
