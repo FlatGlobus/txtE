@@ -43,15 +43,15 @@ bool Query::execute() const
 }
 
 //////////////////////////////////////////////////////////////////////////
-IsExact::IsExact(const std::string& p) :pattern(p)
+Exact::Exact(const std::string& p) :pattern(p)
 {
 }
 
-IsExact::IsExact(const std::string& p, std::string* o) : pattern(p), out(o)
+Exact::Exact(const std::string& p, std::string* o) : pattern(p), out(o)
 {
 }
 
-bool IsExact::execute() const
+bool Exact::execute() const
 {
     if (cursor && cursor->is_eof() == false)
     {
@@ -70,15 +70,15 @@ bool IsExact::execute() const
     return false;
 }
 //////////////////////////////////////////////////////////////////////////
-IsAny::IsAny(const std::string& p, int c) :pattern(p), count(c)
+Any::Any(const std::string& p, int c) :pattern(p), count(c)
 {
 }
 
-IsAny::IsAny(const std::string& p, int c, std::string* o) : pattern(p), count(c), out(o)
+Any::Any(const std::string& p, int c, std::string* o) : pattern(p), count(c), out(o)
 {
 }
 
-bool IsAny::execute() const
+bool Any::execute() const
 {
     if (cursor && cursor->is_eof() == false)
     {
@@ -96,11 +96,9 @@ bool IsAny::execute() const
                     if (count == found_qty)
                         break;
                 }
-                else
-                {
-                    break;
-                }
+                continue;
             }
+            break;
         }
 
         if (found_qty > 0)
@@ -165,6 +163,53 @@ bool Is::execute() const
     return false;
 }
 
+Range::Range(char f, char t, const int c): from(f), to(t), count(c)
+{
+}
+    
+Range::Range(const char f, const char t, const int c, std::string* o) : from(f), to(t), count(c), out(o)
+{
+}
+
+bool Range::execute() const
+{
+    if (cursor && cursor->is_eof() == false)
+    {
+        const std::string& text = cursor->get_text();
+        auto pos = cursor->get_pos();
+        auto i = text.begin() + pos;
+        size_t found_qty = 0;
+        for (; i < text.end(); ++i)
+        {
+            if (from <= *i && *i <= to)
+            {
+                ++found_qty;
+                if (count != -1)
+                {
+                    if (count == found_qty)
+                        break;
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        if (found_qty > 0)
+        {
+            size_t qty = distance(text.begin() + pos, i) + 1;
+            if (out != nullptr)
+            {
+                *out = text.substr(pos, qty);
+            }
+            cursor->inc(qty);
+            return true;
+        }
+    }
+    return false;
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 DECLARE_MODULE(QUERY)
@@ -177,17 +222,17 @@ m->add(chaiscript::constructor<Query(Cursor*, bool)>(), "Query");
 m->add(chaiscript::base_class<QueryBase, Query>());
 m->add(chaiscript::type_conversion<Query, bool>([](const Query& q) {return q.execute(); }));
 
-m->add(chaiscript::constructor<IsExact(const std::string&)>(), "IsExact");
-m->add(chaiscript::constructor<IsExact(const std::string&, std::string*)>(), "IsExact");
-m->add(chaiscript::user_type<IsExact>(), "IsExact");
-m->add(chaiscript::base_class<QueryBase, IsExact>());
-m->add(chaiscript::type_conversion<IsExact, bool>([](const IsExact& q) { return q.execute(); }));
+m->add(chaiscript::constructor<Exact(const std::string&)>(), "Exact");
+m->add(chaiscript::constructor<Exact(const std::string&, std::string*)>(), "Exact");
+m->add(chaiscript::user_type<Exact>(), "Exact");
+m->add(chaiscript::base_class<QueryBase, Exact>());
+m->add(chaiscript::type_conversion<Exact, bool>([](const Exact& q) { return q.execute(); }));
 
-m->add(chaiscript::constructor<IsAny(const std::string&, int)>(), "IsAny");
-m->add(chaiscript::constructor<IsAny(const std::string&, int, std::string*)>(), "IsAny");
-m->add(chaiscript::user_type<IsAny>(), "IsAny");
-m->add(chaiscript::base_class<QueryBase, IsAny>());
-m->add(chaiscript::type_conversion<IsAny, bool>([](const IsAny& q) { return q.execute(); }));
+m->add(chaiscript::constructor<Any(const std::string&, int)>(), "Any");
+m->add(chaiscript::constructor<Any(const std::string&, int, std::string*)>(), "Any");
+m->add(chaiscript::user_type<Any>(), "Any");
+m->add(chaiscript::base_class<QueryBase, Any>());
+m->add(chaiscript::type_conversion<Any, bool>([](const Any& q) { return q.execute(); }));
 
 m->add(chaiscript::constructor<Is(const is_func, const int)>(), "Is");
 m->add(chaiscript::constructor<Is(const is_func, const int, std::string*)>(), "Is");
@@ -195,5 +240,10 @@ m->add(chaiscript::user_type<Is>(), "Is");
 m->add(chaiscript::base_class<QueryBase, Is>());
 m->add(chaiscript::type_conversion<Is, bool>([](const Is& q) { return q.execute(); }));
 
+m->add(chaiscript::constructor<Range(const char, const char, const int)>(), "Range");
+m->add(chaiscript::constructor<Range(const char, const char, const int, std::string*)>(), "Range");
+m->add(chaiscript::user_type<Range>(), "Range");
+m->add(chaiscript::base_class<QueryBase, Range>());
+m->add(chaiscript::type_conversion<Range, bool>([](const Range& q) { return q.execute(); }));
 
 END_DECLARE(QUERY)

@@ -908,6 +908,6 @@ m->add(chaiscript::constructor<Cursor(string&, const string&, find_func)>(), "Cu
 m->add(chaiscript::constructor<Cursor(const Cursor&, const string&, find_func)>(), "Cursor");
 m->add(chaiscript::constructor<Cursor(Cursor&, const string&, find_func)>(), "Cursor");
 
-m->add(chaiscript::type_conversion<Cursor, bool>([](const Cursor& c) { return c.is_eof() == false; }));
+m->add(chaiscript::type_conversion<Cursor, bool>([](const Cursor& c) { return c.is_eof() == false;}));
 
 END_DECLARE(CURSOR)

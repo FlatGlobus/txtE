@@ -2,7 +2,7 @@ var str = " Abcd 123z4a  5678-44?\n";
 var cursor = Cursor(str);
 var ret = "";
 
-if(Query(cursor) && Is(isspace, -1) && IsExact("Abcd 123z4a") && Is(isspace, -1) && Is(isdigit, 4, ret) && IsExact("-"))
+if(Query(cursor) && Is(isspace, -1) && Exact("Abcd 123z4a") && Is(isspace, -1) && Is(isdigit, 4, ret) && Exact("-"))
 {
 	print("true \"" + ret +"\"");
 }
@@ -24,11 +24,23 @@ else
 ret = "";
 cursor.begin();
 
-if(Query(cursor) && IsAny("18", 2, ret))
+if(Query(cursor) && Any("A ", 2, ret))
 { 
-	print("IsAny:true \"" + ret +"\"");
+	print("Any:true \"" + ret +"\"");
 }
 else
 {
-	print("IsAny:false");
+	print("Any:false");
+}
+
+ret = "";
+cursor.begin();
+
+if(Query(cursor) && cursor.move_to_end("Abcd ", find) && Range('0', '9', 3, ret))
+{ 
+	print("Range:true \"" + ret +"\"");
+}
+else
+{
+	print("Range:false");
 }
