@@ -113,7 +113,7 @@ bool is_options_key_exist(std::vector<std::string>& program_options, const std::
     return false;
 }
 
-bool member_of(const std::string & member, const std::vector<chaiscript::Boxed_Value>& set_of_members)
+bool member(const std::string & member, const std::vector<chaiscript::Boxed_Value>& set_of_members)
 {
     TRACE_FUNC;
 
@@ -147,6 +147,6 @@ m->add(chaiscript::fun([]() {__debugbreak(); }), "debugbreak");
 m->add(chaiscript::fun(get_options_value), "get_options_value");
 m->add(chaiscript::fun(get_options_values), "get_options_values");
 m->add(chaiscript::fun(is_options_key_exist), "is_options_key_exist");
-m->add(chaiscript::fun(member_of), "member_of");
+m->add(chaiscript::fun(member), "member");
 m->add_global_const(chaiscript::const_var(ENDL), "endl");
 END_DECLARE(THINGS)

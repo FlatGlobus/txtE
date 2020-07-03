@@ -877,8 +877,6 @@ m->add(chaiscript::fun(&Cursor::reset_range_limit), "reset_range_limit");
 m->add(chaiscript::fun(&Cursor::get_min_range_limit), "get_min_range_limit");
 m->add(chaiscript::fun(&Cursor::get_max_range_limit), "get_max_range_limit");
 
-
-m->add(chaiscript::type_conversion<Cursor, size_t>());
 m->add(chaiscript::fun(&Cursor::operator +=), "+=");
 m->add(chaiscript::fun(&Cursor::operator ++), "++");
 m->add(chaiscript::fun(&Cursor::operator +), "+");
@@ -892,7 +890,6 @@ m->add(chaiscript::fun(&Cursor::operator >), ">");
 m->add(chaiscript::fun(&Cursor::operator >=), ">=");
 m->add(chaiscript::fun(&Cursor::operator ==), "==");
 m->add(chaiscript::fun(&Cursor::operator !=), "!=");
-
 
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const Cursor&)>(&Cursor::operator =)), "=");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(size_t)>(&Cursor::operator =)), "=");
@@ -908,6 +905,7 @@ m->add(chaiscript::constructor<Cursor(string&, const string&, find_func)>(), "Cu
 m->add(chaiscript::constructor<Cursor(const Cursor&, const string&, find_func)>(), "Cursor");
 m->add(chaiscript::constructor<Cursor(Cursor&, const string&, find_func)>(), "Cursor");
 
+m->add(chaiscript::type_conversion<Cursor, size_t>());
 m->add(chaiscript::type_conversion<Cursor, bool>([](const Cursor& c) { return c.is_eof() == false;}));
 
 END_DECLARE(CURSOR)

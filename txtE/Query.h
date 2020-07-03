@@ -45,6 +45,7 @@ class Any : public QueryBase
 public:
     Any(const std::string&, int count);
     Any(const std::string&, int count, std::string* out);
+    Any(int count, std::string* out);
     virtual bool execute() const;
 };
 

@@ -78,6 +78,11 @@ Any::Any(const std::string& p, int c, std::string* o) : pattern(p), count(c), ou
 {
 }
 
+Any::Any(int c, std::string* o): count(c), out(o)
+{
+
+}
+
 bool Any::execute() const
 {
     if (cursor && cursor->is_eof() == false)
@@ -88,7 +93,7 @@ bool Any::execute() const
         size_t found_qty = 0;
         for (; i < text.end(); ++i)
         {
-            if (pattern.find(*i) != std::string::npos)
+            if ((pattern.find(*i) != std::string::npos) || (pattern.size() == 0 && count != -1))
             {
                 ++found_qty;
                 if (count != -1)
@@ -213,6 +218,7 @@ bool Range::execute() const
 
 //////////////////////////////////////////////////////////////////////////
 DECLARE_MODULE(QUERY)
+
 m->add(chaiscript::constructor<QueryBase()>(), "QueryBase");
 m->add(chaiscript::user_type<QueryBase>(), "QueryBase");
 m->add(chaiscript::type_conversion<QueryBase, bool>([](const QueryBase& q) { return q.execute(); }));
@@ -230,6 +236,7 @@ m->add(chaiscript::type_conversion<Exact, bool>([](const Exact& q) { return q.ex
 
 m->add(chaiscript::constructor<Any(const std::string&, int)>(), "Any");
 m->add(chaiscript::constructor<Any(const std::string&, int, std::string*)>(), "Any");
+m->add(chaiscript::constructor<Any(int, std::string*)>(), "Any");
 m->add(chaiscript::user_type<Any>(), "Any");
 m->add(chaiscript::base_class<QueryBase, Any>());
 m->add(chaiscript::type_conversion<Any, bool>([](const Any& q) { return q.execute(); }));
