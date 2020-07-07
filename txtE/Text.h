@@ -47,11 +47,13 @@ public:
     Cursor diff(Text&, Cursor&);
 
     size_t size();
+
     void erase(Cursor& pos, size_t count);
     void erase_between(Cursor& from, Cursor& to);
     Cursor erase_line(Cursor& pos);
     void clear();
 
+    operator const std::string& () { return text; }
     friend class Cursor;
 };
 

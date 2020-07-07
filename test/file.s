@@ -18,10 +18,12 @@ if(exists(temp_dir))
 	}
 }
 
+var tmp_file_name = tmpnam();
+print("tmpnam :" + tmp_file_name);
+
 temp_dir = temp_directory_path();
 print("List files : " + temp_dir);
-var files = get_files_from_folder(temp_dir, true, ["*"]);
+var files = get_files_from_folder(temp_dir, true, ["*.txt"]);
 print(to_string(files));
-
 
 print("end");

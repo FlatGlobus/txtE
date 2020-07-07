@@ -1,5 +1,6 @@
 #include "util.h"
 #include "chaiscript/extras/string_methods.hpp"
+#include <chaiscript/chaiscript.hpp>
 #include <intrin.h>
 
 //////////////////////////////////////////////////////////////////////////
@@ -71,7 +72,9 @@ std::string get_options_value(std::vector<std::string>& program_options, const s
             found = true;
         }
     }
-    return "";
+
+    throw std::runtime_error("No command line option : \"" + opt + "\"");
+    //return "";
 }
 
 std::vector<std::string> get_options_values(std::vector<std::string>& program_options, const std::string& opt)
@@ -97,6 +100,10 @@ std::vector<std::string> get_options_values(std::vector<std::string>& program_op
             found = true;
         }
     }
+
+    if(values.size())
+        throw std::runtime_error("No arguments for command line option : \"" + opt + "\"");
+
     return values;
 }
 
@@ -113,20 +120,14 @@ bool is_options_key_exist(std::vector<std::string>& program_options, const std::
     return false;
 }
 
-bool member(const std::string & member, const std::vector<chaiscript::Boxed_Value>& set_of_members)
+bool member(const std::string & member, const std::vector<std::string>& set_of_members)
 {
     TRACE_FUNC;
 
-    chaiscript::Type_Info ut = chaiscript::user_type<std::string>();
     for (auto p : set_of_members)
     {
-        if (p.is_type(ut) == false)
-        {
-            TRACE_OUT << "error: a set value is not a string" TRACE_END;
-            continue;
-        }
         
-        if (member == chaiscript::boxed_cast<std::string>(p))
+        if (member == p)
         {
             TRACE_OUT << "value \"" << member << "\" is member of the set" TRACE_END;
             return true;
@@ -149,4 +150,12 @@ m->add(chaiscript::fun(get_options_values), "get_options_values");
 m->add(chaiscript::fun(is_options_key_exist), "is_options_key_exist");
 m->add(chaiscript::fun(member), "member");
 m->add_global_const(chaiscript::const_var(ENDL), "endl");
+
+m->add(chaiscript::type_conversion<std::vector<chaiscript::Boxed_Value>, std::vector<std::string>>(
+    [](const std::vector<chaiscript::Boxed_Value>& vec) {
+        std::vector < std::string > ret;
+        for (const auto& bv : vec) ret.emplace_back(boxed_cast<std::string>(bv));
+        return ret;})
+);
+
 END_DECLARE(THINGS)

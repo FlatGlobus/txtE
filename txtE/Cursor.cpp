@@ -74,20 +74,15 @@ void Cursor::check_cursor(const Cursor& c)
     }
 }
 
-size_t Cursor::multi_find(const std::vector<chaiscript::Boxed_Value>& pattern, find_func func)
+size_t Cursor::multi_find(const std::vector<std::string>& pattern, find_func func)
 {
     size_t ret_pos = string::npos;
-    chaiscript::Type_Info ut = chaiscript::user_type<string>();
 
     TRACE_FUNC;
     for (auto p : pattern)
     {
-        if (p.is_type(ut) == false)
-        {
-            continue;
-        }
-        TRACE_OUT << "pattern = " << chaiscript::boxed_cast<std::string>(p) TRACE_END;
-        ret_pos = func(text, chaiscript::boxed_cast<std::string>(p), pos);
+        TRACE_OUT << "pattern = " << p TRACE_END;
+        ret_pos = func(text, p, pos);
         if (ret_pos != string::npos)
         {
             TRACE_POS(ret_pos);
@@ -299,7 +294,7 @@ Cursor& Cursor::move_to(const string& pattern, find_func func)
     return *this;
 }
 
-Cursor& Cursor::move_to(const std::vector<chaiscript::Boxed_Value>& pattern, find_func func)
+Cursor& Cursor::move_to(const std::vector < std::string > & pattern, find_func func)
 {
     TRACE_FUNC;
     if (!func)
@@ -422,7 +417,7 @@ Cursor& Cursor::move_to_end(const string& pattern, find_func func)
     return *this;
 }
 
-Cursor& Cursor::move_to_end(const std::vector<chaiscript::Boxed_Value>& pattern, find_func func)
+Cursor& Cursor::move_to_end(const std::vector<std::string>& pattern, find_func func)
 {
     TRACE_FUNC;
 
@@ -819,14 +814,14 @@ m->add(chaiscript::fun(&Cursor::inc), "inc");
 
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(size_t)>(&Cursor::move_to)), "move_to");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&, find_func)>(&Cursor::move_to)), "move_to");
-m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const std::vector<chaiscript::Boxed_Value>&, find_func)>(&Cursor::move_to)), "move_to");
+m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const std::vector<std::string>&, find_func)>(&Cursor::move_to)), "move_to");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&, const string&, find_func)>(&Cursor::move_to)), "move_to");
 
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&)>(&Cursor::move_while)), "move_while");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&)>(&Cursor::move_until)), "move_until");
 
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&, find_func)>(&Cursor::move_to_end)), "move_to_end");
-m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const std::vector<chaiscript::Boxed_Value>&, find_func)>(&Cursor::move_to_end)), "move_to_end");
+m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const std::vector<std::string>&, find_func)>(&Cursor::move_to_end)), "move_to_end");
 
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)()>(&Cursor::next_line)), "next_line");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(size_t)>(&Cursor::next_line)), "next_line");

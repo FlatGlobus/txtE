@@ -36,7 +36,7 @@ protected:
 
     size_t rfind_first_of(const string& pattern, size_t p);
     void check_cursor(const Cursor& c);
-    size_t multi_find(const std::vector<chaiscript::Boxed_Value>& pattern, find_func func);
+    size_t multi_find(const std::vector<std::string>& pattern, find_func func);
     int find_count(const std::string& pattern, size_t from_pos, size_t until_pos, find_func func);
 
     inline void set_eof()
@@ -73,7 +73,7 @@ public:
 
     Cursor& move_to(size_t p);
     Cursor& move_to(const string& pattern, find_func func);
-    Cursor& move_to(const std::vector<chaiscript::Boxed_Value>& pattern, find_func func);
+    Cursor& move_to(const std::vector<std::string>& pattern, find_func func);
     // pattern1 = {, pattern2 =}, moves pos to } ; from here ->{ {abcd} ->}<- to here }
     Cursor& move_to(const string& pattern1, const string& pattern2, find_func func);
 
@@ -81,7 +81,7 @@ public:
     Cursor& move_until(const string& pattern);
 
     Cursor& move_to_end(const string& pattern, find_func func);
-    Cursor& move_to_end(const std::vector<chaiscript::Boxed_Value>& pattern, find_func func);
+    Cursor& move_to_end(const std::vector<std::string>& pattern, find_func func);
 
     Cursor& next_word(const string& pattern);
     Cursor& next_word();

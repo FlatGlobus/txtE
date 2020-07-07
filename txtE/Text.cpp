@@ -41,7 +41,7 @@ size_t Text::load(const string& file_name)
     ifstream in(file_name, ios::in | ios::binary | ios::ate);
     if (!in)
     {
-        std::cerr << "Error loading file " << file_name <<" : " << strerror(errno);
+        std::cerr << "Error loading file " << file_name <<" : " << strerror(errno) << std::endl;
         return 0;
     }
 
@@ -68,7 +68,7 @@ size_t Text::write(const string& file_name, el_types t)
     ofstream out(file_name, ios::out | ios::binary);
     if (!out)
     {
-        std::cerr << "Error writing file " << file_name << " : " << strerror(errno);
+        std::cerr << "Error writing file " << file_name << " : " << strerror(errno) << std::endl;
         return 0;
     }
 
@@ -378,6 +378,8 @@ m->add(chaiscript::constructor<Text()>(), "Text");
 m->add(chaiscript::user_type<Text>(), "Text");
 
 m->add(chaiscript::fun(&reset_endl), "reset_endl");
+
+m->add(chaiscript::type_conversion<Text, const std::string&>([](const Text& t) { return (const std::string&)t;}));
 
 chaiscript::utility::add_class<el_types>(*m,   "el_types",
     {

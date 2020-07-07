@@ -7,6 +7,7 @@
 #include <iostream>
 #include <chaiscript/chaiscript.hpp>
 #include "util.h"
+#include <cstdio>
 
 namespace fs = std::filesystem;
 typedef std::vector<fs::path> VectorPath;
@@ -120,32 +121,22 @@ bool GetAllFilesFromFolder(const fs::path& source, const bool recursively, Vecto
     return !files.empty();
 }
 
-VectorPath GetAllFilesFromFolderProxy(fs::path sourceFolder, bool recursively, const std::vector<chaiscript::Boxed_Value>& masks)
+VectorPath GetAllFilesFromFolderProxy(fs::path sourceFolder, bool recursively, const std::vector<std::string>& mask)
 {
-    VectorString maskVector;
+    VectorString maskVector(mask);
     VectorPath files;
 
     if (fs::exists(sourceFolder) == false)
     {
-        std::cout << "The path  " << sourceFolder.string() << " does not exist."<< std::endl;
+        std::cout << "The path  " << sourceFolder.string() << " does not exist." << std::endl;
         return files;
     }
-        
-    chaiscript::Type_Info ut = chaiscript::user_type<std::string>();
-    for (auto m : masks)
-    {
-        if (m.is_type(ut) == false)
-        {
-            continue;
-        }
-        maskVector.push_back(chaiscript::boxed_cast<std::string>(m));
-    }
-    
+
     if (maskVector.empty())
     {
         maskVector.push_back(std::string(_T("*")));
     }
-    
+
     GetAllFilesFromFolder(sourceFolder, recursively, files, maskVector);
     return files;
 }
@@ -157,6 +148,11 @@ void PrintError(std::error_code& e)
         std::cout << e.message() << std::endl;
         e.clear();
     }
+}
+
+std::string tmp_nam()
+{
+    return std::tmpnam(NULL);
 }
 //////////////////////////////////////////////////////////////////////////
 DECLARE_MODULE(DIRFUNC)
@@ -205,7 +201,7 @@ m->add(chaiscript::fun(static_cast<fs::path& (fs::path::*)(const std::string&)>(
 m->add(chaiscript::type_conversion<fs::path, std::string>([](const fs::path& p) { return p.string();}));
 m->add(chaiscript::type_conversion<std::string, fs::path>([](const std::string& s) { return fs::path(s); }));
 
-m->add(chaiscript::fun(&GetAllFilesFromFolderProxy), "get_files_from_folder");
+m->add(chaiscript::fun(static_cast<VectorPath(*)(fs::path, bool, const std::vector<std::string>&)>(&GetAllFilesFromFolderProxy)), "get_files_from_folder");
 
 ChaiEngine::get_engine()->add(chaiscript::bootstrap::standard_library::vector_type<std::vector<fs::path>>("VectorPath"));
 
@@ -217,6 +213,7 @@ m->add(chaiscript::fun(static_cast<bool (*)(const fs::path&)>(&fs::remove)), "re
 m->add(chaiscript::fun(static_cast<std::uintmax_t (*)(const fs::path&)>(&fs::remove_all)), "remove_all");
 m->add(chaiscript::fun(static_cast<void (*)(const fs::path&, const fs::path&)>(&fs::copy)), "copy");
 m->add(chaiscript::fun(static_cast<fs::path(*)()>(&fs::temp_directory_path)), "temp_directory_path");
+m->add(chaiscript::fun(&tmp_nam), "tmpnam");
 
 END_DECLARE(DIRFUNC)
 //////////////////////////////////////////////////////////////////////////
