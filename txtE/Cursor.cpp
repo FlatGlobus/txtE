@@ -808,6 +808,36 @@ bool Cursor::check_range(size_t& p)
     p = string::npos;
     return false;
 }
+
+Cursor& Cursor::move_to_line(size_t line_num)
+{
+    TRACE_FUNC;
+
+    begin();
+    next_line(line_num);
+    if(is_eof() == false)
+        move_to_begin_of_line();
+
+    return *this;
+}
+
+Cursor& Cursor::move_to_col(size_t col)
+{
+    TRACE_FUNC;
+    move_to_begin_of_line();
+    
+    size_t line_end = text.find(ENDL, pos);
+
+    if (line_end != string::npos && col <= line_end)
+    {
+        inc(col);
+    }
+    else
+        pos = string::npos;
+
+    return *this;
+}
+
 //////////////////////////////////////////////////////////////////////////
 DECLARE_MODULE(CURSOR)
 m->add(chaiscript::fun(&Cursor::inc), "inc");

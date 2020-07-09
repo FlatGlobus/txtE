@@ -12,11 +12,14 @@ using namespace std;
 
 class Cursor;
 
-enum class el_types { elWin, elUnix, elMac };
+enum class el_types { elNone, elWin, elUnix, elMac };
 
 class Text
 {
     string text;
+    el_types original;
+
+    el_types find_endl_type();
 protected:
     void check_cursor(Cursor&);
     bool is_eof(size_t);
@@ -52,6 +55,8 @@ public:
     void erase_between(Cursor& from, Cursor& to);
     Cursor erase_line(Cursor& pos);
     void clear();
+
+    el_types get_endl_type() { return original; }
 
     operator const std::string& () { return text; }
     friend class Cursor;

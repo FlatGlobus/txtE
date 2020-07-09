@@ -77,3 +77,14 @@ public:
 
     virtual bool execute() const;
 };
+
+class Set : public QueryBase
+{
+    std::vector<std::string> pattern;
+    std::string* out = nullptr;
+public:
+    Set(const std::vector<std::string>&);
+    Set(const std::vector<std::string>&, std::string* out);
+    virtual bool execute() const;
+};
+

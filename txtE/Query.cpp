@@ -214,7 +214,36 @@ bool Range::execute() const
     }
     return false;
 }
+//////////////////////////////////////////////////////////////////////////
+Set::Set(const std::vector<std::string>& p) :pattern(p)
+{
+}
 
+Set::Set(const std::vector<std::string>& p, std::string* o) : pattern(p), out(o)
+{
+}
+
+bool Set::execute() const
+{
+    if (cursor && cursor->is_eof() == false)
+    {
+        for (auto p : pattern)
+        {
+            std::string text = cursor->get_text().substr(cursor->get_pos(), p.size());
+
+            if (text == p)
+            {
+                if (out != nullptr)
+                {
+                    *out = text;
+                }
+                cursor->inc(p.size() + 1);
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 //////////////////////////////////////////////////////////////////////////
 DECLARE_MODULE(QUERY)
@@ -252,5 +281,11 @@ m->add(chaiscript::constructor<Range(const char, const char, const int, std::str
 m->add(chaiscript::user_type<Range>(), "Range");
 m->add(chaiscript::base_class<QueryBase, Range>());
 m->add(chaiscript::type_conversion<Range, bool>([](const Range& q) { return q.execute(); }));
+
+m->add(chaiscript::constructor<Set(const std::vector<std::string>&)>(), "Set");
+m->add(chaiscript::constructor<Set(const std::vector<std::string>&, std::string*)>(), "Set");
+m->add(chaiscript::user_type<Set>(), "Set");
+m->add(chaiscript::base_class<QueryBase, Set>());
+m->add(chaiscript::type_conversion<Set, bool>([](const Set& q) { return q.execute(); }));
 
 END_DECLARE(QUERY)

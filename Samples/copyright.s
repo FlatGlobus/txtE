@@ -1,3 +1,4 @@
+//07.07.2020
 //txtE -e copyright.s -m *.h *.cpp -s <source_files_dir> -f header.txt -r
 
 var ERROR = "Error: ";
@@ -44,6 +45,7 @@ if(files.size() == 0)
 var source_file = Text();
 var cursor = Cursor(source_file);
 var pattern_vector = ["Copyrights","(C)","All rights reserved"];
+pattern_vector.push_back(header_file);
 
 for(f : files)
 {

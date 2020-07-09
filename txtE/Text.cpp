@@ -14,7 +14,7 @@ void set_endl(std::string& str, el_types t);
 
 extern bool enable_trace;
 //////////////////////////////////////////////////////////////////////////
-Text::Text()
+Text::Text():original(el_types::elWin)
 {
 
 }
@@ -55,6 +55,8 @@ size_t Text::load(const string& file_name)
     in.read(&bytes[0], fileSize);
 
     text = string(&bytes[0], fileSize);
+
+    original = find_endl_type();
     reset_endl(text);
 
     return text.size();
@@ -94,7 +96,7 @@ size_t Text::write(const string& file_name, el_types t)
 
 size_t Text::write(const string& file_name)
 {
-    return write(file_name, el_types::elWin);
+    return write(file_name, original);
 }
 
 string Text::get(Cursor& start, size_t count)
@@ -330,6 +332,22 @@ bool Text::is_eof(size_t p)
 
     return ret;
 }
+
+el_types Text::find_endl_type()
+{
+    size_t p = text.find("\n", 0);
+    if (p == std::string::npos)
+    {
+        return el_types::elNone;
+    }
+
+    if (p > 1 && text[p - 1] == '\r' )
+    {
+        return el_types::elWin;
+    }
+
+    return el_types::elUnix;
+}
 //////////////////////////////////////////////////////////////////////////
 void reset_endl(std::string & str)
 {
@@ -344,12 +362,13 @@ void set_endl(std::string& str, el_types t)
     case el_types::elUnix:
     case el_types::elMac:
         break;
+    case el_types::elNone:
+        break;
     case el_types::elWin:
     default:
         boost::replace_all(str, ENDL, "\r\n");
     }
 }
-
 //////////////////////////////////////////////////////////////////////////
 DECLARE_MODULE(TEXT)
 m->add(chaiscript::fun(&Text::load), "load");
@@ -377,12 +396,13 @@ m->add(chaiscript::fun(&Text::clear), "clear");
 m->add(chaiscript::constructor<Text()>(), "Text");
 m->add(chaiscript::user_type<Text>(), "Text");
 
-m->add(chaiscript::fun(&reset_endl), "reset_endl");
+m->add(chaiscript::fun(&Text::get_endl_type), "get_endl_type");
 
 m->add(chaiscript::type_conversion<Text, const std::string&>([](const Text& t) { return (const std::string&)t;}));
 
 chaiscript::utility::add_class<el_types>(*m,   "el_types",
     {
+        { el_types::elNone, "elNone" },
         { el_types::elWin, "elWin" },
         { el_types::elUnix, "elUnix" },
         { el_types::elMac, "elMac" }
