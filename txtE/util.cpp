@@ -6,6 +6,7 @@
 //////////////////////////////////////////////////////////////////////////
 ChaiEngine::module_type * ChaiEngine::_modules;
 std::unique_ptr<chaiscript::ChaiScript> ChaiEngine::engine;
+std::vector<std::string>* ChaiEngine::program_options = nullptr;
 
 void ChaiEngine::start()
 {
@@ -32,6 +33,11 @@ chaiscript::ChaiScript* ChaiEngine::get_engine()
 	return ChaiEngine::engine.get();
 }
 
+std::vector<std::string>* ChaiEngine::get_program_options()
+{
+    return program_options;
+}
+
 void  ChaiEngine::init_std()
 {
     auto stringmethods = chaiscript::extras::string_methods::bootstrap();
@@ -56,11 +62,11 @@ void set_max_trace_text_size(size_t sz)
     _MAX_TRACE_TEXT_SIZE = sz;
 }
 
-std::string get_options_value(std::vector<std::string>& program_options, const std::string& opt)
+std::string get_options_value(const std::string& opt)
 {
     TRACE_FUNC;
     bool found = false;
-    for (auto value : program_options)
+    for (auto value : *ChaiEngine::get_program_options())
     {
         if (found == true)
         {
@@ -77,12 +83,12 @@ std::string get_options_value(std::vector<std::string>& program_options, const s
     //return "";
 }
 
-std::vector<std::string> get_options_values(std::vector<std::string>& program_options, const std::string& opt)
+std::vector<std::string> get_options_values(const std::string& opt)
 {
     TRACE_FUNC;
     bool found = false;
     std::vector<std::string> values;
-    for (auto value : program_options)
+    for (auto value : *ChaiEngine::get_program_options())
     {
         if (found == true && value.size() > 0 && value[0] != '-')
         {
@@ -107,10 +113,10 @@ std::vector<std::string> get_options_values(std::vector<std::string>& program_op
     return values;
 }
 
-bool is_options_key_exist(std::vector<std::string>& program_options, const std::string& opt)
+bool is_options_key_exist(const std::string& opt)
 {
     TRACE_FUNC;
-    for (auto value : program_options)
+    for (auto value : *ChaiEngine::get_program_options())
     {
         if (value == opt)
         {
@@ -124,7 +130,7 @@ bool member(const std::string & member, const std::vector<std::string>& set_of_m
 {
     TRACE_FUNC;
 
-    for (auto p : set_of_members)
+    for (auto p : set_of_members._Make_iterator_offset())
     {
         
         if (member == p)
@@ -138,6 +144,21 @@ bool member(const std::string & member, const std::vector<std::string>& set_of_m
     return false;
 }
 //////////////////////////////////////////////////////////////////////////
+void exit_if(bool flag)
+{
+    if (flag)
+    {
+        throw std::runtime_error("Exit with condition.");
+    }
+}
+
+void exit_if(bool flag, const std::string& msg)
+{
+    if (flag)
+    {
+        throw std::runtime_error(msg);
+    }
+}
 
 //////////////////////////////////////////////////////////////////////////
 DECLARE_MODULE(THINGS)
@@ -150,6 +171,9 @@ m->add(chaiscript::fun(get_options_values), "get_options_values");
 m->add(chaiscript::fun(is_options_key_exist), "is_options_key_exist");
 m->add(chaiscript::fun(member), "member");
 m->add_global_const(chaiscript::const_var(ENDL), "endl");
+
+m->add(chaiscript::fun(static_cast<void (*)(bool)>(&exit_if)), "exit_if");
+m->add(chaiscript::fun(static_cast<void (*)(bool, const std::string&)>(&exit_if)), "exit_if");
 
 m->add(chaiscript::type_conversion<std::vector<chaiscript::Boxed_Value>, std::vector<std::string>>(
     [](const std::vector<chaiscript::Boxed_Value>& vec) {

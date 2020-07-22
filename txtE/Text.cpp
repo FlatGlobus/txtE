@@ -14,17 +14,21 @@ void set_endl(std::string& str, el_types t);
 
 extern bool enable_trace;
 //////////////////////////////////////////////////////////////////////////
-Text::Text():original(el_types::elWin)
+Text::Text():original_endl(el_types::elWin), changed(false)
 {
 
+}
+
+Text::Text(const string &t): text(t)
+{
+    original_endl = find_endl_type();
 }
 
 Text::~Text()
 {
-
 }
 
-void Text::check_cursor(Cursor& c)
+void Text::check_cursor(const Cursor& c)
 {
     if (AreEqual(c.get_text(), text) == false)
     {
@@ -32,7 +36,7 @@ void Text::check_cursor(Cursor& c)
     }
 }
 
-size_t Text::load(const string& file_name)
+size_t Text::load(const fs::path& file_name)
 {
     TRACE_FUNC;
     TRACE_OUT << "filename = " << file_name TRACE_END;
@@ -56,13 +60,15 @@ size_t Text::load(const string& file_name)
 
     text = string(&bytes[0], fileSize);
 
-    original = find_endl_type();
+    original_endl = find_endl_type();
     reset_endl(text);
+
+    changed = false;
 
     return text.size();
 }
 
-size_t Text::write(const string& file_name, el_types t)
+size_t Text::write(const fs::path& file_name, el_types t)
 {
     TRACE_FUNC;
     TRACE_OUT << "filename = " << file_name TRACE_END;
@@ -94,12 +100,12 @@ size_t Text::write(const string& file_name, el_types t)
     return text.size();
 }
 
-size_t Text::write(const string& file_name)
+size_t Text::write(const fs::path& file_name)
 {
-    return write(file_name, original);
+    return write(file_name, original_endl);
 }
 
-string Text::get(Cursor& start, size_t count)
+string Text::get(const Cursor& start, size_t count)
 {
     TRACE_FUNC;
     check_cursor(start);
@@ -116,7 +122,7 @@ string Text::get(Cursor& start, size_t count)
     return str;
 }
 
-string Text::get_to_endl(Cursor& start)
+string Text::get_to_endl(const Cursor& start)
 {
     TRACE_FUNC;
     check_cursor(start);
@@ -134,7 +140,7 @@ string Text::get_to_endl(Cursor& start)
     return str;
 }
 
-string Text::get_line(Cursor& start)
+string Text::get_line(const Cursor& start)
 {
     TRACE_FUNC;
     check_cursor(start);
@@ -144,6 +150,20 @@ string Text::get_line(Cursor& start)
     size_t epos = text.find(ENDL, start);
 
     spos = spos != string::npos ? spos + ENDL_SIZE : spos;
+    epos = epos != string::npos ? epos + ENDL_SIZE : epos;
+
+    if (epos != string::npos && spos == string::npos)
+        spos = 0;
+    else
+        if (epos == string::npos && spos != string::npos)
+            epos = text.size() - ENDL_SIZE;
+        else
+            if (epos == spos)
+            {
+                spos -= 1;
+                //epos += ENDL_SIZE;
+            }
+
     if (spos != string::npos && epos != string::npos && (spos <= epos))
     {
         str = text.substr(spos, epos - spos);
@@ -154,7 +174,7 @@ string Text::get_line(Cursor& start)
     return str;
 }
 
-string Text::get_word(Cursor& pos)
+string Text::get_word(const Cursor& pos)
 {
     TRACE_FUNC;
     check_cursor(pos);
@@ -178,7 +198,7 @@ string Text::get_word(Cursor& pos)
     return str;
 }
 
-string Text::get_between(Cursor& start, Cursor& end)
+string Text::get_between(const Cursor& start, const Cursor& end)
 {
     TRACE_FUNC;
     check_cursor(start);
@@ -196,17 +216,20 @@ string Text::get_between(Cursor& start, Cursor& end)
     return str;
 }
 
-void Text::set(Cursor& pos, const string& str)
+void Text::set(const Cursor& pos, const string& str)
 {
     TRACE_FUNC;
     check_cursor(pos);
 
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
     for (size_t i = 0; i < str.size() && (pos + i) < text.size(); i++)
+    {
         text[pos + i] = str[i];
+        changed = true;
+    }
 }
 
-void Text::set_line(Cursor& pos, const string& str)
+void Text::set_line(const Cursor& pos, const string& str)
 {
     TRACE_FUNC;
     check_cursor(pos);
@@ -219,7 +242,7 @@ void Text::set_line(Cursor& pos, const string& str)
     }
 }
 
-void Text::insert(Cursor& start, const string& str)
+void Text::insert(const Cursor& start, const string& str)
 {
     TRACE_FUNC;
     check_cursor(start);
@@ -227,9 +250,10 @@ void Text::insert(Cursor& start, const string& str)
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
 
     text.insert(start, str);
+    changed = true;
 }
 
-void Text::insert_line(Cursor& start, const string& str)
+void Text::insert_line(const Cursor& start, const string& str)
 {
     TRACE_FUNC;
     check_cursor(start);
@@ -239,47 +263,49 @@ void Text::insert_line(Cursor& start, const string& str)
     if (pos != string::npos)
     {
         text.insert(pos, ENDL + str);
+        changed = true;
     }
 }
 
 void Text::add(const Text& t)
 {
     TRACE_FUNC;
-
-    //TRACE_OUT << "text = \"" << t.text << "\"" TRACE_END;
-
     text += t.text;
+    changed = true;
 }
 
 void Text::add(const string& str)
 {
     TRACE_FUNC;
     text += str;
+    changed = true;
 }
 
-size_t Text::size()
+size_t Text::size() const 
 {
     return text.size();
 }
 
-void Text::erase(Cursor& pos, size_t count)
+void Text::erase(const Cursor& pos, size_t count)
 {
     TRACE_FUNC;
     check_cursor(pos);
 
     text.erase(pos, count);
+    changed = true;
 }
 
-void Text::erase_between(Cursor& from, Cursor& to)
+void Text::erase_between(const Cursor& from, const Cursor& to)
 {
     TRACE_FUNC;
     check_cursor(from);
     check_cursor(to);
 
     text.erase(std::min((size_t)from, (size_t)to), std::max((size_t)from, (size_t)to) - std::min((size_t)from, (size_t)to));
+    changed = true;
 }
 
-Cursor Text::erase_line(Cursor& pos)
+Cursor Text::erase_line(const Cursor& pos)
 {
     TRACE_FUNC;
     check_cursor(pos);
@@ -293,6 +319,7 @@ Cursor Text::erase_line(Cursor& pos)
     {
         text.erase(spos, epos - spos);
         ret = spos;
+        changed = true;
     }
     else
     {
@@ -302,24 +329,68 @@ Cursor Text::erase_line(Cursor& pos)
     return ret;
 }
 
-//TODO diff
-Cursor Text::diff(string& str, Cursor& c)
+Cursor Text::diff(const Cursor& start, const string& text1, string & result)
 {
     TRACE_FUNC;
-    Cursor cur(str);
 
-    return cur;
+    result.clear();
+    Cursor found_cur(start);
+    found_cur.set_eof();
+
+    size_t i = 0;
+    size_t found_idx = string::npos;
+
+    for (;start + i < text.size() && i < text1.size(); ++i)
+    {
+        if (text[start + i] == text1[i] && found_idx != string::npos)
+        {
+            break;
+        }
+
+        if (text[start + i] != text1[i])
+        {
+            result += text1[i];
+            found_cur = found_idx = start + i;
+        }
+    }
+
+    return found_cur;
 }
 
-Cursor Text::diff(Text& t, Cursor& pos)
+Cursor Text::diff(const Cursor& start, const Text& text1, string& result)
 {
-    return diff(t.text, pos);
+    TRACE_FUNC;
+
+    result.clear();
+
+    Cursor found_cur(start);
+    found_cur.set_eof();
+
+    size_t i = 0;
+    size_t found_idx = string::npos;
+
+    for (; start + i < text.size() && start + i < text1.text.size(); ++i)
+    {
+        if (text[start + i] == text1.text[i] && found_idx != string::npos)
+        {
+            break;
+        }
+
+        if (text[start + i] != text1.text[i])
+        {
+            result += text1.text[i];
+            found_cur = found_idx = start + i;
+        }
+    }
+
+    return found_cur;
 }
 
 void Text::clear()
 {
     TRACE_FUNC;
     text.clear();
+    changed = true;
 }
 
 bool Text::is_eof(size_t p)
@@ -336,6 +407,7 @@ bool Text::is_eof(size_t p)
 el_types Text::find_endl_type()
 {
     size_t p = text.find("\n", 0);
+
     if (p == std::string::npos)
     {
         return el_types::elNone;
@@ -373,8 +445,8 @@ void set_endl(std::string& str, el_types t)
 DECLARE_MODULE(TEXT)
 m->add(chaiscript::fun(&Text::load), "load");
 
-m->add(chaiscript::fun(static_cast<size_t (Text::*)(const string&)>(&Text::write)), "write");
-m->add(chaiscript::fun(static_cast<size_t(Text::*)(const string&, el_types)>(&Text::write)), "write");
+m->add(chaiscript::fun(static_cast<size_t (Text::*)(const fs::path&)>(&Text::write)), "write");
+m->add(chaiscript::fun(static_cast<size_t(Text::*)(const fs::path&, el_types)>(&Text::write)), "write");
 
 m->add(chaiscript::fun(&Text::get), "get");
 m->add(chaiscript::fun(&Text::get_line), "get_line");
@@ -393,7 +465,11 @@ m->add(chaiscript::fun(&Text::erase), "erase");
 m->add(chaiscript::fun(&Text::erase_line), "erase_line");
 m->add(chaiscript::fun(&Text::clear), "clear");
 
+m->add(chaiscript::fun(static_cast<Cursor(Text::*)(const Cursor&, const string&, string&)>(&Text::diff)), "diff");
+m->add(chaiscript::fun(static_cast<Cursor(Text::*)(const Cursor&, const Text&, string&)>(&Text::diff)), "diff");
+
 m->add(chaiscript::constructor<Text()>(), "Text");
+m->add(chaiscript::constructor<Text(const string&)>(), "Text");
 m->add(chaiscript::user_type<Text>(), "Text");
 
 m->add(chaiscript::fun(&Text::get_endl_type), "get_endl_type");
@@ -408,6 +484,5 @@ chaiscript::utility::add_class<el_types>(*m,   "el_types",
         { el_types::elMac, "elMac" }
     }
 );
-
 
 END_DECLARE(TEXT)

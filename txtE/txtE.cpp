@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
         po::parsed_options parsed =
             po::command_line_parser(argc, argv).options(desc).allow_unregistered().run();
         po::store(parsed, vm);
-        vector<string> unregistered = po::collect_unrecognized(parsed.options, po::include_positional);
+        *ChaiEngine::get_program_options() = po::collect_unrecognized(parsed.options, po::include_positional);
         po::notify(vm);
 
         if (vm.count("help") || vm.empty())
@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
         if (!execute_script.empty())
         {
             ChaiEngine::start();
-            ChaiEngine::get_engine()->add_global(chaiscript::var(&unregistered), ("program_options"));
+            ChaiEngine::get_engine()->add_global(chaiscript::var(ChaiEngine::get_program_options()), ("program_options"));
             auto val = ChaiEngine::get_engine()->eval_file(execute_script);
         }
     }

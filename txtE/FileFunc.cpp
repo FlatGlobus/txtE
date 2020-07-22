@@ -14,16 +14,6 @@ typedef std::vector<fs::path> VectorPath;
 typedef std::vector<std::string> VectorString;
 //////////////////////////////////////////////////////////////////////////
 
-__time64_t FileTimeToUnixTime(FILETIME& ft)
-{
-    ULARGE_INTEGER ull;
-
-    ull.LowPart = ft.dwLowDateTime;
-    ull.HighPart = ft.dwHighDateTime;
-
-    return ull.QuadPart / 10000000ULL - 11644473600ULL;
-}
-//////////////////////////////////////////////////////////////////////////
 std::string GetLastErrorStr()
 {
     DWORD errorMessageID = ::GetLastError();
@@ -65,7 +55,7 @@ bool IsDots(WIN32_FIND_DATA* pFindData)
     return bResult;
 }
 
-bool GetAllFilesFromFolder(const fs::path& source, const bool recursively, VectorPath& files, const std::vector<std::string>& maskVector)
+bool GetAllFilesFromFolder(const fs::path& source, bool recursively, VectorPath& files, const std::vector<std::string>& maskVector)
 {
     fs::path sourceFolder(source);
     AddBackSlash(sourceFolder);
@@ -154,6 +144,21 @@ std::string tmp_nam()
 {
     return std::tmpnam(NULL);
 }
+
+fs::path find_file(const fs::path & dir, const std::string & mask)
+{
+    VectorPath files;
+    std::vector<std::string> maskVector = { mask };
+    fs::path ret;
+
+    GetAllFilesFromFolder(dir, true, files, maskVector);
+    if (files.size())
+    {
+        ret = files[0];
+    }
+    
+    return ret;
+}
 //////////////////////////////////////////////////////////////////////////
 DECLARE_MODULE(DIRFUNC)
 
@@ -214,6 +219,7 @@ m->add(chaiscript::fun(static_cast<std::uintmax_t (*)(const fs::path&)>(&fs::rem
 m->add(chaiscript::fun(static_cast<void (*)(const fs::path&, const fs::path&)>(&fs::copy)), "copy");
 m->add(chaiscript::fun(static_cast<fs::path(*)()>(&fs::temp_directory_path)), "temp_directory_path");
 m->add(chaiscript::fun(&tmp_nam), "tmpnam");
+m->add(chaiscript::fun(&find_file), "find_file");
 
 END_DECLARE(DIRFUNC)
 //////////////////////////////////////////////////////////////////////////

@@ -39,10 +39,6 @@ protected:
     size_t multi_find(const std::vector<std::string>& pattern, find_func func);
     int find_count(const std::string& pattern, size_t from_pos, size_t until_pos, find_func func);
 
-    inline void set_eof()
-    {
-        pos = string::npos;
-    }
 
 public:
     Cursor(Text& t);
@@ -92,6 +88,7 @@ public:
     Cursor& move_to_end_of_word(const string& pattern);
     Cursor& move_to_end_of_word();
 
+    Cursor& goto_line(size_t line_num);
     Cursor& next_line();
     Cursor& next_line(size_t count);
 
@@ -117,29 +114,29 @@ public:
     bool is_eof(size_t p);
     bool is_eof(size_t p) const;
 
-    operator size_t()
+    inline operator size_t() const
     {
         return pos;
     }
 
-    size_t get_pos()
+    inline size_t get_pos() const
     {
         return pos;
     }
 
-    const string& get_text() const
+    inline const string& get_text() const
     {
         return text;
     }
 
-    string to_string();
+    string to_string() const;
 
-    void set_name(const string& n)
+    inline void set_name(const string& n)
     {
         name = n;
     }
 
-    const string& get_name() const
+    inline const string& get_name() const
     {
         return name;
     }
@@ -154,11 +151,20 @@ public:
     void set_max_range_limit(size_t m);
     bool set_max_range_limit(const string& m);
 
-    size_t get_min_range_limit();
-    size_t get_max_range_limit();
+    size_t get_min_range_limit() const;
+    size_t get_max_range_limit() const;
 
     void reset_range_limit();
 
     bool check_range();
+    bool check_range() const; //doesn't set pos to npos
+
     bool check_range(size_t& p);
+    bool check_range(size_t p) const;//doesn't set pos to npos
+
+    inline void set_eof()
+    {
+        pos = string::npos;
+    }
+
 };

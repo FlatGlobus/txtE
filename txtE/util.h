@@ -87,6 +87,7 @@ protected:
     static module_type *_modules;
     chaiscript::ModulePtr m = std::make_shared<chaiscript::Module>();
     static std::unique_ptr<chaiscript::ChaiScript> engine;
+    static std::vector<std::string>* program_options;
 
     virtual void register_module() = 0;
     static void init_std();
@@ -97,16 +98,25 @@ public:
             _modules = new module_type();
 
         _modules->push_front(this);
+
+        program_options = new std::vector<std::string>();
     }
     
-    virtual ~ChaiEngine()
+    ~ChaiEngine()
     {
         if (_modules)
         {
             delete _modules;
             _modules = nullptr;
         }
+        if (program_options)
+        {
+            delete program_options;
+            program_options = nullptr;
+        }
     }
+        
+    static std::vector<std::string> * get_program_options();
     static chaiscript::ChaiScript* get_engine();
     static void start();
     static void stop();

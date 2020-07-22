@@ -59,5 +59,23 @@
     <ClInclude Include="Query.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\strtk\strtk.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\chaiscript\chaiscript.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\chaiscript\chaiscript_basic.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\chaiscript\chaiscript_defines.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\chaiscript\chaiscript_stdlib.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\chaiscript\chaiscript_threading.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

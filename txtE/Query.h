@@ -43,6 +43,7 @@ class Any : public QueryBase
     int count = 0;
     std::string* out = nullptr;
 public:
+    Any(const std::string&);
     Any(const std::string&, int count);
     Any(const std::string&, int count, std::string* out);
     Any(int count, std::string* out);
@@ -58,8 +59,9 @@ public:
     is_func func;
     std::string* out= nullptr;
 
-    Is(const is_func func, const int count);
-    Is(const is_func func, const int count, std::string* out);
+    Is(const is_func func);
+    Is(const is_func func, int count);
+    Is(const is_func func, int count, std::string* out);
 
     virtual bool execute() const;
 };
@@ -72,8 +74,9 @@ public:
     std::string* out = nullptr;
     char from = '\0', to = '\0';
 
-    Range(const char from, const char to, const int count);
-    Range(const char from, const char to, const int count, std::string* out);
+    Range(char from, char to);
+    Range(char from, char to, int count);
+    Range(char from, char to, int count, std::string* out);
 
     virtual bool execute() const;
 };
@@ -88,3 +91,9 @@ public:
     virtual bool execute() const;
 };
 
+class Endl : public QueryBase
+{
+public:
+    Endl();
+    virtual bool execute() const;
+};

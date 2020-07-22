@@ -3,9 +3,11 @@
 #include "Text.h"
 #include "util.h"
 #include <ctype.h>
+
 ////////////////////////////////////////////////////////////
 namespace strfun
 {
+    
     size_t regex_search(const std::string& str, const std::string& pattern, size_t pos)
     {
         TRACE_FUNC;
@@ -26,6 +28,7 @@ namespace strfun
     {
         TRACE_FUNC;
         size_t p = str.find(pattern, pos);
+        
         if (p != string::npos)
         {
             TRACE_OUT << "found at = " << p TRACE_END;
@@ -142,14 +145,25 @@ namespace strfun
         return ret_str;
     }
 
+    //bool ifind(const std::string& a, const std::string& b)
+    //{
+    //    return std::equal(a.begin(), a.end(),
+    //        b.begin(), b.end(),
+    //        [](char a, char b) {
+    //            return tolower(a) == tolower(b);
+    //        });
+    //}
+
+
+//////////////////////////////////////////////////////////////////////////
     DECLARE_MODULE(STR)
-    m->add(chaiscript::fun(regex_search), "regex_search");
-//    m->add(chaiscript::fun(find), "find");
-//    m->add(chaiscript::fun(rfind), "rfind");
-//    m->add(chaiscript::fun(find_first_not_of), "find_first_not_of");
-//    m->add(chaiscript::fun(find_last_of), "find_last_of");
-//    m->add(chaiscript::fun(find_last_not_of), "find_last_not_of");
-    m->add(chaiscript::fun(remove_to_end), "remove_to_end");
+    m->add(chaiscript::fun(strfun::regex_search), "regex_search");
+    m->add(chaiscript::fun(strfun::find), "find");
+    m->add(chaiscript::fun(strfun::rfind), "rfind");
+    m->add(chaiscript::fun(strfun::find_first_not_of), "find_first_not_of");
+    m->add(chaiscript::fun(strfun::find_last_of), "find_last_of");
+    m->add(chaiscript::fun(strfun::find_last_not_of), "find_last_not_of");
+    m->add(chaiscript::fun(strfun::remove_to_end), "remove_to_end");
     m->add(chaiscript::fun(static_cast<int (*)(int)>(&isupper)), "isupper");
     m->add(chaiscript::fun(static_cast<int (*)(int)>(&islower)), "islower");
     m->add(chaiscript::fun(static_cast<int (*)(int)>(&iscntrl)), "iscntrl");
@@ -162,6 +176,9 @@ namespace strfun
     m->add(chaiscript::fun(static_cast<int (*)(int)>(&isalpha)), "isalpha");
     m->add(chaiscript::fun(static_cast<int (*)(int)>(&isdigit)), "isdigit");
     m->add(chaiscript::fun(static_cast<int (*)(int)>(&isxdigit)), "isxdigit");
+    m->add(chaiscript::fun(static_cast<int (*)(int)>(&__iscsym)), "iscsym");
+    m->add(chaiscript::fun([](unsigned char)->int {return 1; }), "isany");
+
     m->add(chaiscript::fun(insert), "insert");
     m->add(chaiscript::fun(erase), "erase");
     m->add(chaiscript::fun(remove_duplicates), "remove_duplicates");

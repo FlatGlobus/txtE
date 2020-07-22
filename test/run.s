@@ -2,4 +2,7 @@
 //use("query.s");
 
 //file tests
-use("file.s");
+//use("file.s");
+
+//text tests
+use("text.s");

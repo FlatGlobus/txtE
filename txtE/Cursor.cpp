@@ -503,6 +503,15 @@ Cursor& Cursor::move_to_end_of_word()
     return move_to_end_of_word(space_pattern);
 }
 
+Cursor& Cursor::goto_line(size_t line_num)
+{
+    TRACE_FUNC;
+    begin();
+    next_line(line_num);
+
+    return *this;
+}
+
 Cursor& Cursor::next_line()
 {
     TRACE_FUNC;
@@ -527,10 +536,12 @@ Cursor& Cursor::next_line(size_t count)
     {
         throw runtime_error("Cursor::next_line, argument cannot be less zero.");
     }
-
-    for (size_t i = 0; i < count || is_eof() == false; i++)
+    size_t i;
+    for ( i = 0; i < count; i++)
     {
         next_line();
+        if (is_eof())
+            break;
     }
 
     check_range();
@@ -680,7 +691,7 @@ bool Cursor::is_eof(size_t p) const
     return text.size() <= p || p == string::npos;
 }
 
-string Cursor::to_string()
+string Cursor::to_string() const
 {
     stringstream ss;
     ss << pos;
@@ -771,13 +782,13 @@ bool Cursor::set_max_range_limit(const string& m)
     return true;
 }
 
-size_t Cursor::get_min_range_limit()
+size_t Cursor::get_min_range_limit() const
 {
     TRACE_FUNC;
     return min_;
 }
 
-size_t Cursor::get_max_range_limit()
+size_t Cursor::get_max_range_limit() const
 {
     TRACE_FUNC;
     return max_;
@@ -799,6 +810,11 @@ bool Cursor::check_range()
     return ret;
 }
 
+bool Cursor::check_range() const 
+{
+    return check_range(pos);
+}
+
 bool Cursor::check_range(size_t& p)
 {
     if (p != string::npos && min_ <= p && p <= max_)
@@ -806,6 +822,14 @@ bool Cursor::check_range(size_t& p)
     TRACE_OUT << "position is out of range" TRACE_END;
 
     p = string::npos;
+    return false;
+}
+
+bool Cursor::check_range(size_t p) const
+{
+    if (p != string::npos && min_ <= p && p <= max_)
+        return true;
+    TRACE_OUT << "position is out of range" TRACE_END;
     return false;
 }
 
@@ -853,6 +877,7 @@ m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&)>(&Cursor::
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&, find_func)>(&Cursor::move_to_end)), "move_to_end");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const std::vector<std::string>&, find_func)>(&Cursor::move_to_end)), "move_to_end");
 
+m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(size_t)>(&Cursor::goto_line)), "goto_line");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)()>(&Cursor::next_line)), "next_line");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(size_t)>(&Cursor::next_line)), "next_line");
 

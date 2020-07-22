@@ -174,6 +174,12 @@
     <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\chaiscript\chaiscript.hpp" />
+    <ClInclude Include="..\chaiscript\chaiscript_basic.hpp" />
+    <ClInclude Include="..\chaiscript\chaiscript_defines.hpp" />
+    <ClInclude Include="..\chaiscript\chaiscript_stdlib.hpp" />
+    <ClInclude Include="..\chaiscript\chaiscript_threading.hpp" />
+    <ClInclude Include="..\strtk\strtk.hpp" />
     <ClInclude Include="Cursor.h" />
     <ClInclude Include="Query.h" />
     <ClInclude Include="StrFun.h" />

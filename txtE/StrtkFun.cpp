@@ -49,6 +49,7 @@ m->add(chaiscript::fun<bool, const std::string&, const std::string&, std::string
 
 m->add(chaiscript::fun<std::string, const std::size_t&, const std::string& >(strtk::replicate), "replicate");
 
+m->add(chaiscript::fun<bool, const std::string&, const std::string& >(strtk::match), "match");
 
 //join
 //bracketize
