@@ -130,7 +130,7 @@ bool member(const std::string & member, const std::vector<std::string>& set_of_m
 {
     TRACE_FUNC;
 
-    for (auto p : set_of_members._Make_iterator_offset())
+    for (auto p : set_of_members)
     {
         
         if (member == p)

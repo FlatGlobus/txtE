@@ -95,8 +95,8 @@ public:
     Cursor& prev_line();
     Cursor& prev_line(size_t count);
 
-    void move_to_begin_of_line();
-    void move_to_end_of_line();
+    Cursor& move_to_begin_of_line();
+    Cursor& move_to_end_of_line();
 
     Cursor& move_to_line(size_t line_num);
     Cursor& move_to_col(size_t col);

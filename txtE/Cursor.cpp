@@ -515,11 +515,11 @@ Cursor& Cursor::goto_line(size_t line_num)
 Cursor& Cursor::next_line()
 {
     TRACE_FUNC;
+
     size_t p = text.find(ENDL, pos);
-    if (is_eof(p += ENDL_SIZE) == false)
+    if (is_eof(p) == false && is_eof(p += ENDL_SIZE) == false)
     {
         pos = p;
-
         TRACE_POS(pos);
         check_range();
         return *this;
@@ -590,21 +590,37 @@ Cursor& Cursor::prev_line(size_t count)
     return *this;
 }
 
-void Cursor::move_to_begin_of_line()
+Cursor& Cursor::move_to_begin_of_line()
 {
     TRACE_FUNC;
+    if (pos == 0)
+    {
+        TRACE_POS(pos);
+        return *this;
+    }
 
     pos = text.rfind(ENDL, pos);
+    if (pos == string::npos)
+    {
+        //pos = 0;
+        TRACE_POS(pos);
+        return *this;
+    }
+
+    pos += 1;
     TRACE_POS(pos);
     check_range();
+
+    return *this;
 }
 
-void Cursor::move_to_end_of_line()
+Cursor& Cursor::move_to_end_of_line()
 {
     TRACE_FUNC;
     pos = text.find(ENDL, pos);
     TRACE_POS(pos);
     check_range();
+    return *this;
 }
 
 Cursor& Cursor::begin()
@@ -678,7 +694,7 @@ bool Cursor::is_eof()
 
 bool Cursor::is_eof(size_t p)
 {
-    return text.size() <= p || p == string::npos;
+    return p >= text.size() || p == string::npos;
 }
 
 bool Cursor::is_eof() const
@@ -688,7 +704,7 @@ bool Cursor::is_eof() const
 
 bool Cursor::is_eof(size_t p) const
 {
-    return text.size() <= p || p == string::npos;
+    return p >= text.size() || p == string::npos;
 }
 
 string Cursor::to_string() const
