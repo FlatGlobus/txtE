@@ -59,11 +59,15 @@ public:
 
     Position(Position& p)
     {
+        min_pos = p.min_pos;
+        max_pos = p.max_pos;
         pos = p.pos;
     }
 
     Position(const Position& p)
     {
+        min_pos = p.min_pos;
+        max_pos = p.max_pos;
         pos = p.pos;
     }
 
@@ -229,9 +233,7 @@ public:
     const Position& operator [](const string& key);
     size_t label_size();
 
-    bool is_eof();
     bool is_eof() const;
-    bool is_eof(size_t p);
     bool is_eof(size_t p) const;
 
     inline operator const Position& () const
@@ -266,10 +268,10 @@ public:
         return name;
     }
 
-    //inline operator bool() const
-    //{
-    //    return check_range();
-    //}
+    explicit inline operator bool() const
+    {
+        return is_eof() == false;
+    }
 
     bool set_range(size_t min, size_t max);
     void set_min_range(size_t m);
@@ -279,12 +281,6 @@ public:
     size_t get_max_range() const;
 
     void reset();
-
-    bool check_range();
-    bool check_range() const; 
-
-    bool check_range(size_t p);
-    bool check_range(size_t p) const;
 
     inline void set_eof()
     {

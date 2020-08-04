@@ -98,11 +98,11 @@ int Cursor::find_count(const string& pattern, const Position& from_pos, const Po
     int count = 0;
 
     Position i = from_pos;
-    for (; check_range(i) == true;)
+    for (; is_eof(i) == false;)
     {
         i = func(text, pattern, i);
 
-        if (check_range(i) == true && i <= until_pos)
+        if (is_eof(i) == false && i <= until_pos)
         {
             ++count;
             i += 1;
@@ -122,8 +122,6 @@ Cursor& Cursor::inc(size_t p)
     TRACE_OUT << "increment = " << p TRACE_END;
     TRACE_POS(pos);
 
-    check_range();
-
     return *this;
 }
 
@@ -133,8 +131,6 @@ Cursor& Cursor::operator += (size_t p)
     TRACE_FUNC;
     TRACE_OUT << "increment = " << p TRACE_END;
     TRACE_POS(pos);
-
-    check_range();
 
     return *this;
 }
@@ -158,7 +154,6 @@ Cursor& Cursor::operator ++ ()
     TRACE_FUNC;
     TRACE_POS(pos);
 
-    check_range();
     return *this;
 }
 
@@ -170,7 +165,6 @@ Cursor& Cursor::operator -= (size_t p)
     TRACE_OUT << "decrement = " << p TRACE_END;
     TRACE_POS(pos);
 
-    check_range();
     return *this;
 }
 
@@ -192,7 +186,6 @@ Cursor& Cursor::operator -- ()
     TRACE_FUNC;
     TRACE_POS(pos);
 
-    check_range();
     return *this;
 }
 
@@ -231,8 +224,6 @@ Cursor& Cursor::operator = (size_t p)
     TRACE_FUNC;
     TRACE_OUT << "set position = " << p TRACE_END;
     TRACE_POS(pos);
-
-    check_range();
 
     return *this;
 }
@@ -274,7 +265,6 @@ Cursor& Cursor::move_to(size_t p)
     TRACE_FUNC;
     TRACE_POS(pos);
 
-    check_range();
     return *this;
 }
 
@@ -290,7 +280,6 @@ Cursor& Cursor::move_to(const string& pattern, find_func func)
     TRACE_OUT << "pattern = " << pattern TRACE_END;
     TRACE_POS(pos);
 
-    check_range();
     return *this;
 }
 
@@ -304,8 +293,6 @@ Cursor& Cursor::move_to(const vector < string > & pattern, find_func func)
     pos = multi_find(pattern, func);
 
     TRACE_POS(pos);
-
-    check_range();
 
     return *this;
 }
@@ -330,15 +317,15 @@ Cursor& Cursor::move_to(const string& pattern1, const string& pattern2, find_fun
     set_eof();
     pos1 = func(text, pattern1, pos_orig);//{
     pos1 += 1;
-    if (check_range(pos1) == false)
+    if (is_eof(pos1) == true)
     {
         return *this;
     }
 
-    for (; count > 0 && check_range(pos2) == true; )
+    for (; count > 0 && is_eof(pos2) == false; )
     {
         pos2 = func(text, pattern2, pos1); //}
-        if (check_range(pos2) == false)
+        if (is_eof(pos2) == true)
         {
             break;
         }
@@ -354,7 +341,6 @@ Cursor& Cursor::move_to(const string& pattern1, const string& pattern2, find_fun
     if (count == 0)
     {
         pos = pos2;
-        check_range();
     }
 
     TRACE_POS(pos);
@@ -365,7 +351,7 @@ Cursor& Cursor::move_to(const string& pattern1, const string& pattern2, find_fun
 Cursor& Cursor::move_while(const string& pattern)
 {
     TRACE_FUNC;
-    for (; check_range(); ++pos)
+    for (; is_eof() == false; ++pos)
     {
         if (pattern.find(text[pos]) != Position::eof)
         {
@@ -383,7 +369,7 @@ Cursor& Cursor::move_until(const string& pattern)
 {
     TRACE_FUNC;
 
-    for (; check_range(); ++pos)
+    for (; is_eof() == false; ++pos)
     {
         if (pattern.find(text[pos]) == Position::eof)
         {
@@ -412,8 +398,6 @@ Cursor& Cursor::move_to_end(const string& pattern, find_func func)
     TRACE_OUT << "pattern = " << pattern TRACE_END;
     TRACE_POS(pos);
 
-    check_range();
-
     return *this;
 }
 
@@ -431,8 +415,6 @@ Cursor& Cursor::move_to_end(const vector<string>& pattern, find_func func)
         pos += pattern.size();
     TRACE_POS(pos);
 
-    check_range();
-
     return *this;
 }
 
@@ -446,7 +428,6 @@ Cursor& Cursor::next_word(const string& pattern)
     TRACE_OUT << "pattern = " << pattern TRACE_END;
     TRACE_POS(pos);
 
-    check_range();
     return *this;
 }
 
@@ -471,7 +452,6 @@ Cursor& Cursor::move_to_begin_of_word(const string& pattern)
     TRACE_OUT << "pattern = " << pattern TRACE_END;
     TRACE_POS(pos);
 
-    check_range();
     return *this;
 }
 
@@ -489,7 +469,6 @@ Cursor& Cursor::move_to_end_of_word(const string& pattern)
     {
         pos = text.find_first_of(space_pattern, pos);
         TRACE_POS(pos);
-        check_range();
         return *this;
     }
 
@@ -521,7 +500,6 @@ Cursor& Cursor::next_line()
     {
         pos = p;
         TRACE_POS(pos);
-        check_range();
         return *this;
     }
     pos = Position::eof;
@@ -544,7 +522,6 @@ Cursor& Cursor::next_line(size_t count)
             break;
     }
 
-    check_range();
     return *this;
 }
 
@@ -556,7 +533,6 @@ Cursor& Cursor::prev_line()
     {
         pos = p;
         TRACE_POS(pos);
-        check_range();
         return *this;
     }
 
@@ -565,7 +541,6 @@ Cursor& Cursor::prev_line()
         pos = p - ENDL_SIZE;
         TRACE_POS(pos);
 
-        check_range();
         return *this;
     }
 
@@ -586,7 +561,6 @@ Cursor& Cursor::prev_line(size_t count)
     {
         prev_line();
     }
-    check_range();
     return *this;
 }
 
@@ -608,7 +582,6 @@ Cursor& Cursor::move_to_begin_of_line()
 
     pos += 1;
     TRACE_POS(pos);
-    check_range();
 
     return *this;
 }
@@ -618,7 +591,6 @@ Cursor& Cursor::move_to_end_of_line()
     TRACE_FUNC;
     pos = text.find(ENDL, pos);
     TRACE_POS(pos);
-    check_range();
     return *this;
 }
 
@@ -627,7 +599,6 @@ Cursor& Cursor::begin()
     TRACE_FUNC;
     pos = 0;
     TRACE_POS(pos);
-    check_range();
     return *this;
 }
 
@@ -636,7 +607,6 @@ Cursor& Cursor::end()
     TRACE_FUNC;
     pos = text.size() - ENDL_SIZE;
     TRACE_POS(pos);
-    check_range();
     return *this;
 }
 
@@ -646,7 +616,6 @@ void Cursor::label(const string& key)
     labels[key] = pos;
     TRACE_OUT << "key = " << key TRACE_END;
     TRACE_POS(pos);
-    check_range();
 }
 
 bool Cursor::goto_label(const string& key)
@@ -660,12 +629,10 @@ bool Cursor::goto_label(const string& key)
         TRACE_OUT << "key = " << key TRACE_END;
         TRACE_POS(pos);
 
-        check_range();
         return true;
     }
     TRACE_OUT << "key = " << key TRACE_END;
     TRACE_POS(pos);
-    check_range();
     return false;
 }
 
@@ -685,16 +652,6 @@ size_t Cursor::label_size()
     TRACE_OUT << "size = " << labels.size() TRACE_END;
 
     return labels.size();
-}
-
-bool Cursor::is_eof()
-{
-    return is_eof(pos);
-}
-
-bool Cursor::is_eof(size_t p)
-{
-    return p >= text.size() || pos.is_eof(p);
 }
 
 bool Cursor::is_eof() const
@@ -721,7 +678,6 @@ bool Cursor::set_range(size_t min, size_t max)
     pos.set_max(max);
 
     TRACE_OUT << "min = " << min << " max = " << max TRACE_END;
-    check_range();//may set pos to eof
     return true;
 }
 
@@ -730,7 +686,6 @@ void Cursor::set_min_range(size_t min)
     TRACE_FUNC;
     pos.set_min(min);
     TRACE_OUT << "min = " << min TRACE_END;
-    check_range();
 }
 
 void Cursor::set_max_range(size_t max)
@@ -739,7 +694,6 @@ void Cursor::set_max_range(size_t max)
 
     pos.set_max(max);
     TRACE_OUT << " max = " << max TRACE_END;
-    check_range();
 }
 
 size_t Cursor::get_min_range() const
@@ -758,29 +712,6 @@ void Cursor::reset()
 {
     TRACE_FUNC;
     pos.reset();
-}
-
-bool Cursor::check_range()
-{
-    bool ret = check_range(pos);
-    if (ret == false)
-        pos.set_eof();
-    return ret;
-}
-
-bool Cursor::check_range() const 
-{
-    return check_range(pos);
-}
-
-bool Cursor::check_range(size_t p)
-{
-    return is_eof(p) == false;
-}
-
-bool Cursor::check_range(size_t p) const
-{
-    return is_eof(p) == false;
 }
 
 Cursor& Cursor::move_to_line(size_t line_num)
@@ -802,7 +733,7 @@ Cursor& Cursor::move_to_col(size_t col)
     
     size_t line_end = text.find(ENDL, pos);
 
-    if (check_range(line_end) && pos + col <= line_end)
+    if (is_eof(line_end) == false && pos + col <= line_end)
     {
         inc(col);
     }
@@ -849,8 +780,8 @@ m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)()>(&Cursor::move_to_end_o
 m->add(chaiscript::fun(&Cursor::begin), "begin");
 m->add(chaiscript::fun(&Cursor::end), "end");
 
-m->add(chaiscript::fun(static_cast<bool(Cursor::*)()>(&Cursor::is_eof)), "is_eof");
-m->add(chaiscript::fun(static_cast<bool(Cursor::*)(size_t)>(&Cursor::is_eof)), "is_eof");
+m->add(chaiscript::fun(static_cast<bool(Cursor::*)() const>(&Cursor::is_eof)), "is_eof");
+m->add(chaiscript::fun(static_cast<bool(Cursor::*)(size_t)const>(&Cursor::is_eof)), "is_eof");
 
 m->add(chaiscript::fun(&Cursor::operator[]), "[]");
 m->add(chaiscript::fun(&Cursor::label), "label");
@@ -900,7 +831,7 @@ m->add(chaiscript::constructor<Cursor(const Cursor&, const string&, find_func)>(
 m->add(chaiscript::constructor<Cursor(Cursor&, const string&, find_func)>(), "Cursor");
 
 //m->add(chaiscript::type_conversion<Cursor, Position>());
-m->add(chaiscript::type_conversion<Cursor, bool>([](const Cursor& c)-> bool { return c.check_range();}));
+m->add(chaiscript::type_conversion<Cursor, bool>([](const Cursor& c)-> bool { return c.is_eof() == false;}));
 
 m->add(chaiscript::type_conversion<Position, size_t>());
 m->add(chaiscript::user_type<Position>(), "Position");

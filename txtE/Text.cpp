@@ -112,7 +112,7 @@ string Text::get(const Cursor& start, size_t count)
 
     string str;
 
-    if (start.check_range() && start.check_range(start + count))
+    if (start && start.is_eof(start + count) == false)
     {
         str = text.substr(start, count);
     }
@@ -130,7 +130,7 @@ string Text::get_to_endl(const Cursor& start)
     string str;
     size_t pos = text.find(ENDL, start);
 
-    if (start.check_range() && start.check_range(pos))
+    if (start && start.is_eof(pos) == false)
         str = text.substr(start, pos - (size_t)start);
 
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
@@ -145,7 +145,7 @@ string Text::get_line(const Cursor& start)
 
     string str;
 
-    if (start.check_range() == false)
+    if (start == false)
         return str;
 
     Position spos = start;
@@ -157,7 +157,7 @@ string Text::get_line(const Cursor& start)
     spos += ENDL_SIZE;
     epos -= ENDL_SIZE;
 
-    if (start.check_range(epos) && start.check_range(spos))
+    if (start.is_eof(epos) == false && start.is_eof(spos) == false)
     {
         if (spos <= epos)
             str = text.substr(spos, epos - spos);
@@ -175,7 +175,7 @@ string Text::get_word(const Cursor& pos)
    
     string str;
 
-    if (pos.check_range() == false)
+    if (pos == false)
         return str;
 
     Cursor s = pos;
@@ -184,7 +184,7 @@ string Text::get_word(const Cursor& pos)
     s.move_to_begin_of_word();
     e.move_to_end_of_word();
 
-    if (s.check_range() && e.check_range())
+    if (s && e)
     {
         str = text.substr(s, e - s);
     }
@@ -202,7 +202,7 @@ string Text::get_between(const Cursor& start, const Cursor& end)
 
     string str;
 
-    if (start.check_range() && end.check_range() && start < end)
+    if (start && end && start < end)
     {
         str = text.substr(start, end - start);
     }
@@ -217,13 +217,13 @@ void Text::set(const Cursor& pos, const string& str)
     TRACE_FUNC;
     check_cursor(pos);
 
-    if (pos.check_range() == false)
+    if (pos == false)
         return;
 
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
     for (size_t i = 0; i < str.size() && (pos + i) < text.size(); i++)
     {
-        if (pos.check_range(pos + i) == false)
+        if (pos.is_eof(pos + i))
             break;
         text[pos + i] = str[i];
         changed = true;
@@ -234,7 +234,7 @@ void Text::set_line(const Cursor& pos, const string& str)
 {
     TRACE_FUNC;
     check_cursor(pos);
-    if (pos.check_range() == false)
+    if (pos == false)
         return;
 
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
@@ -243,7 +243,7 @@ void Text::set_line(const Cursor& pos, const string& str)
     size_t spos = text.rfind(ENDL, pos);
 
     spos = spos != string::npos ? spos + ENDL_SIZE : spos;
-    if (pos.check_range(spos))
+    if (pos.is_eof(spos) == false)
     {   
         Cursor pos1 = pos;
         pos1 = spos;
@@ -256,7 +256,7 @@ void Text::insert(const Cursor& pos, const string& str)
     TRACE_FUNC;
     check_cursor(pos);
 
-    if (pos.check_range() == false)
+    if (pos == false)
         return;
 
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
@@ -270,12 +270,12 @@ void Text::insert_line(const Cursor& pos, const string& str)
     TRACE_FUNC;
     check_cursor(pos);
 
-    if (pos.check_range() == false)
+    if (pos == false)
         return;
 
     size_t p = text.find(ENDL, pos);
 
-    if (pos.check_range(p))
+    if (pos.is_eof(p) == false)
     {
         text.insert(p, ENDL + str);
         changed = true;
@@ -306,7 +306,7 @@ void Text::erase(const Cursor& pos, size_t count)
     TRACE_FUNC;
     check_cursor(pos);
 
-    if (pos.check_range() == false || pos.check_range(pos + count) == false)
+    if (pos == false || pos.is_eof(pos + count))
         return;
 
     text.erase(pos, count);
@@ -319,7 +319,7 @@ void Text::erase_between(const Cursor& from, const Cursor& to)
     check_cursor(from);
     check_cursor(to);
 
-    if (from.check_range() == false || to.check_range() == false || to < from)
+    if (from == false || to == false || to < from)
         return;
 
     text.erase(from, to - from);
@@ -331,7 +331,7 @@ void Text::erase_line(const Cursor& pos)
     TRACE_FUNC;
     check_cursor(pos);
 
-    if (pos.check_range() == false)
+    if (pos == false)
         return;
 
     Cursor ret(pos);
@@ -339,7 +339,7 @@ void Text::erase_line(const Cursor& pos)
     size_t epos = text.find(ENDL, pos);
 
     spos = spos != string::npos ? spos + ENDL_SIZE : spos;
-    if (pos.check_range(spos) && pos.check_range(epos) && spos <= epos)
+    if (pos.is_eof(spos) == false && pos.is_eof(epos) == false && spos <= epos)
     {
         text.erase(spos, epos - spos);
         changed = true;
@@ -354,7 +354,7 @@ Cursor Text::diff(const Cursor& pos, const string& text1, string & result)
     Cursor found_cur(pos);
     found_cur.set_eof();
 
-    if (pos.check_range() == false)
+    if (pos == false)
         return found_cur;
 
     size_t i = 0;
@@ -362,7 +362,7 @@ Cursor Text::diff(const Cursor& pos, const string& text1, string & result)
 
     for (;pos + i < text.size() && i < text1.size(); ++i)
     {
-        if (pos.check_range(pos + i) == false)
+        if (pos.is_eof(pos + i))
             break;
 
         if (text[pos + i] == text1[i] && found_idx != string::npos)
@@ -389,7 +389,7 @@ Cursor Text::diff(const Cursor& pos, const Text& text1, string& result)
     Cursor found_cur(pos);
     found_cur.set_eof();
 
-    if (pos.check_range() == false)
+    if (pos == false)
         return found_cur;
 
     size_t i = 0;
@@ -397,7 +397,7 @@ Cursor Text::diff(const Cursor& pos, const Text& text1, string& result)
 
     for (; pos + i < text.size() && pos + i < text1.text.size(); ++i)
     {
-        if (pos.check_range(pos + i) == false)
+        if (pos.is_eof(pos + i))
             break;
 
         if (text[pos + i] == text1.text[i] && found_idx != string::npos)

@@ -53,7 +53,7 @@ Exact::Exact(const std::string& p, std::string* o) : pattern(p), out(o)
 
 bool Exact::execute() const
 {
-    if (cursor && cursor->check_range())
+    if (cursor && cursor->is_eof() == false)
     {
         std::string text = cursor->get_text().substr(cursor->get_pos(), pattern.size());
 
@@ -89,7 +89,7 @@ Any::Any(int c, std::string* o): count(c), out(o)
 
 bool Any::execute() const
 {
-    if (cursor && cursor->check_range())
+    if (cursor && cursor->is_eof() == false)
     {
         const std::string& text = cursor->get_text();
         auto pos = cursor->get_pos();
@@ -139,7 +139,7 @@ Is::Is(const is_func f, int c, std::string* o) : func(f), count(c), out(o)
 
 bool Is::execute() const
 {
-    if (cursor && cursor->check_range())
+    if (cursor && cursor->is_eof() == false)
     {
         const std::string& text = cursor->get_text();
         auto pos = cursor->get_pos();
@@ -190,7 +190,7 @@ Range::Range(char f, char t, int c, std::string* o) : from(f), to(t), count(c), 
 
 bool Range::execute() const
 {
-    if (cursor && cursor->check_range())
+    if (cursor && cursor->is_eof() == false)
     {
         const std::string& text = cursor->get_text();
         auto pos = cursor->get_pos();
@@ -237,7 +237,7 @@ Set::Set(const std::vector<std::string>& p, std::string* o) : pattern(p), out(o)
 
 bool Set::execute() const
 {
-    if (cursor && cursor->check_range())
+    if (cursor && cursor->is_eof() == false)
     {
         for (auto p : pattern)
         {
@@ -264,7 +264,7 @@ Endl::Endl()
 
 bool Endl::execute() const
 {
-    if (cursor && cursor->check_range())
+    if (cursor && cursor->is_eof() == false)
     {
         std::string text = cursor->get_text().substr(cursor->get_pos(), ENDL_SIZE);
 
