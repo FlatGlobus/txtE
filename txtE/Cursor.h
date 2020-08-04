@@ -6,13 +6,134 @@
 #include <map>
 #include <functional>
 #include <algorithm>
+#include <compare>
 #include <chaiscript/chaiscript.hpp>
 #include "text.h"
 #include <memory>
 #include <limits.h>
 #include"util.h"
 
+//////////////////////////////////////////////////////////////////////////
 using namespace std;
+
+class Position
+{
+    size_t pos = 0;
+    size_t min_pos = 0;
+    size_t max_pos = SIZE_MAX - 1;
+
+    inline size_t inc(size_t delta) const
+    {
+        if(is_eof(pos))
+            return Position::eof;
+
+        size_t temp_pos = pos + delta;
+        if(temp_pos < pos || max_pos < temp_pos)
+            return Position::eof;
+
+        return pos + delta;
+    };
+
+    inline size_t dec(size_t delta) const
+    {
+        if (is_eof(pos))
+            return Position::eof;
+
+        size_t temp_pos = pos - delta;
+        if (temp_pos > pos || temp_pos < min_pos)
+            return Position::eof;
+
+        return pos - delta;
+    };
+public:
+    static Position eof;
+
+    Position()
+    {
+    }
+
+    Position(size_t p)
+    {
+        pos = p;
+    }
+
+    Position(Position& p)
+    {
+        pos = p.pos;
+    }
+
+    Position(const Position& p)
+    {
+        pos = p.pos;
+    }
+
+    inline Position& operator = (const Position& p)
+    {
+        pos = p.pos;
+        min_pos = p.min_pos;
+        max_pos = p.max_pos;
+        return *this;
+    }
+
+    inline operator size_t () const { return pos; }
+    inline operator string () const { return to_string(pos); }
+
+    inline Position& operator ++()
+    {
+        pos = inc(1);
+        return *this;
+    }
+
+    inline const Position& operator --()
+    {
+        pos = dec(1);
+        return *this;
+    }
+
+    inline Position& operator +=(size_t delta)
+    {
+        pos = inc(delta);
+        return *this;
+    }
+
+    inline const Position& operator -=(size_t delta)
+    {
+        pos = dec(delta);
+        return *this;
+    }
+
+    inline Position& operator +=(const Position& delta)
+    {
+        pos = inc(delta.pos);
+        return *this;
+    }
+
+    inline const Position& operator -=(const Position& delta)
+    {
+        pos = dec(delta.pos);
+        return *this;
+    }
+
+    inline void set_min(size_t m) { min_pos = m; }
+    inline void set_max(size_t m) { max_pos = m; }
+
+    inline size_t get_min() const { return min_pos; }
+    inline size_t get_max() const { return max_pos; }
+
+    inline void set_eof() { pos = Position::eof; }
+    inline bool is_eof() const { return is_eof(pos); }
+    inline bool is_eof(size_t p) const { return !(min_pos <= p && p <= max_pos) || p == Position::eof; }
+
+    inline void set_to_min() { pos = min_pos; }
+    inline void set_to_max() { pos = max_pos; }
+
+    void reset()
+    {
+        size_t pos = 0;
+        size_t min_pos = 0;
+        size_t max_pos = SIZE_MAX - 1;
+    }
+};
 
 template <class T> bool AreEqual(const T& a, const T& b)
 {
@@ -20,25 +141,22 @@ template <class T> bool AreEqual(const T& a, const T& b)
 }
 
 const string space_pattern = " \t\n\r;:.,?!";
-using posMap = map<string, size_t>;
+using posMap = map<string, Position>;
 using strVector = vector<string>;
 using find_func = function<size_t(const string&, const string&, size_t)>;
 
 class Cursor
 {
 protected:
-    posMap positions;
+    posMap labels;
     string& text;
-    size_t pos = 0;
+    Position pos;
     string name;
-    size_t min_ = 0;
-    size_t max_ = ULLONG_MAX - 1;
 
-    size_t rfind_first_of(const string& pattern, size_t p);
+    Position rfind_first_of(const string& pattern, const Position & p);
     void check_cursor(const Cursor& c);
-    size_t multi_find(const std::vector<std::string>& pattern, find_func func);
-    int find_count(const std::string& pattern, size_t from_pos, size_t until_pos, find_func func);
-
+    Position multi_find(const vector<string>& pattern, find_func func);
+    int find_count(const string& pattern, const Position& from_pos, const Position& until_pos, find_func func);
 
 public:
     Cursor(Text& t);
@@ -58,10 +176,12 @@ public:
     Cursor& operator -= (size_t p);
     size_t operator - (size_t p);
     Cursor& operator -- ();
-    bool operator == (size_t p);
-    bool operator != (size_t p);
+
     Cursor& operator = (const Cursor& c);
     Cursor& operator = (size_t p);
+
+    bool operator == (size_t p);
+    bool operator != (size_t p);
     bool operator < (size_t p);
     bool operator <= (size_t p);
     bool operator >= (size_t p);
@@ -69,7 +189,7 @@ public:
 
     Cursor& move_to(size_t p);
     Cursor& move_to(const string& pattern, find_func func);
-    Cursor& move_to(const std::vector<std::string>& pattern, find_func func);
+    Cursor& move_to(const vector<string>& pattern, find_func func);
     // pattern1 = {, pattern2 =}, moves pos to } ; from here ->{ {abcd} ->}<- to here }
     Cursor& move_to(const string& pattern1, const string& pattern2, find_func func);
 
@@ -77,7 +197,7 @@ public:
     Cursor& move_until(const string& pattern);
 
     Cursor& move_to_end(const string& pattern, find_func func);
-    Cursor& move_to_end(const std::vector<std::string>& pattern, find_func func);
+    Cursor& move_to_end(const vector<string>& pattern, find_func func);
 
     Cursor& next_word(const string& pattern);
     Cursor& next_word();
@@ -106,7 +226,7 @@ public:
 
     void label(const string& key);
     bool goto_label(const string& key);
-    size_t operator [](const string& key);
+    const Position& operator [](const string& key);
     size_t label_size();
 
     bool is_eof();
@@ -114,17 +234,22 @@ public:
     bool is_eof(size_t p);
     bool is_eof(size_t p) const;
 
-    inline operator size_t() const
+    inline operator const Position& () const
     {
         return pos;
     }
 
-    inline size_t get_pos() const
+    inline operator size_t () const
     {
         return pos;
     }
 
-    inline const string& get_text() const
+    inline const Position& get_pos() const
+    {
+        return pos;
+    }
+
+    const string& get_text() const
     {
         return text;
     }
@@ -141,30 +266,28 @@ public:
         return name;
     }
 
-    bool set_range_limit(void);
-    bool set_range_limit(size_t mi, size_t ma);
-    bool set_range_limit(const string& mi, const string& ma);
+    //inline operator bool() const
+    //{
+    //    return check_range();
+    //}
 
-    void set_min_range_limit(size_t m);
-    bool set_min_range_limit(const string& m);
+    bool set_range(size_t min, size_t max);
+    void set_min_range(size_t m);
+    void set_max_range(size_t m);
 
-    void set_max_range_limit(size_t m);
-    bool set_max_range_limit(const string& m);
+    size_t get_min_range() const;
+    size_t get_max_range() const;
 
-    size_t get_min_range_limit() const;
-    size_t get_max_range_limit() const;
-
-    void reset_range_limit();
+    void reset();
 
     bool check_range();
-    bool check_range() const; //doesn't set pos to npos
+    bool check_range() const; 
 
-    bool check_range(size_t& p);
-    bool check_range(size_t p) const;//doesn't set pos to npos
+    bool check_range(size_t p);
+    bool check_range(size_t p) const;
 
     inline void set_eof()
     {
-        pos = string::npos;
+        pos = Position::eof;
     }
-
 };

@@ -25,7 +25,6 @@ class Text
     el_types find_endl_type();
 protected:
     void check_cursor(const Cursor&);
-    bool is_eof(size_t);
 public:
     Text();
     Text(const string&);
@@ -57,7 +56,7 @@ public:
 
     void erase(const Cursor& pos, size_t count);
     void erase_between(const Cursor& from, const Cursor& to);
-    Cursor erase_line(const Cursor& pos);
+    void erase_line(const Cursor& pos);
     void clear();
 
     el_types get_endl_type() const { return original_endl; }

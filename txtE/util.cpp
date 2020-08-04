@@ -80,7 +80,8 @@ std::string get_options_value(const std::string& opt)
     }
 
     throw std::runtime_error("No command line option : \"" + opt + "\"");
-    //return "";
+
+    return "";//
 }
 
 std::vector<std::string> get_options_values(const std::string& opt)
@@ -178,7 +179,7 @@ m->add(chaiscript::fun(static_cast<void (*)(bool, const std::string&)>(&exit_if)
 m->add(chaiscript::type_conversion<std::vector<chaiscript::Boxed_Value>, std::vector<std::string>>(
     [](const std::vector<chaiscript::Boxed_Value>& vec) {
         std::vector < std::string > ret;
-        for (const auto& bv : vec) ret.emplace_back(boxed_cast<std::string>(bv));
+        for (const auto& bv : vec) ret.emplace_back(chaiscript::boxed_cast<std::string>(bv));
         return ret;})
 );
 

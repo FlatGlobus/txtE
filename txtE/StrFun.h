@@ -5,12 +5,14 @@
 #include <string>
 #include <chaiscript/chaiscript.hpp>
 
+//////////////////////////////////////////////////////////////////////////
+using namespace std;
 namespace strfun
 {
-    size_t regex_search(const std::string& str, const std::string& pattern, size_t pos);
-    size_t find(const std::string& str, const std::string& pattern, size_t pos);
-    size_t rfind(const std::string& str, const std::string& pattern, size_t pos);
-    size_t find_first_not_of(const std::string& str, const std::string& pattern, size_t pos);
-    size_t find_last_of(const std::string& str, const std::string& pattern, size_t pos);
-    size_t find_last_not_of(const std::string& str, const std::string& pattern, size_t pos);
+    size_t regex_search(const string& str, const string& pattern, size_t pos);
+    size_t find(const string& str, const string& pattern, size_t pos);
+    size_t rfind(const string& str, const string& pattern, size_t pos);
+    size_t find_first_not_of(const string& str, const string& pattern, size_t pos);
+    size_t find_last_of(const string& str, const string& pattern, size_t pos);
+    size_t find_last_not_of(const string& str, const string& pattern, size_t pos);
 }

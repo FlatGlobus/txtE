@@ -8,6 +8,9 @@ global MENUITEM = 4;
 global DIALOG = 5;
 global CONTROL = 6;
 global STRING = 7;
+global CURSOR = 8;
+global TOOLBAR = 9;
+global BUTTON = 10;
 
 class ResItem
 {
@@ -69,85 +72,114 @@ def make_rc_id_string(rc_item)
 //////////////////////////////////////////////////
 def load_rc(cursor, IDs)
 {
+	//type text id
+	var dlg_ctrl1 = ["AUTO3STATE","AUTOCHECKBOX","AUTORADIOBUTTON","CHECKBOX","CONTROL","CTEXT","DEFPUSHBUTTON","GROUPBOX","ICON","LTEXT","PUSHBOX","PUSHBUTTON","RADIOBUTTON","RTEXT","STATE3","CONTROL"];
+	//type id
+	var dlg_ctrl2 = ["COMBOBOX","EDITTEXT","LISTBOX","SCROLLBAR"];
+
 	cursor.begin();
 	while(cursor)
 	{
 		var ID = "";
 		var found = false;
-		cursor.move_to_begin_of_line();
 		//BITMAP
-		if(Query(cursor) && Is(iscsym,-1, ID) && Is(isspace) && Exact("BITMAP") && Is(isspace) && Exact("\""))
+		if(Query(cursor.move_to_begin_of_line()) && Is(iscsym,-1, ID) && Is(isspace) && Exact("BITMAP") && Is(isspace) && Exact("\""))
 		{
+			print("BITMAP : " + ID);
 			if(IDs.count(ID) > 0)
 			{
 				IDs[ID].type = BITMAP;
-				print("BITMAP : " + ID);
 			}
 			found = true;
 		}
-		cursor.move_to_begin_of_line();
 		//ICON
-		if(found == false && Query(cursor) && Is(iscsym,-1, ID) && Is(isspace) && Exact("ICON") && Is(isspace) && Exact("\""))
+		if(found == false && Query(cursor.move_to_begin_of_line()) && Is(iscsym,-1, ID) && Is(isspace) && Exact("ICON") && Is(isspace) && Exact("\""))
 		{
+			print("ICON : " + ID);
 			if(IDs.count(ID) > 0)
 			{
 				IDs[ID].type = ICON;
-				print("ICON : " + ID);
 			}
+			found = true;
 		}
-
-		cursor.move_to_begin_of_line();
-		//MENU
-		if(found == false && Query(cursor) && Is(iscsym,-1, ID) && Is(isspace) && Exact("MENU"))
+		//CURSOR
+		if(found == false && Query(cursor.move_to_begin_of_line()) && Is(iscsym,-1, ID) && Is(isspace) && Exact("CURSOR") && Is(isspace) && Exact("\""))
 		{
+			print("CURSOR : " + ID);
+			if(IDs.count(ID) > 0)
+			{
+				IDs[ID].type = CURSOR;
+			}
+			found = true;
+		}
+		//MENU
+		if(found == false && Query(cursor.move_to_begin_of_line()) && Is(iscsym,-1, ID) && Is(isspace) && Exact("MENU"))
+		{
+			print("MENU : " + ID);
 			if(IDs.count(ID) > 0)
 			{
 				IDs[ID].type = MENU;
-				print("MENU : " + ID);
 			}
+			found = true;
 		}
-
-		cursor.move_to_begin_of_line();
 		//MENUITEM
-		if(found == false && Query(cursor) && Is(isspace) && Exact("MENUITEM") && cursor.move_to_end("\",", find) && Is(isspace) && Is(iscsym,-1, ID))
+		if(found == false && Query(cursor.move_to_begin_of_line()) && Is(isspace) && Exact("MENUITEM") && cursor.move_to_end("\",", find) && Is(isspace) && Is(iscsym,-1, ID))
 		{
+			print("MENUITEM : " + ID);
 			if(IDs.count(ID) > 0)
 			{
 				IDs[ID].type = MENUITEM;
-				print("MENUITEM : " + ID);
+			}
+			found = true;
+		}
+		//TOOLBAR
+		if(found == false && Query(cursor.move_to_begin_of_line()) && Is(iscsym,-1, ID) && Is(isspace) && Exact("TOOLBAR"))
+		{
+			print("TOOLBAR : " + ID);
+			if(IDs.count(ID) > 0)
+			{
+				IDs[ID].type = TOOLBAR;
+			}
+			found = true;
+		}
+		//TOOLBAR BUTTON
+		if(found == false && Query(cursor.move_to_begin_of_line()) && Is(isspace) && Exact("BUTTON") && Is(isspace) && Is(iscsym,-1, ID))
+		{
+			print("BUTTON : " + ID);			
+			if(IDs.count(ID) > 0)
+			{
+				IDs[ID].type = BUTTON;
 			}
 		}
-
-		cursor.move_to_begin_of_line();
 		//DIALOG
-		if(found == false && Query(cursor) && Is(iscsym,-1, ID) && Is(isspace) && Exact("DIALOGEX"))
+		if(found == false && Query(cursor.move_to_begin_of_line()) && Is(iscsym,-1, ID) && Is(isspace) && Exact("DIALOGEX"))
 		{
+			print("DIALOG : " + ID);
 			if(IDs.count(ID) > 0)
 			{
 				IDs[ID].type = DIALOG;
-				print("DIALOG : " + ID);
 			}
+			found = true;
 		}
-
-		cursor.move_to_begin_of_line();
 		//CONTROL
-		if(found == false && Query(cursor) && Is(isspace) && Set(["PUSHBUTTON", "DEFPUSHBUTTON", "CONTROL", "LTEXT", "RTEXT", "GROUPBOX", "EDITTEXT"]) && cursor.move_to_end("\",", find) && Is(iscsym,-1, ID))
+		if(found == false && (Query(cursor.move_to_begin_of_line()) && Is(isspace) && Set(dlg_ctrl1) && cursor.move_to_end("\",", find) && Is(iscsym,-1, ID) ||
+		                      Query(cursor.move_to_begin_of_line()) && Is(isspace) && Set(dlg_ctrl2) && Is(isspace) && Is(iscsym,-1, ID)))
 		{
+			print("CONTROL : " + ID);	
 			if(IDs.count(ID) > 0)
 			{
 				IDs[ID].type = CONTROL;
-				print("CONTROL : " + ID);
 			}
+			found = true;
 		}
-		cursor.move_to_begin_of_line();
 		//STRING
-		if(found == false && Query(cursor) && Is(isspace) && Exact("IDS_") && Is(iscsym,-1, ID) && Is(isspace))
+		if(found == false && Query(cursor.move_to_begin_of_line()) && Is(isspace) && Exact("IDS_") && Is(iscsym,-1, ID) && Is(isspace))
 		{
 			ID = "IDS_"+ID;
+			print("STRING : " + ID);			
 			if(IDs.count(ID) > 0)
 			{
 				IDs[ID].type = STRING;
-				print("STRING : " + ID);
 			}
 		}
 		cursor.next_line();

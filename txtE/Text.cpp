@@ -112,7 +112,7 @@ string Text::get(const Cursor& start, size_t count)
 
     string str;
 
-    if (is_eof(start.get_pos() + count) == false)
+    if (start.check_range() && start.check_range(start + count))
     {
         str = text.substr(start, count);
     }
@@ -130,10 +130,8 @@ string Text::get_to_endl(const Cursor& start)
     string str;
     size_t pos = text.find(ENDL, start);
 
-    if (pos != string::npos)
-    {
-        str = text.substr(start, pos - start);
-    }
+    if (start.check_range() && start.check_range(pos))
+        str = text.substr(start, pos - (size_t)start);
 
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
 
@@ -146,27 +144,23 @@ string Text::get_line(const Cursor& start)
     check_cursor(start);
 
     string str;
-    size_t spos = text.rfind(ENDL, start);
-    size_t epos = text.find(ENDL, start);
 
-    spos = spos != string::npos ? spos + ENDL_SIZE : spos;
-    epos = epos != string::npos ? epos + ENDL_SIZE : epos;
+    if (start.check_range() == false)
+        return str;
 
-    if (epos != string::npos && spos == string::npos)
-        spos = 0;
-    else
-        if (epos == string::npos && spos != string::npos)
-            epos = text.size() - ENDL_SIZE;
-        else
-            if (epos == spos)
-            {
-                spos -= 1;
-                //epos += ENDL_SIZE;
-            }
+    Position spos = start;
+    Position epos = start;
 
-    if (spos != string::npos && epos != string::npos && (spos <= epos))
+    spos = text.rfind(ENDL, start);
+    epos = text.find(ENDL, start);
+
+    spos += ENDL_SIZE;
+    epos -= ENDL_SIZE;
+
+    if (start.check_range(epos) && start.check_range(spos))
     {
-        str = text.substr(spos, epos - spos);
+        if (spos <= epos)
+            str = text.substr(spos, epos - spos);
     }
 
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
@@ -178,17 +172,19 @@ string Text::get_word(const Cursor& pos)
 {
     TRACE_FUNC;
     check_cursor(pos);
-
-    Cursor s(*this);
-    Cursor e(*this);
+   
     string str;
 
-    s = pos;
-    e = pos;
+    if (pos.check_range() == false)
+        return str;
+
+    Cursor s = pos;
+    Cursor e = pos;
+
     s.move_to_begin_of_word();
     e.move_to_end_of_word();
 
-    if (s.is_eof() == false && e.is_eof() == false)
+    if (s.check_range() && e.check_range())
     {
         str = text.substr(s, e - s);
     }
@@ -221,9 +217,14 @@ void Text::set(const Cursor& pos, const string& str)
     TRACE_FUNC;
     check_cursor(pos);
 
+    if (pos.check_range() == false)
+        return;
+
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
     for (size_t i = 0; i < str.size() && (pos + i) < text.size(); i++)
     {
+        if (pos.check_range(pos + i) == false)
+            break;
         text[pos + i] = str[i];
         changed = true;
     }
@@ -233,36 +234,50 @@ void Text::set_line(const Cursor& pos, const string& str)
 {
     TRACE_FUNC;
     check_cursor(pos);
+    if (pos.check_range() == false)
+        return;
 
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
-    Cursor start_line = erase_line(pos);
-    if (start_line.is_eof() == false)
-    {
-        insert(start_line, str);
+    erase_line(pos);
+
+    size_t spos = text.rfind(ENDL, pos);
+
+    spos = spos != string::npos ? spos + ENDL_SIZE : spos;
+    if (pos.check_range(spos))
+    {   
+        Cursor pos1 = pos;
+        pos1 = spos;
+        insert(pos1, str);
     }
 }
 
-void Text::insert(const Cursor& start, const string& str)
+void Text::insert(const Cursor& pos, const string& str)
 {
     TRACE_FUNC;
-    check_cursor(start);
+    check_cursor(pos);
+
+    if (pos.check_range() == false)
+        return;
 
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
 
-    text.insert(start, str);
+    text.insert(pos, str);
     changed = true;
 }
 
-void Text::insert_line(const Cursor& start, const string& str)
+void Text::insert_line(const Cursor& pos, const string& str)
 {
     TRACE_FUNC;
-    check_cursor(start);
+    check_cursor(pos);
 
-    size_t pos = text.find(ENDL, start);
+    if (pos.check_range() == false)
+        return;
 
-    if (pos != string::npos)
+    size_t p = text.find(ENDL, pos);
+
+    if (pos.check_range(p))
     {
-        text.insert(pos, ENDL + str);
+        text.insert(p, ENDL + str);
         changed = true;
     }
 }
@@ -291,6 +306,9 @@ void Text::erase(const Cursor& pos, size_t count)
     TRACE_FUNC;
     check_cursor(pos);
 
+    if (pos.check_range() == false || pos.check_range(pos + count) == false)
+        return;
+
     text.erase(pos, count);
     changed = true;
 }
@@ -301,85 +319,96 @@ void Text::erase_between(const Cursor& from, const Cursor& to)
     check_cursor(from);
     check_cursor(to);
 
-    text.erase(std::min((size_t)from, (size_t)to), std::max((size_t)from, (size_t)to) - std::min((size_t)from, (size_t)to));
+    if (from.check_range() == false || to.check_range() == false || to < from)
+        return;
+
+    text.erase(from, to - from);
     changed = true;
 }
 
-Cursor Text::erase_line(const Cursor& pos)
+void Text::erase_line(const Cursor& pos)
 {
     TRACE_FUNC;
     check_cursor(pos);
+
+    if (pos.check_range() == false)
+        return;
 
     Cursor ret(pos);
     size_t spos = text.rfind(ENDL, pos);
     size_t epos = text.find(ENDL, pos);
 
     spos = spos != string::npos ? spos + ENDL_SIZE : spos;
-    if (spos != string::npos && epos != string::npos && (spos <= epos))
+    if (pos.check_range(spos) && pos.check_range(epos) && spos <= epos)
     {
         text.erase(spos, epos - spos);
-        ret = spos;
         changed = true;
     }
-    else
-    {
-        ret = string::npos;
-    }
-
-    return ret;
 }
 
-Cursor Text::diff(const Cursor& start, const string& text1, string & result)
+Cursor Text::diff(const Cursor& pos, const string& text1, string & result)
 {
     TRACE_FUNC;
 
     result.clear();
-    Cursor found_cur(start);
+    Cursor found_cur(pos);
     found_cur.set_eof();
+
+    if (pos.check_range() == false)
+        return found_cur;
 
     size_t i = 0;
     size_t found_idx = string::npos;
 
-    for (;start + i < text.size() && i < text1.size(); ++i)
+    for (;pos + i < text.size() && i < text1.size(); ++i)
     {
-        if (text[start + i] == text1[i] && found_idx != string::npos)
+        if (pos.check_range(pos + i) == false)
+            break;
+
+        if (text[pos + i] == text1[i] && found_idx != string::npos)
         {
             break;
         }
 
-        if (text[start + i] != text1[i])
+        if (text[pos + i] != text1[i])
         {
             result += text1[i];
-            found_cur = found_idx = start + i;
+            found_cur = found_idx = pos + i;
         }
     }
 
     return found_cur;
 }
 
-Cursor Text::diff(const Cursor& start, const Text& text1, string& result)
+Cursor Text::diff(const Cursor& pos, const Text& text1, string& result)
 {
     TRACE_FUNC;
 
     result.clear();
 
-    Cursor found_cur(start);
+    Cursor found_cur(pos);
     found_cur.set_eof();
+
+    if (pos.check_range() == false)
+        return found_cur;
 
     size_t i = 0;
     size_t found_idx = string::npos;
 
-    for (; start + i < text.size() && start + i < text1.text.size(); ++i)
+    for (; pos + i < text.size() && pos + i < text1.text.size(); ++i)
     {
-        if (text[start + i] == text1.text[i] && found_idx != string::npos)
+        if (pos.check_range(pos + i) == false)
+            break;
+
+        if (text[pos + i] == text1.text[i] && found_idx != string::npos)
         {
             break;
         }
 
-        if (text[start + i] != text1.text[i])
+        if (text[pos + i] != text1.text[i])
         {
             result += text1.text[i];
-            found_cur = found_idx = start + i;
+            found_cur = found_idx = pos + i;
         }
     }
 
@@ -391,17 +420,6 @@ void Text::clear()
     TRACE_FUNC;
     text.clear();
     changed = true;
-}
-
-bool Text::is_eof(size_t p)
-{
-    bool ret = text.size() <= (size_t)p || p == string::npos;
-    if (enable_trace)
-    {
-        cout << "Text::is_eof(size_t " << p << ") returned " << ret << endl;
-    }
-
-    return ret;
 }
 
 el_types Text::find_endl_type()
