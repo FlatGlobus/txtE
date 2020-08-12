@@ -194,7 +194,7 @@ public:
     Cursor& move_to(size_t p);
     Cursor& move_to(const string& pattern, find_func func);
     Cursor& move_to(const vector<string>& pattern, find_func func);
-    // pattern1 = {, pattern2 =}, moves pos to } ; from here ->{ {abcd} ->}<- to here }
+    // pattern1 = {, pattern2 =}, moves pos to } ; from here ->{ {abcd} ->}<- to here }, count { must be == count }
     Cursor& move_to(const string& pattern1, const string& pattern2, find_func func);
 
     Cursor& move_while(const string& pattern);

@@ -691,7 +691,6 @@ void Cursor::set_min_range(size_t min)
 void Cursor::set_max_range(size_t max)
 {
     TRACE_FUNC;
-
     pos.set_max(max);
     TRACE_OUT << " max = " << max TRACE_END;
 }
@@ -792,7 +791,6 @@ m->add(chaiscript::fun(&Cursor::to_string), "to_string");
 
 m->add(chaiscript::fun(&Cursor::set_name), "set_name");
 m->add(chaiscript::fun(&Cursor::get_name), "get_name");
-
 
 m->add(chaiscript::fun(static_cast<bool(Cursor::*)(size_t, size_t)>(&Cursor::set_range)), "set_range");
 m->add(chaiscript::fun(static_cast<bool(Cursor::*)(size_t, size_t)>(&Cursor::set_range)), "set_range");

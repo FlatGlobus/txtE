@@ -52,3 +52,50 @@ else
 	print("Range:false");
 }
 
+var txt = Text();
+txt.load("txt.txt");
+var txt_cur = Cursor(txt);
+
+if(Query(txt_cur) && Word(ret))
+{
+	print("Word:true \"" + ret +"\"");	
+}
+else
+{
+	print("Word:false");
+}
+
+if(Query(txt_cur) && Space())
+{
+	print("Space:true ");	
+}
+else
+{
+	print("Space:false");
+}
+
+print("print 5 words");
+txt_cur = 0;
+Query(txt_cur);
+for(var i =0; i < 5; ++i)
+{
+	if(Word(ret) && Space())
+	{
+		print(ret);
+	}
+}
+
+if(Starts("Section") && Space() && Number(ret))
+{
+	print("Starts:true \"" + ret + "\"");
+}
+else
+{
+	print("Starts:false");
+}
+
+txt_cur = 0;
+if( Count(213, [Word(), Space()]) )
+{
+	print("Count: 213 true");
+}

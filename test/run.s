@@ -1,8 +1,8 @@
 //query tests
-//use("query.s");
+use("query.s");
 
 //file tests
 //use("file.s");
 
 //text tests
-use("text.s");
+//use("text.s");

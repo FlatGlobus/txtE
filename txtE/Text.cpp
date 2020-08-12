@@ -111,7 +111,6 @@ string Text::get(const Cursor& start, size_t count)
     check_cursor(start);
 
     string str;
-
     if (start && start.is_eof(start + count) == false)
     {
         str = text.substr(start, count);

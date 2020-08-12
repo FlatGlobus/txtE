@@ -10,6 +10,7 @@
 #include <tchar.h>
 #include <boost/algorithm/string/replace.hpp>
 
+using namespace std;
 //////////////////////////////////////////////////////////////////////////
 //https://habr.com/ru/post/131977/
 class MakeString
@@ -21,57 +22,66 @@ public:
         m_stream << arg;
         return *this;
     }
-    operator std::string() const
+    operator string() const
     {
         return m_stream.str();
     }
 protected:
-    std::stringstream m_stream;
+    stringstream m_stream;
 };
 
 #define ENDL "\n"
 #define ENDL_SIZE 1
 
 extern bool enable_trace;
-extern size_t _MAX_TRACE_TEXT_SIZE;
+extern size_t _TRACE_TEXT_DELTA;
 
-inline std::string _text_at(const std::string & text, size_t pos)
+inline string _text_at(const string & text, size_t pos)
 {
-    std::string _s;
+    string s;
     if (pos < text.size())
     {
-        _s = text.substr(pos, std::min(_MAX_TRACE_TEXT_SIZE, text.size() - pos));
-        boost::replace_all(_s, "\r", "");
+        size_t left = pos > _TRACE_TEXT_DELTA ? pos - _TRACE_TEXT_DELTA : 0;
+        s += text.substr(left, pos - left);
+        s += ">|<";
+        s += text.substr(pos, min(_TRACE_TEXT_DELTA, text.size() - pos));
+
+        boost::replace_all(s, "\r", "");
     }
     else
     {
-        _s = "EOF";
+        s = "EOF";
     }
 
-    return _s;
+    return s;
 }
 
 class _Trace
 {
     const char* func_name;
+    static size_t level;
 public:
     _Trace(const char* s):func_name(s)
     {
-        if (enable_trace) std::cout << "---> " << func_name << std::endl;
+        if (enable_trace) cout << tab(">") << ">" << func_name << endl;
+        ++level;
     }
+
     ~_Trace()
     {
-        if (enable_trace) std::cout << "<--- " << func_name << std::endl << std::endl;
+        level--;
+        if (enable_trace) cout << tab("<") << "<" << func_name << endl << endl;
     }
+    static string tab(string sym = " ");
 };
 
 #define _ENABLE_TRACE  // comment this to disable tracing
 
 #ifdef _ENABLE_TRACE
 #define TRACE_FUNC _Trace _tTr(__FUNCTION__);
-#define TRACE_POS(pos_val) if(enable_trace) { std::cout << "pos = " << pos_val << "\n" << "text = \"" << _text_at(text, pos_val) << "\"" << std::endl;}
-#define TRACE_OUT if (enable_trace) { std::cout
-#define TRACE_END << std::endl;}
+#define TRACE_POS(pos_val) if(enable_trace) { cout << _Trace::tab() << "pos = " << pos_val << "; text = \"" << _text_at(text, pos_val) << "\"" << endl;}
+#define TRACE_OUT if (enable_trace) { cout << _Trace::tab()
+#define TRACE_END << endl;}
 #else
 #define TRACE_FUNC 
 #define TRACE_POS(pos_val) 
@@ -83,11 +93,11 @@ public:
 class ChaiEngine
 {
 protected:
-    using module_type = std::list<ChaiEngine*>;
+    using module_type = list<ChaiEngine*>;
     static module_type *_modules;
-    chaiscript::ModulePtr m = std::make_shared<chaiscript::Module>();
-    static std::unique_ptr<chaiscript::ChaiScript> engine;
-    static std::vector<std::string>* program_options;
+    chaiscript::ModulePtr m = make_shared<chaiscript::Module>();
+    static unique_ptr<chaiscript::ChaiScript> engine;
+    static vector<string>* program_options;
 
     virtual void register_module() = 0;
     static void init_std();
@@ -99,7 +109,7 @@ public:
 
         _modules->push_front(this);
 
-        program_options = new std::vector<std::string>();
+        program_options = new vector<string>();
     }
     
     ~ChaiEngine()
@@ -116,7 +126,7 @@ public:
         }
     }
         
-    static std::vector<std::string> * get_program_options();
+    static vector<string> * get_program_options();
     static chaiscript::ChaiScript* get_engine();
     static void start();
     static void stop();

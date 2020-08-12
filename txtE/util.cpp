@@ -2,11 +2,15 @@
 #include "chaiscript/extras/string_methods.hpp"
 #include <chaiscript/chaiscript.hpp>
 #include <intrin.h>
+#include "strtk/strtk.hpp"
 
 //////////////////////////////////////////////////////////////////////////
 ChaiEngine::module_type * ChaiEngine::_modules;
-std::unique_ptr<chaiscript::ChaiScript> ChaiEngine::engine;
-std::vector<std::string>* ChaiEngine::program_options = nullptr;
+unique_ptr<chaiscript::ChaiScript> ChaiEngine::engine;
+vector<string>* ChaiEngine::program_options = nullptr;
+size_t _Trace::level = 0;
+
+string _Trace::tab(string sym) { return strtk::replicate(level, sym); }
 
 void ChaiEngine::start()
 {
@@ -29,11 +33,11 @@ void ChaiEngine::stop()
 chaiscript::ChaiScript* ChaiEngine::get_engine()
 {
     if (ChaiEngine::engine == nullptr)
-        ChaiEngine::engine = std::make_unique<chaiscript::ChaiScript>();
+        ChaiEngine::engine = make_unique<chaiscript::ChaiScript>();
 	return ChaiEngine::engine.get();
 }
 
-std::vector<std::string>* ChaiEngine::get_program_options()
+vector<string>* ChaiEngine::get_program_options()
 {
     return program_options;
 }
@@ -42,27 +46,27 @@ void  ChaiEngine::init_std()
 {
     auto stringmethods = chaiscript::extras::string_methods::bootstrap();
     ChaiEngine::get_engine()->add(stringmethods);
-    ChaiEngine::get_engine()->add(chaiscript::bootstrap::standard_library::vector_type<std::vector<std::string>>("VectorString"));
-	ChaiEngine::get_engine()->add(chaiscript::bootstrap::standard_library::string_type<std::wstring>("wstring"));
+    ChaiEngine::get_engine()->add(chaiscript::bootstrap::standard_library::vector_type<vector<string>>("VectorString"));
+	ChaiEngine::get_engine()->add(chaiscript::bootstrap::standard_library::string_type<wstring>("wstring"));
 }
 //////////////////////////////////////////////////////////////////////////
-size_t _MAX_TRACE_TEXT_SIZE = 32;
+size_t _TRACE_TEXT_DELTA = 8;
 bool enable_trace = false;
 
 void trace(bool t)
 {
     enable_trace = t;
 #ifndef _ENABLE_TRACE
-    std::cout << "----trace is disabled----" << std::endl;
+    cout << "----trace is disabled----" << endl;
 #endif
 }
 
-void set_max_trace_text_size(size_t sz)
+void set_trace_text_delta(size_t sz)
 {
-    _MAX_TRACE_TEXT_SIZE = sz;
+    _TRACE_TEXT_DELTA = sz;
 }
 
-std::string get_options_value(const std::string& opt)
+string get_options_value(const string& opt)
 {
     TRACE_FUNC;
     bool found = false;
@@ -79,16 +83,16 @@ std::string get_options_value(const std::string& opt)
         }
     }
 
-    throw std::runtime_error("No command line option : \"" + opt + "\"");
+    throw runtime_error("No command line option : \"" + opt + "\"");
 
     return "";//
 }
 
-std::vector<std::string> get_options_values(const std::string& opt)
+vector<string> get_options_values(const string& opt)
 {
     TRACE_FUNC;
     bool found = false;
-    std::vector<std::string> values;
+    vector<string> values;
     for (auto value : *ChaiEngine::get_program_options())
     {
         if (found == true && value.size() > 0 && value[0] != '-')
@@ -109,12 +113,12 @@ std::vector<std::string> get_options_values(const std::string& opt)
     }
 
     if(values.size())
-        throw std::runtime_error("No arguments for command line option : \"" + opt + "\"");
+        throw runtime_error("No arguments for command line option : \"" + opt + "\"");
 
     return values;
 }
 
-bool is_options_key_exist(const std::string& opt)
+bool is_options_key_exist(const string& opt)
 {
     TRACE_FUNC;
     for (auto value : *ChaiEngine::get_program_options())
@@ -127,7 +131,7 @@ bool is_options_key_exist(const std::string& opt)
     return false;
 }
 
-bool member(const std::string & member, const std::vector<std::string>& set_of_members)
+bool member(const string & member, const vector<string>& set_of_members)
 {
     TRACE_FUNC;
 
@@ -147,17 +151,19 @@ bool member(const std::string & member, const std::vector<std::string>& set_of_m
 //////////////////////////////////////////////////////////////////////////
 void exit_if(bool flag)
 {
+    TRACE_FUNC;
     if (flag)
     {
-        throw std::runtime_error("Exit with condition.");
+        throw runtime_error("Exit with condition.");
     }
 }
 
-void exit_if(bool flag, const std::string& msg)
+void exit_if(bool flag, const string& msg)
 {
+    TRACE_FUNC;
     if (flag)
     {
-        throw std::runtime_error(msg);
+        throw runtime_error(msg);
     }
 }
 
@@ -165,7 +171,7 @@ void exit_if(bool flag, const std::string& msg)
 DECLARE_MODULE(THINGS)
 m->add(chaiscript::type_conversion<int, size_t>([](const int& t_bt) { return size_t(t_bt); }));
 m->add(chaiscript::fun(trace), "trace");
-m->add(chaiscript::fun(set_max_trace_text_size), "trace_text_size");
+m->add(chaiscript::fun(set_trace_text_delta), "trace_text_delta");
 m->add(chaiscript::fun([]() {__debugbreak(); }), "debugbreak");
 m->add(chaiscript::fun(get_options_value), "get_options_value");
 m->add(chaiscript::fun(get_options_values), "get_options_values");
@@ -174,12 +180,12 @@ m->add(chaiscript::fun(member), "member");
 m->add_global_const(chaiscript::const_var(ENDL), "endl");
 
 m->add(chaiscript::fun(static_cast<void (*)(bool)>(&exit_if)), "exit_if");
-m->add(chaiscript::fun(static_cast<void (*)(bool, const std::string&)>(&exit_if)), "exit_if");
+m->add(chaiscript::fun(static_cast<void (*)(bool, const string&)>(&exit_if)), "exit_if");
 
-m->add(chaiscript::type_conversion<std::vector<chaiscript::Boxed_Value>, std::vector<std::string>>(
-    [](const std::vector<chaiscript::Boxed_Value>& vec) {
-        std::vector < std::string > ret;
-        for (const auto& bv : vec) ret.emplace_back(chaiscript::boxed_cast<std::string>(bv));
+m->add(chaiscript::type_conversion<vector<chaiscript::Boxed_Value>, vector<string>>(
+    [](const vector<chaiscript::Boxed_Value>& vec) {
+        vector < string > ret;
+        for (const auto& bv : vec) ret.emplace_back(chaiscript::boxed_cast<string>(bv));
         return ret;})
 );
 

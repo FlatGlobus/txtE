@@ -1,6 +1,5 @@
-var text1 = "abcd klmn";
-var text2 = "abcd koprst";
-var text = Text(text1);
+var text = Text();
+text.load("txt.txt");
 var cursor  = Cursor(text);
 
 var difference = "";

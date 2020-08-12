@@ -11,6 +11,22 @@ global STRING = 7;
 global CURSOR = 8;
 global TOOLBAR = 9;
 global BUTTON = 10;
+//
+var NEXT_RESOURCE_VALUE = 101;
+var NEXT_RESOURCE_VALUE_MAX = 0x6FFF;
+
+var NEXT_COMMAND_VALUE = 40001;
+var NEXT_COMMAND_VALUE_MAX = 0xDFFF;
+
+var NEXT_CONTROL_VALUE = 1000;
+var NEXT_CONTROL_VALUE_MAX = 0xDFFF;
+
+var NEXT_SYMED_VALUE = 101;
+
+var dlg_ctrl1 = ["AUTO3STATE","AUTOCHECKBOX","AUTORADIOBUTTON","CHECKBOX","CONTROL","CTEXT","DEFPUSHBUTTON","GROUPBOX","ICON","LTEXT","PUSHBOX","PUSHBUTTON","RADIOBUTTON","RTEXT","STATE3","CONTROL"];
+var dlg_ctrl2 = ["COMBOBOX","EDITTEXT","LISTBOX","SCROLLBAR"];
+
+//
 
 class ResItem
 {
@@ -40,7 +56,6 @@ def load_ids(cursor)
 {
 	var IDs = Map();
 	var line = 0;
-
 	cursor.begin();
 	while(cursor)
 	{
@@ -73,10 +88,10 @@ def make_rc_id_string(rc_item)
 def load_rc(cursor, IDs)
 {
 	//type text id
-	var dlg_ctrl1 = ["AUTO3STATE","AUTOCHECKBOX","AUTORADIOBUTTON","CHECKBOX","CONTROL","CTEXT","DEFPUSHBUTTON","GROUPBOX","ICON","LTEXT","PUSHBOX","PUSHBUTTON","RADIOBUTTON","RTEXT","STATE3","CONTROL"];
+	
 	//type id
-	var dlg_ctrl2 = ["COMBOBOX","EDITTEXT","LISTBOX","SCROLLBAR"];
 
+	trace(true);
 	cursor.begin();
 	while(cursor)
 	{
@@ -184,6 +199,7 @@ def load_rc(cursor, IDs)
 		}
 		cursor.next_line();
 	}
+	trace(false);
 }
 //////////////////////////////////////////////////////
 def find_item_line(IDs, line_num)
@@ -214,94 +230,56 @@ def find_item_by_val(IDs, val)
 	return "";
 }
 //////////////////////////////////////////////////////
-//
-//var NEXT_RESOURCE_VALUE = 101;
-//var NEXT_COMMAND_VALUE = 40001;
-//var NEXT_CONTROL_VALUE = 1000;
-//var NEXT_SYMED_VALUE = 101;
-//
 print("start");
 if(program_options.size() == 0)
 {
 	print("Error: no command line");
 	return;
 }
-//from right to left
 
-var left_path = get_options_value("-l");
-var right_path = get_options_value("-r");
+var rc_path = get_options_value("-f");
 
-var left_h_fn = find_file(left_path, "resource.h");
-exit_if(exists(left_h_fn) == false, left_path + " " + "resource.h not found");
-var left_h = Text();
-left_h.load(left_h_fn);
-var left_h_cursor = Cursor(left_h);
+var h_fn = find_file(rc_path, "resource.h");
+exit_if(exists(h_fn) == false, rc_path + " " + "resource.h not found");
+var header = Text();
+header.load(h_fn);
+var h_cursor = Cursor(header);
 
-var right_h_fn = find_file(right_path, "resource.h");
-exit_if(exists(right_h_fn) == false, right_path + " " + "resource.h not found");
-var right_h = Text();
-right_h.load(right_h_fn);
-var right_h_cursor = Cursor(right_h);
+var rc_fn = find_file(rc_path, "*.rc");
+exit_if(exists(rc_fn) == false, rc_path + " " + "rc file not found");
+var rc = Text();
+rc.load(rc_fn);
+var rc_cursor = Cursor(rc);
 
-var left_rc_fn = find_file(left_path, "*.rc");
-exit_if(exists(left_rc_fn) == false, left_path + " " + "rc file not found");
-var left_rc = Text();
-left_rc.load(left_rc_fn);
-var left_rc_cursor = Cursor(left_rc);
+print("load h file");
+var IDs = load_ids(h_cursor);
 
-var right_rc_fn = find_file(right_path, "*.rc");
-exit_if(exists(right_rc_fn) == false, right_path + " " + "rc file not found");
-var right_rc = Text();
-right_rc.load(right_rc_fn);
-var right_rc_cursor = Cursor(right_rc);
-
-print("load h files");
-var left_IDs = load_ids(left_h_cursor);
-var right_IDs = load_ids(right_h_cursor);
-
-print("load rc files");
-load_rc(left_rc_cursor, left_IDs);
-load_rc(right_rc_cursor, right_IDs);
-
-for(item : left_IDs)
+print("load rc file");
+load_rc(rc_cursor, IDs);
+trace(true);
+h_cursor.begin();
+(h_cursor.move_to("_APS_NEXT_RESOURCE_VALUE", find))
 {
-	if(right_IDs.count(item.first) > 0)
-	{
-		right_IDs.erase(item.first);
-	}
+	NEXT_RESOURCE_VALUE = to_int(header.get_word(h_cursor.next_word()));
 }
 
-//merge h
-for(item : right_IDs)
+h_cursor.begin();
+if(h_cursor.move_to("_APS_NEXT_COMMAND_VALUE", find))
 {
-	left_h.insert_line(left_h_cursor.goto_line(item.second.line), make_rc_id_string(item));
-}
-//merge rc
-
-
-/*left_cursor.begin();
-if(left_cursor.move_to("_APS_NEXT_RESOURCE_VALUE", find))
-{
-	NEXT_RESOURCE_VALUE = to_int(left_rc_h.get_word(left_cursor.next_word()));
+	NEXT_COMMAND_VALUE = to_int(header.get_word(h_cursor.next_word()));
 }
 
-left_cursor.begin();
-if(left_cursor.move_to("_APS_NEXT_COMMAND_VALUE", find))
+h_cursor.begin();
+if(h_cursor.move_to("_APS_NEXT_CONTROL_VALUE", find))
 {
-	NEXT_COMMAND_VALUE = to_int(left_rc_h.get_word(left_cursor.next_word()));
+	NEXT_CONTROL_VALUE = to_int(header.get_word(h_cursor.next_word()));
 }
 
-left_cursor.begin();
-if(left_cursor.move_to("_APS_NEXT_CONTROL_VALUE", find))
+h_cursor.begin();
+if(h_cursor.move_to("_APS_NEXT_SYMED_VALUE", find))
 {
-	NEXT_CONTROL_VALUE = to_int(left_rc_h.get_word(left_cursor.next_word()));
+	NEXT_SYMED_VALUE = to_int(header.get_word(h_cursor.next_word()));
 }
 
-left_cursor.begin();
-if(left_cursor.move_to("_APS_NEXT_SYMED_VALUE", find))
-{
-	NEXT_SYMED_VALUE = to_int(left_rc_h.get_word(left_cursor.next_word()));
-}
-*/
-left_h.write(left_h_fn + ".new");
+//left_h.write(left_h_fn + ".new");
 print("end.");
