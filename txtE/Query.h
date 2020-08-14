@@ -14,7 +14,7 @@ protected:
 
     int count = -1;
     string* out = nullptr;
-    vector<chaiscript::Boxed_Value>* outs = nullptr;//conversion not work
+    vector<chaiscript::Boxed_Value>* outs = nullptr;
 
     inline void set_out(const string& s) const
     {

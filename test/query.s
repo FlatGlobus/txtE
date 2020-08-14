@@ -97,8 +97,8 @@ else
 txt_cur = 0;
 var w = [];
 
-if( Group(200, [Word(w), Space()]) )
+if( Group(-1, [Word(w), Space()]) )
 {
-	print("Count: 213 true "+ to_string(w));
+	print("Group:true "+ "size = " + to_string(w.size()) + " words = " + to_string(w));
 }
 

@@ -461,13 +461,21 @@ bool Group::execute() const
         int c = 0;
         do 
         {
+            bool flag = true;
             for (auto i : query)
             {
                 if (i->execute() == false)
-                    return c > 0 && count == -1;
+                {
+                    flag = false;
+                    cursor->inc(1);
+
+                    break;
+                }
             }
-            ++c;
-        } while ((count != -1 && c < count) || count == -1);
+            if (flag == true)
+                c += 1;
+            
+        } while (((count != -1 && c < count) || count == -1) && cursor->is_eof() == false);
 
         return (count == -1 && c > 0) || (count != -1 && c == count);
     }
