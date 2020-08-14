@@ -95,7 +95,10 @@ else
 }
 
 txt_cur = 0;
-if( Count(213, [Word(), Space()]) )
+var w = [];
+
+if( Group(200, [Word(w), Space()]) )
 {
-	print("Count: 213 true");
+	print("Count: 213 true "+ to_string(w));
 }
+

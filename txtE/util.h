@@ -90,6 +90,8 @@ public:
 #endif
 //////////////////////////////////////////////////////////////////////////
 
+using VectorString = vector<std::string>;
+
 class ChaiEngine
 {
 protected:

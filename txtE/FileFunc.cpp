@@ -10,21 +10,22 @@
 #include <cstdio>
 
 namespace fs = std::filesystem;
-typedef std::vector<fs::path> VectorPath;
-typedef std::vector<std::string> VectorString;
+using namespace std;
+using VectorPath = vector<fs::path> ;
+
 //////////////////////////////////////////////////////////////////////////
 
-std::string GetLastErrorStr()
+string GetLastErrorStr()
 {
     DWORD errorMessageID = ::GetLastError();
     if (errorMessageID == 0)
-        return std::string();
+        return string();
 
     LPTSTR messageBuffer = nullptr;
     size_t size = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&messageBuffer, 0, NULL);
 
-    std::string message(messageBuffer, size);
+    string message(messageBuffer, size);
 
     LocalFree(messageBuffer);
 
@@ -55,7 +56,7 @@ bool IsDots(WIN32_FIND_DATA* pFindData)
     return bResult;
 }
 
-bool GetAllFilesFromFolder(const fs::path& source, bool recursively, VectorPath& files, const std::vector<std::string>& maskVector)
+bool GetAllFilesFromFolder(const fs::path& source, bool recursively, VectorPath& files, const VectorString& maskVector)
 {
     fs::path sourceFolder(source);
     AddBackSlash(sourceFolder);
@@ -111,44 +112,44 @@ bool GetAllFilesFromFolder(const fs::path& source, bool recursively, VectorPath&
     return !files.empty();
 }
 
-VectorPath GetAllFilesFromFolderProxy(fs::path sourceFolder, bool recursively, const std::vector<std::string>& mask)
+VectorPath GetAllFilesFromFolderProxy(fs::path sourceFolder, bool recursively, const VectorString& mask)
 {
     VectorString maskVector(mask);
     VectorPath files;
 
     if (fs::exists(sourceFolder) == false)
     {
-        std::cout << "The path  " << sourceFolder.string() << " does not exist." << std::endl;
+        cout << "The path  " << sourceFolder.string() << " does not exist." << endl;
         return files;
     }
 
     if (maskVector.empty())
     {
-        maskVector.push_back(std::string(_T("*")));
+        maskVector.push_back(string(_T("*")));
     }
 
     GetAllFilesFromFolder(sourceFolder, recursively, files, maskVector);
     return files;
 }
 
-void PrintError(std::error_code& e)
+void PrintError(error_code& e)
 {
     if (e)
     {
-        std::cout << e.message() << std::endl;
+        cout << e.message() << endl;
         e.clear();
     }
 }
 
-std::string tmp_nam()
+string tmp_nam()
 {
-    return std::tmpnam(NULL);
+    return tmpnam(NULL);
 }
 
-fs::path find_file(const fs::path & dir, const std::string & mask)
+fs::path find_file(const fs::path & dir, const string & mask)
 {
     VectorPath files;
-    std::vector<std::string> maskVector = { mask };
+    VectorString maskVector = { mask };
     fs::path ret;
 
     GetAllFilesFromFolder(dir, true, files, maskVector);
@@ -166,7 +167,7 @@ m->add(chaiscript::user_type<fs::path>(), "path");
 m->add(chaiscript::constructor<fs::path()>(), "path");
 m->add(chaiscript::constructor<fs::path(fs::path&)>(), "path");
 m->add(chaiscript::constructor<fs::path(const fs::path&)>(), "path");
-m->add(chaiscript::constructor<fs::path(const std::string&)>(), "path");
+m->add(chaiscript::constructor<fs::path(const string&)>(), "path");
 
 m->add(chaiscript::fun(&fs::path::clear), "clear");
 m->add(chaiscript::fun(&fs::path::make_preferred), "make_preferred");
@@ -195,27 +196,27 @@ m->add(chaiscript::fun(static_cast<fs::path& (fs::path::*)()>(&fs::path::replace
 m->add(chaiscript::fun(static_cast<fs::path& (fs::path::*)(const fs::path&)>(&fs::path::replace_extension)), "replace_extension");
 
 m->add(chaiscript::fun(static_cast<fs::path& (fs::path::*)(const fs::path &)>(&fs::path::operator =)), "=");
-m->add(chaiscript::fun(static_cast<fs::path& (fs::path::*)(const std::string&)>(&fs::path::operator =)), "=");
+m->add(chaiscript::fun(static_cast<fs::path& (fs::path::*)(const string&)>(&fs::path::operator =)), "=");
 
 m->add(chaiscript::fun(static_cast<fs::path& (fs::path::*)(const fs::path&)>(&fs::path::operator /=)), "/=");
-m->add(chaiscript::fun(static_cast<fs::path& (fs::path::*)(const std::string&)>(&fs::path::operator /=)), "/=");
+m->add(chaiscript::fun(static_cast<fs::path& (fs::path::*)(const string&)>(&fs::path::operator /=)), "/=");
 
 m->add(chaiscript::fun(static_cast<fs::path& (fs::path::*)(const fs::path&)>(&fs::path::operator +=)), "+=");
-m->add(chaiscript::fun(static_cast<fs::path& (fs::path::*)(const std::string&)>(&fs::path::operator +=)), "+=");
+m->add(chaiscript::fun(static_cast<fs::path& (fs::path::*)(const string&)>(&fs::path::operator +=)), "+=");
 
-m->add(chaiscript::type_conversion<fs::path, std::string>([](const fs::path& p) { return p.string();}));
-m->add(chaiscript::type_conversion<std::string, fs::path>([](const std::string& s) { return fs::path(s); }));
+m->add(chaiscript::type_conversion<fs::path, string>([](const fs::path& p) { return p.string();}));
+m->add(chaiscript::type_conversion<string, fs::path>([](const string& s) { return fs::path(s); }));
 
-m->add(chaiscript::fun(static_cast<VectorPath(*)(fs::path, bool, const std::vector<std::string>&)>(&GetAllFilesFromFolderProxy)), "get_files_from_folder");
+m->add(chaiscript::fun(static_cast<VectorPath(*)(fs::path, bool, const VectorString&)>(&GetAllFilesFromFolderProxy)), "get_files_from_folder");
 
-ChaiEngine::get_engine()->add(chaiscript::bootstrap::standard_library::vector_type<std::vector<fs::path>>("VectorPath"));
+ChaiEngine::get_engine()->add(chaiscript::bootstrap::standard_library::vector_type<vector<fs::path>>("VectorPath"));
 
 m->add(chaiscript::fun(static_cast<bool (*)(const fs::path&)>(&fs::create_directory)), "create_directory");
 m->add(chaiscript::fun(static_cast<fs::path (*)()>(&fs::current_path)), "current_path");
 m->add(chaiscript::fun(static_cast<bool (*)(const fs::path&)>(&fs::exists)), "exists");
 m->add(chaiscript::fun(static_cast<bool (*)(const fs::path&, const fs::path&)>(&fs::equivalent)), "equivalent");
 m->add(chaiscript::fun(static_cast<bool (*)(const fs::path&)>(&fs::remove)), "remove");
-m->add(chaiscript::fun(static_cast<std::uintmax_t (*)(const fs::path&)>(&fs::remove_all)), "remove_all");
+m->add(chaiscript::fun(static_cast<uintmax_t (*)(const fs::path&)>(&fs::remove_all)), "remove_all");
 m->add(chaiscript::fun(static_cast<void (*)(const fs::path&, const fs::path&)>(&fs::copy)), "copy");
 m->add(chaiscript::fun(static_cast<fs::path(*)()>(&fs::temp_directory_path)), "temp_directory_path");
 m->add(chaiscript::fun(&tmp_nam), "tmpnam");
