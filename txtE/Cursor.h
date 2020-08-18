@@ -153,7 +153,7 @@ class Cursor
 {
 protected:
     posMap labels;
-    string& text;
+    Text&  text;
     Position pos;
     string name;
 
@@ -164,14 +164,11 @@ protected:
 
 public:
     Cursor(Text& t);
-    Cursor(string& t);
     Cursor(const Cursor& c);
     Cursor(Cursor& c);
 
     Cursor(Text& t, const string& pattern, find_func func);
-    Cursor(string& t, const string& pattern, find_func func);
     Cursor(const Cursor& c, const string& pattern, find_func func);
-    Cursor(Cursor& c, const string& pattern, find_func func);
 
     Cursor& inc(size_t p);
     Cursor& operator += (size_t p);
@@ -251,7 +248,12 @@ public:
         return pos;
     }
 
-    const string& get_text() const
+    inline const Text& get_text() const
+    {
+        return text;
+    }
+
+    inline const string& get_string() const
     {
         return text;
     }

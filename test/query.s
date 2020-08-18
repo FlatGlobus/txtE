@@ -1,7 +1,8 @@
 print("----------------Query---------------------------");
 
-var str = " Abcd 123z4a  5678-44?\n";
-var cursor = Cursor(str);
+var str = " Abcd 123z4a  5678-44?";
+var str_txt = Text(str);
+var cursor = Cursor(str_txt);
 var ret = "";
 
 if(Query(cursor) && Is(isspace, -1) && Exact("Abcd 123z4a") && Is(isspace, -1) && Is(isdigit, 4, ret) && Exact("-"))
@@ -102,3 +103,9 @@ if( Group(-1, [Word(w), Space()]) )
 	print("Group:true "+ "size = " + to_string(w.size()) + " words = " + to_string(w));
 }
 
+txt_cur = 0;
+var n = [];
+if( Group(-1, true, [Number(n)]) )
+{
+	print("Group:true "+ "size = " + to_string(n.size()) + " numbers = " + to_string(n));
+}

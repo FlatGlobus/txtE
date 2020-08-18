@@ -29,6 +29,8 @@ protected:
             outs->push_back(chaiscript::var(s));
         }
     }
+
+    void reset();
 public:
     QueryBase();
     QueryBase(int);
@@ -161,7 +163,9 @@ public:
 class Group : public QueryBase
 {
     VectorQuery query;
+    bool shift = false;
 public:
     Group(int, const vector<chaiscript::Boxed_Value>&);
+    Group(int, bool, const vector<chaiscript::Boxed_Value>&);
     virtual bool execute() const;
 };

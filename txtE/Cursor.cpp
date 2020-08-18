@@ -11,11 +11,7 @@
 //////////////////////////////////////////////////////////////////////////
 Position Position::eof = { string::npos };
 //////////////////////////////////////////////////////////////////////////
-Cursor::Cursor(Text& t) :text(t.text)
-{
-}
-
-Cursor::Cursor(string& t) : text(t)
+Cursor::Cursor(Text& t) :text(t)
 {
 }
 
@@ -27,22 +23,12 @@ Cursor::Cursor(Cursor& c) : text(c.text), pos(c.pos)
 {
 }
 
-Cursor::Cursor(Text& t, const string& pattern, find_func func) : text(t.text)
-{
-    move_to(pattern, func);
-}
-
-Cursor::Cursor(string& t, const string& pattern, find_func func) : text(t)
+Cursor::Cursor(Text& t, const string& pattern, find_func func) : text(t)
 {
     move_to(pattern, func);
 }
 
 Cursor::Cursor(const Cursor& c, const string& pattern, find_func func) : text(c.text), pos(c.pos)
-{
-    move_to(pattern, func);
-}
-
-Cursor::Cursor(Cursor& c, const string& pattern, find_func func) : text(c.text), pos(c.pos)
 {
     move_to(pattern, func);
 }
@@ -422,8 +408,8 @@ Cursor& Cursor::next_word(const string& pattern)
 {
     TRACE_FUNC;
 
-    pos = text.find_first_of(pattern, pos);
-    pos = text.find_first_not_of(pattern, pos);
+    pos = get_string().find_first_of(pattern, pos);
+    pos = get_string().find_first_not_of(pattern, pos);
 
     TRACE_OUT << "pattern = " << pattern TRACE_END;
     TRACE_POS(pos);
@@ -467,7 +453,7 @@ Cursor& Cursor::move_to_end_of_word(const string& pattern)
 
     if (pattern.find_first_of(text[pos]) == Position::eof)
     {
-        pos = text.find_first_of(space_pattern, pos);
+        pos = get_string().find_first_of(space_pattern, pos);
         TRACE_POS(pos);
         return *this;
     }
@@ -495,7 +481,7 @@ Cursor& Cursor::next_line()
 {
     TRACE_FUNC;
 
-    size_t p = text.find(ENDL, pos);
+    size_t p = get_string().find(ENDL, pos);
     if (is_eof(p) == false && is_eof(p += ENDL_SIZE) == false)
     {
         pos = p;
@@ -528,7 +514,7 @@ Cursor& Cursor::next_line(size_t count)
 Cursor& Cursor::prev_line()
 {
     TRACE_FUNC;
-    Position p = text.rfind(ENDL, pos);
+    Position p = get_string().rfind(ENDL, pos);
     if (p.is_eof() == false)
     {
         pos = p;
@@ -573,7 +559,7 @@ Cursor& Cursor::move_to_begin_of_line()
         return *this;
     }
 
-    pos = text.rfind(ENDL, pos);
+    pos = get_string().rfind(ENDL, pos);
     if (pos.is_eof())
     {
         TRACE_POS(pos);
@@ -589,7 +575,7 @@ Cursor& Cursor::move_to_begin_of_line()
 Cursor& Cursor::move_to_end_of_line()
 {
     TRACE_FUNC;
-    pos = text.find(ENDL, pos);
+    pos = get_string().find(ENDL, pos);
     TRACE_POS(pos);
     return *this;
 }
@@ -661,7 +647,7 @@ bool Cursor::is_eof() const
 
 bool Cursor::is_eof(size_t p) const
 {
-    return p >= text.size() || pos.is_eof(p);
+    return !(p < text.size()) || pos.is_eof(p);
 }
 
 string Cursor::to_string() const
@@ -730,7 +716,7 @@ Cursor& Cursor::move_to_col(size_t col)
     TRACE_FUNC;
     move_to_begin_of_line();
     
-    size_t line_end = text.find(ENDL, pos);
+    size_t line_end = get_string().find(ENDL, pos);
 
     if (is_eof(line_end) == false && pos + col <= line_end)
     {
@@ -741,7 +727,6 @@ Cursor& Cursor::move_to_col(size_t col)
 
     return *this;
 }
-
 //////////////////////////////////////////////////////////////////////////
 DECLARE_MODULE(CURSOR)
 m->add(chaiscript::fun(&Cursor::inc), "inc");
@@ -818,15 +803,12 @@ m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const Cursor&)>(&Cursor::
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(size_t)>(&Cursor::operator =)), "=");
 
 m->add(chaiscript::constructor<Cursor(Text&)>(), "Cursor");
-m->add(chaiscript::constructor<Cursor(string&)>(), "Cursor");
 m->add(chaiscript::constructor<Cursor(const Cursor&)>(), "Cursor");
 m->add(chaiscript::constructor<Cursor(Cursor&)>(), "Cursor");
 m->add(chaiscript::user_type<Cursor>(), "Cursor");
 
 m->add(chaiscript::constructor<Cursor(Text&, const string&, find_func)>(), "Cursor");
-m->add(chaiscript::constructor<Cursor(string&, const string&, find_func)>(), "Cursor");
 m->add(chaiscript::constructor<Cursor(const Cursor&, const string&, find_func)>(), "Cursor");
-m->add(chaiscript::constructor<Cursor(Cursor&, const string&, find_func)>(), "Cursor");
 
 //m->add(chaiscript::type_conversion<Cursor, Position>());
 m->add(chaiscript::type_conversion<Cursor, bool>([](const Cursor& c)-> bool { return c.is_eof() == false;}));

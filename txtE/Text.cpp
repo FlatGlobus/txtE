@@ -14,12 +14,12 @@ void set_endl(std::string& str, el_types t);
 
 extern bool enable_trace;
 //////////////////////////////////////////////////////////////////////////
-Text::Text():original_endl(el_types::elWin), changed(false)
+Text::Text() :original_endl(el_types::elWin), changed(false)
 {
 
 }
 
-Text::Text(const string &t): text(t)
+Text::Text(const string& t) : text(t)
 {
     original_endl = find_endl_type();
 }
@@ -30,7 +30,7 @@ Text::~Text()
 
 void Text::check_cursor(const Cursor& c)
 {
-    if (AreEqual(c.get_text(), text) == false)
+    if (AreEqual(c.get_text(), *this) == false)
     {
         throw runtime_error("Cursor object : \"" + c.get_name() + "\" is created for other Text object.");
     }
@@ -45,7 +45,7 @@ size_t Text::load(const fs::path& file_name)
     ifstream in(file_name, ios::in | ios::binary | ios::ate);
     if (!in)
     {
-        std::cerr << "Error loading file " << file_name <<" : " << strerror(errno) << std::endl;
+        std::cerr << "Error loading file " << file_name << " : " << strerror(errno) << std::endl;
         return 0;
     }
 
@@ -91,7 +91,7 @@ size_t Text::write(const fs::path& file_name, el_types t)
     ostringstream contents;
     out << text;
     out.close();
-    
+
     if (t == el_types::elWin)
     {
         reset_endl(text);
@@ -171,7 +171,7 @@ string Text::get_word(const Cursor& pos)
 {
     TRACE_FUNC;
     check_cursor(pos);
-   
+
     string str;
 
     if (pos == false)
@@ -243,7 +243,7 @@ void Text::set_line(const Cursor& pos, const string& str)
 
     spos = spos != string::npos ? spos + ENDL_SIZE : spos;
     if (pos.is_eof(spos) == false)
-    {   
+    {
         Cursor pos1 = pos;
         pos1 = spos;
         insert(pos1, str);
@@ -295,7 +295,7 @@ void Text::add(const string& str)
     changed = true;
 }
 
-size_t Text::size() const 
+size_t Text::size() const
 {
     return text.size();
 }
@@ -345,7 +345,7 @@ void Text::erase_line(const Cursor& pos)
     }
 }
 
-Cursor Text::diff(const Cursor& pos, const string& text1, string & result)
+Cursor Text::diff(const Cursor& pos, const string& text1, string& result)
 {
     TRACE_FUNC;
 
@@ -359,7 +359,7 @@ Cursor Text::diff(const Cursor& pos, const string& text1, string & result)
     size_t i = 0;
     size_t found_idx = string::npos;
 
-    for (;pos + i < text.size() && i < text1.size(); ++i)
+    for (; pos + i < text.size() && i < text1.size(); ++i)
     {
         if (pos.is_eof(pos + i))
             break;
@@ -430,7 +430,7 @@ el_types Text::find_endl_type()
         return el_types::elNone;
     }
 
-    if (p > 1 && text[p - 1] == '\r' )
+    if (p > 1 && text[p - 1] == '\r')
     {
         return el_types::elWin;
     }
@@ -438,7 +438,7 @@ el_types Text::find_endl_type()
     return el_types::elUnix;
 }
 //////////////////////////////////////////////////////////////////////////
-void reset_endl(std::string & str)
+void reset_endl(std::string& str)
 {
     boost::erase_all(str, "\r");
 }
@@ -459,10 +459,16 @@ void set_endl(std::string& str, el_types t)
     }
 }
 //////////////////////////////////////////////////////////////////////////
+string Text::_get(size_t p1, size_t p2) const
+{
+    p2 = p2 == string::npos ? text.size() : p2;
+    return text.substr(p1, p2 - p1);
+}
+//////////////////////////////////////////////////////////////////////////
 DECLARE_MODULE(TEXT)
 m->add(chaiscript::fun(&Text::load), "load");
 
-m->add(chaiscript::fun(static_cast<size_t (Text::*)(const fs::path&)>(&Text::write)), "write");
+m->add(chaiscript::fun(static_cast<size_t(Text::*)(const fs::path&)>(&Text::write)), "write");
 m->add(chaiscript::fun(static_cast<size_t(Text::*)(const fs::path&, el_types)>(&Text::write)), "write");
 
 m->add(chaiscript::fun(&Text::get), "get");
@@ -491,9 +497,9 @@ m->add(chaiscript::user_type<Text>(), "Text");
 
 m->add(chaiscript::fun(&Text::get_endl_type), "get_endl_type");
 
-m->add(chaiscript::type_conversion<Text, const std::string&>([](const Text& t) { return (const std::string&)t;}));
+m->add(chaiscript::type_conversion<Text, const std::string&>([](const Text& t) { return (const std::string&)t; }));
 
-chaiscript::utility::add_class<el_types>(*m,   "el_types",
+chaiscript::utility::add_class<el_types>(*m, "el_types",
     {
         { el_types::elNone, "elNone" },
         { el_types::elWin, "elWin" },

@@ -61,9 +61,17 @@ public:
 
     el_types get_endl_type() const { return original_endl; }
 
-    operator const std::string& () const { return text; }
+    operator const string& () const { return text; }
     bool is_changed() { return changed; };
     friend class Cursor;
+
+    //internal methods
+    inline char operator[] (size_t idx)
+    {
+        return text[idx];
+    }
+
+    string _get(size_t, size_t) const;
     //TODO sort
 };
 

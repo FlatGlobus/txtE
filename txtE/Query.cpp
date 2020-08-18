@@ -2,25 +2,27 @@
 #include"util.h"
 #include "Query.h"
 #include "Cursor.h"
+#include <regex>
 
 //////////////////////////////////////////////////////////////////////////
 Cursor* QueryBase::cursor = nullptr;
 bool QueryBase::case_insensitive = true;
 QueryBase::QueryBase()
 {
-
 }
 
-QueryBase::QueryBase(int c): count(c)
+QueryBase::QueryBase(int c) : count(c)
 {
 }
 
-QueryBase::QueryBase(int c, string* o): count(c), out(o)
+QueryBase::QueryBase(int c, string* o) : count(c), out(o)
 {
+    reset();
 }
 
-QueryBase::QueryBase(int c, vector<chaiscript::Boxed_Value>* o): count(c), outs(o)
+QueryBase::QueryBase(int c, vector<chaiscript::Boxed_Value>* o) : count(c), outs(o)
 {
+    reset();
 }
 
 QueryBase::~QueryBase()
@@ -34,6 +36,15 @@ bool QueryBase::execute() const
         throw runtime_error("QueryBase: Cursor is null.");
     }
     return cursor->is_eof() == false;
+}
+
+void QueryBase::reset()
+{
+    if (out)
+        out->clear();
+
+    if (outs)
+        outs->clear();
 }
 //////////////////////////////////////////////////////////////////////////
 Query::Query(Cursor* c)
@@ -54,7 +65,7 @@ Cursor* Query::get_cursor()
 
 bool Query::execute() const
 {
-    return true;
+    return QueryBase::execute();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -62,7 +73,7 @@ Exact::Exact(const string& p) :pattern(p)
 {
 }
 
-Exact::Exact(const string& p, string* o) : QueryBase(-1, o),pattern(p)
+Exact::Exact(const string& p, string* o) : QueryBase(-1, o), pattern(p)
 {
 }
 
@@ -76,12 +87,12 @@ bool Exact::execute() const
 
     if (QueryBase::execute())
     {
-        string text = cursor->get_text().substr(cursor->get_pos(), pattern.size());
+        string text = cursor->get_text()._get(cursor->get_pos(), cursor->get_pos() + pattern.size());
         if (text == pattern)
         {
             set_out(text);
             TRACE_OUT << "found " << "text = " << text TRACE_END
-            cursor->inc(pattern.size());
+                cursor->inc(pattern.size());
             return true;
         }
     }
@@ -94,14 +105,14 @@ Any::Any(const string& p) :pattern(p)
 
 Any::Any(const string& p, int c) : QueryBase(c), pattern(p)
 {
-    
+
 }
 
 Any::Any(const string& p, int c, string* o) : QueryBase(c, o), pattern(p)
 {
 }
 
-Any::Any(int c, string* o): QueryBase(c, o)
+Any::Any(int c, string* o) : QueryBase(c, o)
 {
 
 }
@@ -119,12 +130,11 @@ bool Any::execute() const
     TRACE_FUNC;
     if (QueryBase::execute())
     {
-        const string& text = cursor->get_text();
         const auto& pos = cursor->get_pos();
-        auto i = text.begin() + pos;
+        auto i = cursor->get_string().begin() + pos;
         size_t found_qty = 0;
 
-        for (; i < text.end(); ++i)
+        for (; i < cursor->get_string().end(); ++i)
         {
             if ((pattern.find(*i) != string::npos) || (pattern.size() == 0 && count != -1))
             {
@@ -141,8 +151,8 @@ bool Any::execute() const
 
         if (found_qty > 0)
         {
-            size_t qty = distance(text.begin() + pos, i);
-            string result = text.substr(pos, qty);
+            size_t qty = distance(cursor->get_string().begin() + pos, i);
+            string result = cursor->get_text()._get(pos, pos + qty);
             set_out(result);
             TRACE_OUT << "found " << "text = " << result TRACE_END
             cursor->inc(qty);
@@ -156,7 +166,7 @@ Is::Is(const is_func f) :func(f)
 {
 }
 
-Is::Is(const is_func f, int c):func(f), QueryBase(c)
+Is::Is(const is_func f, int c) : func(f), QueryBase(c)
 {
 }
 
@@ -173,11 +183,10 @@ bool Is::execute() const
     TRACE_FUNC;
     if (QueryBase::execute())
     {
-        const string& text = cursor->get_text();
-        auto pos = cursor->get_pos();
-        auto i = text.begin() + pos;
+        const auto& pos = cursor->get_pos();
+        auto i = cursor->get_string().begin() + pos;
         size_t found_qty = 0;
-        for (; i < text.end(); ++i)
+        for (; i < cursor->get_string().end(); ++i)
         {
             if (func(*i) != 0)
             {
@@ -196,10 +205,10 @@ bool Is::execute() const
 
         if (found_qty > 0)
         {
-            size_t qty = distance(text.begin() + pos, i);
-            string result = text.substr(pos, qty);
+            size_t qty = distance(cursor->get_string().begin() + pos, i);
+            string result = cursor->get_text()._get(pos, pos + qty);
             set_out(result);
-            TRACE_OUT << "found text = " << result TRACE_END
+            TRACE_OUT << "found text = " << result TRACE_END;
             cursor->inc(qty);
             return true;
         }
@@ -211,10 +220,10 @@ Range::Range(char f, char t) : from(f), to(t)
 {
 }
 
-Range::Range(char f, char t, int c): from(f), to(t), QueryBase(c)
+Range::Range(char f, char t, int c) : from(f), to(t), QueryBase(c)
 {
 }
-    
+
 Range::Range(char f, char t, int c, string* o) : from(f), to(t), QueryBase(c, o)
 {
 }
@@ -228,11 +237,10 @@ bool Range::execute() const
     TRACE_FUNC;
     if (QueryBase::execute())
     {
-        const string& text = cursor->get_text();
-        auto pos = cursor->get_pos();
-        auto i = text.begin() + pos;
+        const auto& pos = cursor->get_pos();
+        auto i = cursor->get_string().begin() + pos;
         size_t found_qty = 0;
-        for (; i < text.end(); ++i)
+        for (; i < cursor->get_string().end(); ++i)
         {
             if (from <= *i && *i <= to)
             {
@@ -251,10 +259,10 @@ bool Range::execute() const
 
         if (found_qty > 0)
         {
-            size_t qty = distance(text.begin() + pos, i);
-            string result = text.substr(pos, qty);
+            size_t qty = distance(cursor->get_string().begin() + pos, i);
+            string result = cursor->get_text()._get(pos, pos + qty);
             set_out(result);
-            TRACE_OUT << "found text = " << result TRACE_END
+            TRACE_OUT << "found text = " << result TRACE_END;
             cursor->inc(qty);
             return true;
         }
@@ -279,14 +287,13 @@ bool Set::execute() const
     TRACE_FUNC;
     if (QueryBase::execute())
     {
-        for (auto p : pattern)
+        for (const auto& p : pattern)
         {
-            string text = cursor->get_text().substr(cursor->get_pos(), p.size());
-
+            string text = cursor->get_text()._get(cursor->get_pos(), cursor->get_pos() + p.size());
             if (text == p)
             {
                 set_out(text);
-                TRACE_OUT << "found text = " << text TRACE_END
+                TRACE_OUT << "found text = " << text TRACE_END;
                 cursor->inc(p.size());
                 return true;
             }
@@ -304,12 +311,12 @@ bool Endl::execute() const
     TRACE_FUNC;
     if (QueryBase::execute())
     {
-        string text = cursor->get_text().substr(cursor->get_pos(), ENDL_SIZE);
+        string text = cursor->get_text()._get(cursor->get_pos(), ENDL_SIZE);
 
         if (text == ENDL)
         {
             TRACE_OUT << "found ENDL" TRACE_END
-            cursor->inc(ENDL_SIZE);
+                cursor->inc(ENDL_SIZE);
             return true;
         }
     }
@@ -320,7 +327,7 @@ Word::Word()
 {
 }
 
-Word::Word(string* o):QueryBase(-1, o)
+Word::Word(string* o) :QueryBase(-1, o)
 {
 }
 
@@ -333,15 +340,13 @@ bool Word::execute() const
     TRACE_FUNC;
     if (QueryBase::execute())
     {
-        const string& text = cursor->get_text();
-        size_t p = cursor->get_pos();
-        
-        if(space_pattern.find(*(text.begin() + p)) == string::npos)
+        const auto& p = cursor->get_pos();
+        if (space_pattern.find(*(cursor->get_string().begin() + p)) == string::npos)
         {
-            auto p1 = text.find_first_of(space_pattern, p);
-            if (cursor->is_eof(p1) == false)
+            auto p1 = (cursor->get_string()).find_first_of(space_pattern, p);
+            if (cursor->is_eof(p1) == false || p1 == string::npos)
             {
-                string result = text.substr(p, p1 - p);
+                string result = cursor->get_text()._get(p, p1);
                 set_out(result);
                 TRACE_OUT << "found text = " << result TRACE_END;
                 cursor->move_to(p1);
@@ -370,19 +375,17 @@ bool Number::execute() const
     TRACE_FUNC;
     if (QueryBase::execute())
     {
-        const string& text = cursor->get_text();
-        size_t p = cursor->get_pos();
-
-        if (pattern.find(*(text.begin() + p)) != string::npos)
+        const auto& p = cursor->get_pos();
+        if (pattern.find(*(cursor->get_string().begin() + p)) != string::npos)
         {
-            auto p1 = text.find_first_not_of(pattern, p);
-            if (cursor->is_eof(p1) == false)
+            auto p1 = cursor->get_string().find_first_not_of(pattern, p);
+            if (cursor->is_eof(p1) == false || p1 == string::npos)
             {
-                string number = text.substr(p, p1 - p);
-                if (is_number(number))
+                string result = cursor->get_text()._get(p, p1);
+                if (is_number(result))
                 {
-                    set_out(number);
-                    TRACE_OUT << "found number = " << number TRACE_END;
+                    set_out(result);
+                    TRACE_OUT << "found number = " << result TRACE_END;
                     cursor->move_to(p1);
                     return true;
                 }
@@ -394,8 +397,13 @@ bool Number::execute() const
 
 bool Number::is_number(const string& number) const //TODO check number
 {
-    
-    return true;
+    return regex_match(number, regex("[+-]?[0-9]+")) ||
+        regex_match(number, regex("[+] ? [0 - 9] + ")) ||
+        regex_match(number, regex("[+-] ? [0 - 9] + [.] ? [0 - 9] + ")) ||
+        regex_match(number, regex("[+]?[0-9]+[.]?[0-9]+")) ||
+        regex_match(number, regex("[+|-]?(?:0|[1-9]\\d*)(?:\\.\\d*)?(?:[eE][+|-]?\\d+)?"));
+    //regex_match(number, regex("^[+\-]?(?=\.\d|\d)(?:0|[1-9]\d*)?(?:\.\d*)?(?:\d[eE][+\-]?\d+)?$"));
+
 }
 //////////////////////////////////////////////////////////////////////////
 Space::Space()
@@ -424,7 +432,7 @@ bool Space::execute() const
     return false;
 }
 //////////////////////////////////////////////////////////////////////////
-Starts::Starts(const string& p):pattern(p)
+Starts::Starts(const string& p) :pattern(p)
 {
 }
 
@@ -433,18 +441,27 @@ bool Starts::execute() const
     TRACE_FUNC;
     if (cursor && cursor->is_eof() == false)
     {
-        auto p = cursor->get_text().find(pattern, cursor->get_pos());
+        auto p = cursor->get_string().find(pattern, cursor->get_pos());
         if (cursor->is_eof(p) == false)
         {
             TRACE_OUT << "found " << "text = " << pattern TRACE_END
-            cursor->move_to(p + pattern.size());
+                cursor->move_to(p + pattern.size());
             return true;
         }
     }
     return false;
 }
 //////////////////////////////////////////////////////////////////////////
-Group::Group(int c, const vector<chaiscript::Boxed_Value>& v):QueryBase(c)
+Group::Group(int c, const vector<chaiscript::Boxed_Value>& v) :QueryBase(c)
+{
+    chaiscript::Type_Info ut = chaiscript::user_type<QueryBase>();
+    for (auto p : v)
+    {
+        query.push_back((QueryBase*)p.get_ptr());//TODO check pointer
+    }
+}
+
+Group::Group(int c, bool s, const vector<chaiscript::Boxed_Value>& v) :QueryBase(c), shift(s)
 {
     chaiscript::Type_Info ut = chaiscript::user_type<QueryBase>();
     for (auto p : v)
@@ -459,7 +476,7 @@ bool Group::execute() const
     if (QueryBase::execute() && query.size())
     {
         int c = 0;
-        do 
+        do
         {
             bool flag = true;
             for (auto i : query)
@@ -467,15 +484,15 @@ bool Group::execute() const
                 if (i->execute() == false)
                 {
                     flag = false;
-                    cursor->inc(1);
-
+                    if(shift)
+                        cursor->inc(1);
                     break;
                 }
             }
             if (flag == true)
                 c += 1;
-            
-        } while (((count != -1 && c < count) || count == -1) && cursor->is_eof() == false);
+
+        } while (((count != -1 && c < count) || (shift == true && count == -1)) && cursor->is_eof() == false);
 
         return (count == -1 && c > 0) || (count != -1 && c == count);
     }
@@ -563,6 +580,7 @@ m->add(chaiscript::base_class<QueryBase, Starts>());
 m->add(chaiscript::type_conversion<Starts, bool>([](const Starts& q) { return q.execute(); }));
 
 m->add(chaiscript::constructor<Group(int, const vector<chaiscript::Boxed_Value>&)>(), "Group");
+m->add(chaiscript::constructor<Group(int, bool, const vector<chaiscript::Boxed_Value>&)>(), "Group");
 m->add(chaiscript::user_type<Group>(), "Count");
 m->add(chaiscript::base_class<QueryBase, Group>());
 m->add(chaiscript::type_conversion<Group, bool>([](const Group& q) { return q.execute(); }));
