@@ -13,6 +13,7 @@ namespace fs = std::filesystem;
 using namespace std;
 
 class Cursor;
+class Position;
 
 enum class el_types { elNone, elWin, elUnix, elMac };
 
@@ -63,15 +64,14 @@ public:
 
     operator const string& () const { return text; }
     bool is_changed() { return changed; };
-    friend class Cursor;
+
+    Text& operator = (const string&);
+    Text& operator = (const Text&);
 
     //internal methods
-    inline char operator[] (size_t idx)
-    {
-        return text[idx];
-    }
-
-    string _get(size_t, size_t) const;
+    string substr(Position, Position) const;
+    string substr(Position, size_t) const;
+    char substr(Position) const;
     //TODO sort
 };
 

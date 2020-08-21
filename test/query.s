@@ -1,7 +1,6 @@
 print("----------------Query---------------------------");
 
-var str = " Abcd 123z4a  5678-44?";
-var str_txt = Text(str);
+var str_txt = Text(" Abcd 123z4a  5678-44?");
 var cursor = Cursor(str_txt);
 var ret = "";
 
@@ -14,7 +13,7 @@ else
 	print("false");
 }
 
-cursor.begin();
+cursor = 0;
 if(Query(cursor) && cursor.move_to_end(" Abcd ", find)  && Is(isdigit, 3, ret))
 {
 	print("Is: true \"" + ret +"\"");

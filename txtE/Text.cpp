@@ -110,11 +110,7 @@ string Text::get(const Cursor& start, size_t count)
     TRACE_FUNC;
     check_cursor(start);
 
-    string str;
-    if (start && start.is_eof(start + count) == false)
-    {
-        str = text.substr(start, count);
-    }
+    string str = substr((const Position&)start, count);
 
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
 
@@ -126,11 +122,8 @@ string Text::get_to_endl(const Cursor& start)
     TRACE_FUNC;
     check_cursor(start);
 
-    string str;
-    size_t pos = text.find(ENDL, start);
-
-    if (start && start.is_eof(pos) == false)
-        str = text.substr(start, pos - (size_t)start);
+    size_t pos = text.find(ENDL, start.get_pos());
+    string str = substr(start, pos);
 
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
 
@@ -147,19 +140,13 @@ string Text::get_line(const Cursor& start)
     if (start == false)
         return str;
 
-    Position spos = start;
-    Position epos = start;
+    Cursor spos = start;
+    Cursor epos = start;
 
-    spos = text.rfind(ENDL, start);
-    epos = text.find(ENDL, start);
-
-    spos += ENDL_SIZE;
-    epos -= ENDL_SIZE;
-
-    if (start.is_eof(epos) == false && start.is_eof(spos) == false)
+    if (spos.move_to_begin_of_line() && epos.move_to_end_of_line())
     {
-        if (spos <= epos)
-            str = text.substr(spos, epos - spos);
+        epos -= ENDL_SIZE;
+        str = substr(spos.get_pos(), epos.get_pos());
     }
 
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
@@ -183,10 +170,7 @@ string Text::get_word(const Cursor& pos)
     s.move_to_begin_of_word();
     e.move_to_end_of_word();
 
-    if (s && e)
-    {
-        str = text.substr(s, e - s);
-    }
+    str = substr(s.get_pos(), e.get_pos());
 
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
 
@@ -199,12 +183,7 @@ string Text::get_between(const Cursor& start, const Cursor& end)
     check_cursor(start);
     check_cursor(end);
 
-    string str;
-
-    if (start && end && start < end)
-    {
-        str = text.substr(start, end - start);
-    }
+    string str= substr(start.get_pos(), end.get_pos());
 
     TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
 
@@ -437,6 +416,23 @@ el_types Text::find_endl_type()
 
     return el_types::elUnix;
 }
+
+Text& Text::operator = (const string& t)
+{
+    text = t;
+    original_endl = find_endl_type();
+    reset_endl(text);
+    return *this;
+}
+
+Text& Text::operator = (const Text& t)
+{
+    text = t.text;
+    original_endl = t.original_endl;
+
+    return *this;
+}
+
 //////////////////////////////////////////////////////////////////////////
 void reset_endl(std::string& str)
 {
@@ -459,11 +455,39 @@ void set_endl(std::string& str, el_types t)
     }
 }
 //////////////////////////////////////////////////////////////////////////
-string Text::_get(size_t p1, size_t p2) const
+string Text::substr(Position pos1, Position pos2) const
 {
-    p2 = p2 == string::npos ? text.size() : p2;
-    return text.substr(p1, p2 - p1);
+    if (pos1.is_eof() || text.size() <= pos1)
+        return "";
+    
+    if (pos2.is_eof())
+        pos2 = text.size() - 1;
+
+    if (pos2 < pos1 || text.size() <= pos2)
+        return "";
+
+    return text.substr(pos1, (pos2 - pos1) + 1);
 }
+
+string Text::substr(Position pos1, size_t count) const
+{
+    if (pos1.is_eof() || text.size() <= pos1)
+        return "";
+
+    if (text.size() <= pos1 + count || pos1.is_eof(pos1 + count))
+        return "";
+
+    return text.substr(pos1, count);
+}
+
+char Text::substr(Position pos) const
+{
+    if (pos.is_eof() || text.size() <= pos)
+        return '\0';
+
+    return text[pos];
+}
+
 //////////////////////////////////////////////////////////////////////////
 DECLARE_MODULE(TEXT)
 m->add(chaiscript::fun(&Text::load), "load");
@@ -494,6 +518,9 @@ m->add(chaiscript::fun(static_cast<Cursor(Text::*)(const Cursor&, const Text&, s
 m->add(chaiscript::constructor<Text()>(), "Text");
 m->add(chaiscript::constructor<Text(const string&)>(), "Text");
 m->add(chaiscript::user_type<Text>(), "Text");
+
+m->add(chaiscript::fun(static_cast<Text& (Text::*)(const string&)>(&Text::operator =)), "=");
+m->add(chaiscript::fun(static_cast<Text& (Text::*)(const Text&)>(&Text::operator =)), "=");
 
 m->add(chaiscript::fun(&Text::get_endl_type), "get_endl_type");
 

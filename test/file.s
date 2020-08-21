@@ -1,3 +1,5 @@
+print("----------------File---------------------------");
+
 var temp_dir = temp_directory_path();
 print("temp dir: " + temp_dir);
 
@@ -26,4 +28,3 @@ print("List files : " + temp_dir);
 var files = get_files_from_folder(temp_dir, true, ["*.txt"]);
 print(to_string(files));
 
-print("end");

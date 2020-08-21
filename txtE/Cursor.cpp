@@ -11,6 +11,14 @@
 //////////////////////////////////////////////////////////////////////////
 Position Position::eof = { string::npos };
 //////////////////////////////////////////////////////////////////////////
+inline size_t correct_pos(size_t pos, size_t text_size)
+{
+    if (pos == string::npos)
+        return text_size;
+
+    return pos;
+}
+//////////////////////////////////////////////////////////////////////////
 Cursor::Cursor(Text& t) :text(t)
 {
 }
@@ -38,15 +46,17 @@ Position Cursor::rfind_first_of(const string& pattern, const Position& p)
     TRACE_FUNC;
     TRACE_OUT << "pattern = " << pattern << "\nposition = " << p TRACE_END;
 
-    for (Position i = p; 0 < i; --i)
+    Position i = p;
+    do
     {
-        if (pattern.find(text[i]) != Position::eof)
+        if (pattern.find(text.substr(i)) != string::npos || i == 0)
         {
-            i += 1;
             TRACE_POS(i);
-            return i;
+            return i != 0 ? i + 1 : 0;
         }
-    }
+        i -= 1;
+
+    } while (is_eof(i) == false);
 
     TRACE_POS(Position::eof);
     return Position::eof;
@@ -60,20 +70,21 @@ void Cursor::check_cursor(const Cursor& c)
     }
 }
 
-Position Cursor::multi_find(const vector<string>& pattern, find_func func)
+Position Cursor::multi_find(const vector<string>& pattern, find_func func, size_t& idx)
 {
     Position ret_pos = Position::eof;
-
+    idx = 0;
     TRACE_FUNC;
-    for (auto p : pattern)
+    for (const auto& p : pattern)
     {
         TRACE_OUT << "pattern = " << p TRACE_END;
         ret_pos = func(text, p, pos);
-        if (ret_pos.is_eof() == false)
+        if (ret_pos != string::npos)
         {
             TRACE_POS(ret_pos);
             break;
         }
+        ++idx;
     }
     return ret_pos;
 }
@@ -111,9 +122,21 @@ Cursor& Cursor::inc(size_t p)
     return *this;
 }
 
+Cursor& Cursor::dec(size_t p)
+{
+    pos -= p;
+
+    TRACE_FUNC;
+    TRACE_OUT << "decrement = " << p TRACE_END;
+    TRACE_POS(pos);
+
+    return *this;
+}
+
 Cursor& Cursor::operator += (size_t p)
 {
     pos += p;
+
     TRACE_FUNC;
     TRACE_OUT << "increment = " << p TRACE_END;
     TRACE_POS(pos);
@@ -276,7 +299,8 @@ Cursor& Cursor::move_to(const vector < string > & pattern, find_func func)
     {
         throw runtime_error("Cursor::move_to Find function in move_to is NULL.");
     }
-    pos = multi_find(pattern, func);
+    size_t idx;
+    pos = multi_find(pattern, func, idx);
 
     TRACE_POS(pos);
 
@@ -337,14 +361,20 @@ Cursor& Cursor::move_to(const string& pattern1, const string& pattern2, find_fun
 Cursor& Cursor::move_while(const string& pattern)
 {
     TRACE_FUNC;
+    bool found = false;
     for (; is_eof() == false; ++pos)
     {
-        if (pattern.find(text[pos]) != Position::eof)
+        if (pattern.find(text.substr(pos, pos)) == string::npos)
         {
+            found = true;
             break;
         }
     }
 
+    if (found == false)
+        pos = get_string().size();
+
+    pos -= 1;
     TRACE_OUT << "pattern = " << pattern TRACE_END;
     TRACE_POS(pos);
 
@@ -354,14 +384,20 @@ Cursor& Cursor::move_while(const string& pattern)
 Cursor& Cursor::move_until(const string& pattern)
 {
     TRACE_FUNC;
-
+    bool found = false;
     for (; is_eof() == false; ++pos)
     {
-        if (pattern.find(text[pos]) == Position::eof)
+        if (pattern.find(text.substr(pos)) != string::npos)
         {
+            found = true;
             break;
         }
     }
+
+    if (found == false)
+        pos = get_string().size();
+
+    pos -= 1;
 
     TRACE_OUT << "pattern = " << pattern TRACE_END;
     TRACE_POS(pos);
@@ -395,10 +431,10 @@ Cursor& Cursor::move_to_end(const vector<string>& pattern, find_func func)
     {
         throw runtime_error("Cursor::move_to_end Find function is NULL.");
     }
-
-    pos = multi_find(pattern, func);
+    size_t idx;
+    pos = multi_find(pattern, func, idx);
     if (is_eof() == false)
-        pos += pattern.size();
+        pos += pattern[idx].size();
     TRACE_POS(pos);
 
     return *this;
@@ -409,7 +445,13 @@ Cursor& Cursor::next_word(const string& pattern)
     TRACE_FUNC;
 
     pos = get_string().find_first_of(pattern, pos);
+    bool flag = is_eof();
     pos = get_string().find_first_not_of(pattern, pos);
+
+    if (flag == false && pos == string::npos)
+    {
+        pos = get_string().size() - 1;
+    }
 
     TRACE_OUT << "pattern = " << pattern TRACE_END;
     TRACE_POS(pos);
@@ -426,7 +468,7 @@ Cursor& Cursor::move_to_begin_of_word(const string& pattern)
 {
     TRACE_FUNC;
 
-    if (pattern.find_first_of(text[pos]) == Position::eof) //pos должна быть в слове, иначе не понятно в каком слове искать начало
+    if (pattern.find_first_of(text.substr(pos)) == string::npos) //pos должна быть в слове, иначе не понятно в каком слове искать начало
     {
         pos = rfind_first_of(pattern, pos);
     }
@@ -451,13 +493,20 @@ Cursor& Cursor::move_to_end_of_word(const string& pattern)
     TRACE_FUNC;
     TRACE_OUT << "pattern = " << pattern TRACE_END;
 
-    if (pattern.find_first_of(text[pos]) == Position::eof)
+    bool flag = is_eof();
+
+    if (pattern.find_first_of(text.substr(pos)) == string::npos)// pos is in the word
     {
-        pos = get_string().find_first_of(space_pattern, pos);
+        pos = get_string().find_first_of(space_pattern, pos);//find end of the word
+        if (flag == false && pos == string::npos) //end of the test/string
+            pos = get_string().size() - 1;
+        else
+            pos -= 1;
+
         TRACE_POS(pos);
         return *this;
     }
-
+    //pos is not in the word
     pos = Position::eof;
     TRACE_POS(pos);
     return *this;
@@ -472,7 +521,7 @@ Cursor& Cursor::goto_line(size_t line_num)
 {
     TRACE_FUNC;
     begin();
-    next_line(line_num);
+    next_line(line_num - 1);
 
     return *this;
 }
@@ -496,10 +545,6 @@ Cursor& Cursor::next_line()
 
 Cursor& Cursor::next_line(size_t count)
 {
-    if (count < 0)
-    {
-        throw runtime_error("Cursor::next_line, argument cannot be less zero.");
-    }
     size_t i;
     for ( i = 0; i < count; i++)
     {
@@ -517,33 +562,16 @@ Cursor& Cursor::prev_line()
     Position p = get_string().rfind(ENDL, pos);
     if (p.is_eof() == false)
     {
-        pos = p;
-        TRACE_POS(pos);
-        return *this;
-    }
-
-    if (p > 1)
-    {
         pos = p - ENDL_SIZE;
-        TRACE_POS(pos);
-
-        return *this;
     }
 
-    pos = Position::eof;
     TRACE_POS(pos);
-
     return *this;
 }
 
 Cursor& Cursor::prev_line(size_t count)
 {
-    if (count < 0)
-    {
-        throw runtime_error("Cursor::prev_line, argument cannot be less zero.");
-    }
-
-    for (size_t i = 0; i < count || is_eof() == false; ++i)
+    for (size_t i = 0; i < count && is_eof() == false; ++i)
     {
         prev_line();
     }
@@ -591,7 +619,7 @@ Cursor& Cursor::begin()
 Cursor& Cursor::end()
 {
     TRACE_FUNC;
-    pos = text.size() - ENDL_SIZE;
+    pos = text.size();
     TRACE_POS(pos);
     return *this;
 }
@@ -699,19 +727,7 @@ void Cursor::reset()
     pos.reset();
 }
 
-Cursor& Cursor::move_to_line(size_t line_num)
-{
-    TRACE_FUNC;
-
-    begin();
-    next_line(line_num);
-    if(is_eof() == false)
-        move_to_begin_of_line();
-
-    return *this;
-}
-
-Cursor& Cursor::move_to_col(size_t col)
+Cursor& Cursor::goto_col(size_t col)
 {
     TRACE_FUNC;
     move_to_begin_of_line();
@@ -730,6 +746,7 @@ Cursor& Cursor::move_to_col(size_t col)
 //////////////////////////////////////////////////////////////////////////
 DECLARE_MODULE(CURSOR)
 m->add(chaiscript::fun(&Cursor::inc), "inc");
+m->add(chaiscript::fun(&Cursor::dec), "dec");
 
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(size_t)>(&Cursor::move_to)), "move_to");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&, find_func)>(&Cursor::move_to)), "move_to");
@@ -743,6 +760,7 @@ m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&, find_func)
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const vector<string>&, find_func)>(&Cursor::move_to_end)), "move_to_end");
 
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(size_t)>(&Cursor::goto_line)), "goto_line");
+m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(size_t)>(&Cursor::goto_col)), "goto_col");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)()>(&Cursor::next_line)), "next_line");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(size_t)>(&Cursor::next_line)), "next_line");
 

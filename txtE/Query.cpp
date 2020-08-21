@@ -87,12 +87,12 @@ bool Exact::execute() const
 
     if (QueryBase::execute())
     {
-        string text = cursor->get_text()._get(cursor->get_pos(), cursor->get_pos() + pattern.size());
+        string text = cursor->get_text().substr(cursor->get_pos(), cursor->get_pos() + pattern.size());
         if (text == pattern)
         {
             set_out(text);
-            TRACE_OUT << "found " << "text = " << text TRACE_END
-                cursor->inc(pattern.size());
+            TRACE_OUT << "found " << "text = " << text TRACE_END;
+            cursor->inc(pattern.size());
             return true;
         }
     }
@@ -152,7 +152,7 @@ bool Any::execute() const
         if (found_qty > 0)
         {
             size_t qty = distance(cursor->get_string().begin() + pos, i);
-            string result = cursor->get_text()._get(pos, pos + qty);
+            string result = cursor->get_text().substr(pos, pos + qty);
             set_out(result);
             TRACE_OUT << "found " << "text = " << result TRACE_END
             cursor->inc(qty);
@@ -206,7 +206,7 @@ bool Is::execute() const
         if (found_qty > 0)
         {
             size_t qty = distance(cursor->get_string().begin() + pos, i);
-            string result = cursor->get_text()._get(pos, pos + qty);
+            string result = cursor->get_text().substr(pos, pos + qty);
             set_out(result);
             TRACE_OUT << "found text = " << result TRACE_END;
             cursor->inc(qty);
@@ -260,7 +260,7 @@ bool Range::execute() const
         if (found_qty > 0)
         {
             size_t qty = distance(cursor->get_string().begin() + pos, i);
-            string result = cursor->get_text()._get(pos, pos + qty);
+            string result = cursor->get_text().substr(pos, pos + qty);
             set_out(result);
             TRACE_OUT << "found text = " << result TRACE_END;
             cursor->inc(qty);
@@ -289,7 +289,7 @@ bool Set::execute() const
     {
         for (const auto& p : pattern)
         {
-            string text = cursor->get_text()._get(cursor->get_pos(), cursor->get_pos() + p.size());
+            string text = cursor->get_text().substr(cursor->get_pos(), cursor->get_pos() + p.size());
             if (text == p)
             {
                 set_out(text);
@@ -311,12 +311,13 @@ bool Endl::execute() const
     TRACE_FUNC;
     if (QueryBase::execute())
     {
-        string text = cursor->get_text()._get(cursor->get_pos(), ENDL_SIZE);
+        string text;
+        text += cursor->get_text().substr(cursor->get_pos());//TODO
 
         if (text == ENDL)
         {
-            TRACE_OUT << "found ENDL" TRACE_END
-                cursor->inc(ENDL_SIZE);
+            TRACE_OUT << "found ENDL" TRACE_END;
+            cursor->inc(ENDL_SIZE);
             return true;
         }
     }
@@ -346,7 +347,7 @@ bool Word::execute() const
             auto p1 = (cursor->get_string()).find_first_of(space_pattern, p);
             if (cursor->is_eof(p1) == false || p1 == string::npos)
             {
-                string result = cursor->get_text()._get(p, p1);
+                string result = cursor->get_text().substr(p, p1);
                 set_out(result);
                 TRACE_OUT << "found text = " << result TRACE_END;
                 cursor->move_to(p1);
@@ -381,7 +382,7 @@ bool Number::execute() const
             auto p1 = cursor->get_string().find_first_not_of(pattern, p);
             if (cursor->is_eof(p1) == false || p1 == string::npos)
             {
-                string result = cursor->get_text()._get(p, p1);
+                string result = cursor->get_text().substr(p, p1);
                 if (is_number(result))
                 {
                     set_out(result);

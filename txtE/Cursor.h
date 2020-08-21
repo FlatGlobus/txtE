@@ -159,7 +159,7 @@ protected:
 
     Position rfind_first_of(const string& pattern, const Position & p);
     void check_cursor(const Cursor& c);
-    Position multi_find(const vector<string>& pattern, find_func func);
+    Position multi_find(const vector<string>& pattern, find_func func, size_t& idx);
     int find_count(const string& pattern, const Position& from_pos, const Position& until_pos, find_func func);
 
 public:
@@ -171,6 +171,7 @@ public:
     Cursor(const Cursor& c, const string& pattern, find_func func);
 
     Cursor& inc(size_t p);
+    Cursor& dec(size_t p);
     Cursor& operator += (size_t p);
     size_t operator + (size_t p);
     Cursor& operator ++ ();
@@ -210,6 +211,8 @@ public:
     Cursor& move_to_end_of_word();
 
     Cursor& goto_line(size_t line_num);
+    Cursor& goto_col(size_t col);
+
     Cursor& next_line();
     Cursor& next_line(size_t count);
 
@@ -218,9 +221,6 @@ public:
 
     Cursor& move_to_begin_of_line();
     Cursor& move_to_end_of_line();
-
-    Cursor& move_to_line(size_t line_num);
-    Cursor& move_to_col(size_t col);
 
     Cursor& begin();
     Cursor& end();
@@ -233,12 +233,7 @@ public:
     bool is_eof() const;
     bool is_eof(size_t p) const;
 
-    inline operator const Position& () const
-    {
-        return pos;
-    }
-
-    inline operator size_t () const
+    inline operator Position () const
     {
         return pos;
     }
@@ -270,7 +265,7 @@ public:
         return name;
     }
 
-    explicit inline operator bool() const
+    inline operator bool() const
     {
         return is_eof() == false;
     }
