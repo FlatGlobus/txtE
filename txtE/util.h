@@ -31,7 +31,7 @@ protected:
 };
 
 #define ENDL "\n"
-#define ENDL_SIZE 1
+#define ENDL_SIZE (size_t)1
 
 extern bool enable_trace;
 extern size_t _TRACE_TEXT_DELTA;

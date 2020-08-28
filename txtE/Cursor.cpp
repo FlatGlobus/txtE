@@ -52,7 +52,7 @@ Position Cursor::rfind_first_of(const string& pattern, const Position& p)
         if (pattern.find(text.substr(i)) != string::npos || i == 0)
         {
             TRACE_POS(i);
-            return i != 0 ? i + 1 : 0;
+            return i != 0 ? ++i : Position();
         }
         i -= 1;
 
@@ -133,6 +133,17 @@ Cursor& Cursor::dec(size_t p)
     return *this;
 }
 
+Cursor& Cursor::operator += (const Cursor& p)
+{
+    pos += p.pos;
+
+    TRACE_FUNC;
+    TRACE_OUT << "increment = " << p.get_pos() TRACE_END;
+    TRACE_POS(pos);
+
+    return *this;
+}
+
 Cursor& Cursor::operator += (size_t p)
 {
     pos += p;
@@ -144,14 +155,28 @@ Cursor& Cursor::operator += (size_t p)
     return *this;
 }
 
-size_t Cursor::operator + (size_t p)
+Cursor Cursor::operator + (const Cursor & p)
 {
-    size_t sum = pos + p;
+    Cursor sum(*this);
+    sum = pos + p.pos;
+
+    TRACE_FUNC;
+    TRACE_OUT << "increment = " << p.get_pos() TRACE_END;
+    TRACE_OUT << "sum = " << sum.get_pos() TRACE_END;
+    TRACE_POS(sum.get_pos());
+
+    return sum;
+}
+
+Cursor Cursor::operator + (size_t p)
+{
+    Cursor sum(*this);
+    sum = pos + p;
 
     TRACE_FUNC;
     TRACE_OUT << "increment = " << p TRACE_END;
-    TRACE_OUT << "sum = " << sum TRACE_END;
-    TRACE_POS(sum);
+    TRACE_OUT << "sum = " << sum.get_pos() TRACE_END;
+    TRACE_POS(sum.get_pos());
 
     return sum;
 }
@@ -161,6 +186,17 @@ Cursor& Cursor::operator ++ ()
     ++pos;
 
     TRACE_FUNC;
+    TRACE_POS(pos);
+
+    return *this;
+}
+
+Cursor& Cursor::operator -= (const Cursor& p)
+{
+    pos -= p.pos;
+
+    TRACE_FUNC;
+    TRACE_OUT << "decrement = " << p.to_string() TRACE_END;
     TRACE_POS(pos);
 
     return *this;
@@ -177,9 +213,22 @@ Cursor& Cursor::operator -= (size_t p)
     return *this;
 }
 
-size_t Cursor::operator - (size_t p)
+Cursor Cursor::operator - (const Cursor& p)
 {
-    size_t dec = pos - p;
+    Cursor dec(*this);
+    dec = pos - p.pos;
+
+    TRACE_FUNC;
+    TRACE_OUT << "decrement = " << p.get_pos() TRACE_END;
+    TRACE_POS(pos);
+
+    return dec;
+}
+
+Cursor Cursor::operator - (size_t p)
+{
+    Cursor dec(*this);
+    dec = pos - p;
 
     TRACE_FUNC;
     TRACE_OUT << "decrement = " << p TRACE_END;
@@ -198,18 +247,34 @@ Cursor& Cursor::operator -- ()
     return *this;
 }
 
+bool Cursor::operator == (const Cursor& c)
+{
+    TRACE_FUNC;
+    //TRACE_OUT << "comparison result = " << (pos == ñ ? "true" : "false") TRACE_END;
+
+    return pos == c.pos;
+}
+
 bool Cursor::operator == (size_t p)
 {
     TRACE_FUNC;
-    TRACE_OUT << "comparison result = " << (pos == p ? "true" : "false") TRACE_END;
+    //TRACE_OUT << "comparison result = " << (pos == ñ ? "true" : "false") TRACE_END;
 
     return pos == p;
+}
+
+bool Cursor::operator != (const Cursor& c)
+{
+    TRACE_FUNC;
+    //TRACE_OUT << "comparison result = " << (pos != p ? "true" : "false") TRACE_END;
+
+    return pos != c.pos;
 }
 
 bool Cursor::operator != (size_t p)
 {
     TRACE_FUNC;
-    TRACE_OUT << "comparison result = " << (pos != p ? "true" : "false") TRACE_END;
+    //TRACE_OUT << "comparison result = " << (pos != p ? "true" : "false") TRACE_END;
 
     return pos != p;
 }
@@ -237,32 +302,62 @@ Cursor& Cursor::operator = (size_t p)
     return *this;
 }
 
+bool Cursor::operator < (const Cursor& c)
+{
+    TRACE_FUNC;
+    //TRACE_OUT << "comparison result = " << (pos < p ? "true" : "false") TRACE_END;
+
+    return pos < c.pos;
+}
+
 bool Cursor::operator < (size_t p)
 {
     TRACE_FUNC;
-    TRACE_OUT << "comparison result = " << (pos < p ? "true" : "false") TRACE_END;
+    //TRACE_OUT << "comparison result = " << (pos < p ? "true" : "false") TRACE_END;
 
     return pos < p;
+}
+
+bool Cursor::operator <= (const Cursor& c)
+{
+    TRACE_FUNC;
+    //TRACE_OUT << "comparison result = " << (pos <= p ? "true" : "false") TRACE_END;
+    return pos <= c.pos;
 }
 
 bool Cursor::operator <= (size_t p)
 {
     TRACE_FUNC;
-    TRACE_OUT << "comparison result = " << (pos <= p ? "true" : "false") TRACE_END;
+    //TRACE_OUT << "comparison result = " << (pos <= p ? "true" : "false") TRACE_END;
     return pos <= p;
+}
+
+bool Cursor::operator >= (const Cursor& c)
+{
+    TRACE_FUNC;
+    //TRACE_OUT << "comparison result = " << (pos >= p ? "true" : "false") TRACE_END;
+    return pos >= c.pos;
 }
 
 bool Cursor::operator >= (size_t p)
 {
     TRACE_FUNC;
-    TRACE_OUT << "comparison result = " << (pos >= p ? "true" : "false") TRACE_END;
+    //TRACE_OUT << "comparison result = " << (pos >= p ? "true" : "false") TRACE_END;
     return pos >= p;
+}
+
+bool Cursor::operator > (const Cursor& c)
+{
+    TRACE_FUNC;
+    //TRACE_OUT << "comparison result = " << (pos > p ? "true" : "false") TRACE_END;
+
+    return pos > c.pos;
 }
 
 bool Cursor::operator > (size_t p)
 {
     TRACE_FUNC;
-    TRACE_OUT << "comparison result = " << (pos > p ? "true" : "false") TRACE_END;
+    //TRACE_OUT << "comparison result = " << (pos > p ? "true" : "false") TRACE_END;
 
     return pos > p;
 }
@@ -303,7 +398,6 @@ Cursor& Cursor::move_to(const vector < string > & pattern, find_func func)
     pos = multi_find(pattern, func, idx);
 
     TRACE_POS(pos);
-
     return *this;
 }
 
@@ -346,7 +440,7 @@ Cursor& Cursor::move_to(const string& pattern1, const string& pattern2, find_fun
             break;
         }
 
-        pos1 = pos2 + 1;
+        pos1 = ++pos2;
     }
     if (count == 0)
     {
@@ -354,7 +448,6 @@ Cursor& Cursor::move_to(const string& pattern1, const string& pattern2, find_fun
     }
 
     TRACE_POS(pos);
-
     return *this;
 }
 
@@ -464,7 +557,7 @@ Cursor& Cursor::next_word()
     return next_word(space_pattern);
 }
 
-Cursor& Cursor::move_to_begin_of_word(const string& pattern)
+Cursor& Cursor::move_to_word_begin(const string& pattern)
 {
     TRACE_FUNC;
 
@@ -483,12 +576,12 @@ Cursor& Cursor::move_to_begin_of_word(const string& pattern)
     return *this;
 }
 
-Cursor& Cursor::move_to_begin_of_word()
+Cursor& Cursor::move_to_word_begin()
 {
-    return move_to_begin_of_word(space_pattern);
+    return move_to_word_begin(space_pattern);
 }
 
-Cursor& Cursor::move_to_end_of_word(const string& pattern)
+Cursor& Cursor::move_to_word_end(const string& pattern)
 {
     TRACE_FUNC;
     TRACE_OUT << "pattern = " << pattern TRACE_END;
@@ -512,9 +605,9 @@ Cursor& Cursor::move_to_end_of_word(const string& pattern)
     return *this;
 }
 
-Cursor& Cursor::move_to_end_of_word()
+Cursor& Cursor::move_to_word_end()
 {
-    return move_to_end_of_word(space_pattern);
+    return move_to_word_end(space_pattern);
 }
 
 Cursor& Cursor::goto_line(size_t line_num)
@@ -578,7 +671,7 @@ Cursor& Cursor::prev_line(size_t count)
     return *this;
 }
 
-Cursor& Cursor::move_to_begin_of_line()
+Cursor& Cursor::move_to_line_begin()
 {
     TRACE_FUNC;
     if (pos == 0)
@@ -594,16 +687,19 @@ Cursor& Cursor::move_to_begin_of_line()
         return *this;
     }
 
-    pos += 1;
+    pos += ENDL_SIZE;
     TRACE_POS(pos);
 
     return *this;
 }
 
-Cursor& Cursor::move_to_end_of_line()
+Cursor& Cursor::move_to_line_end()
 {
     TRACE_FUNC;
     pos = get_string().find(ENDL, pos);
+    if (pos.is_eof())
+        pos = get_string().size() - ENDL_SIZE;
+
     TRACE_POS(pos);
     return *this;
 }
@@ -619,7 +715,7 @@ Cursor& Cursor::begin()
 Cursor& Cursor::end()
 {
     TRACE_FUNC;
-    pos = text.size();
+    pos = text.size() - 1;
     TRACE_POS(pos);
     return *this;
 }
@@ -730,7 +826,7 @@ void Cursor::reset()
 Cursor& Cursor::goto_col(size_t col)
 {
     TRACE_FUNC;
-    move_to_begin_of_line();
+    move_to_line_begin();
     
     size_t line_end = get_string().find(ENDL, pos);
 
@@ -767,17 +863,17 @@ m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(size_t)>(&Cursor::next_li
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)()>(&Cursor::prev_line)), "prev_line");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(size_t)>(&Cursor::prev_line)), "prev_line");
 
-m->add(chaiscript::fun(&Cursor::move_to_begin_of_line), "move_to_begin_of_line");
-m->add(chaiscript::fun(&Cursor::move_to_end_of_line), "move_to_end_of_line");
+m->add(chaiscript::fun(&Cursor::move_to_line_begin), "move_to_line_begin");
+m->add(chaiscript::fun(&Cursor::move_to_line_end), "move_to_line_end");
 
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&)>(&Cursor::next_word)), "next_word");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)()>(&Cursor::next_word)), "next_word");
 
-m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&)>(&Cursor::move_to_begin_of_word)), "move_to_begin_of_word");
-m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)()>(&Cursor::move_to_begin_of_word)), "move_to_begin_of_word");
+m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&)>(&Cursor::move_to_word_begin)), "move_to_word_begin");
+m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)()>(&Cursor::move_to_word_begin)), "move_to_word_begin");
 
-m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&)>(&Cursor::move_to_end_of_word)), "move_to_end_of_word");
-m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)()>(&Cursor::move_to_end_of_word)), "move_to_end_of_word");
+m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const string&)>(&Cursor::move_to_word_end)), "move_to_word_end");
+m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)()>(&Cursor::move_to_word_end)), "move_to_word_end");
 
 m->add(chaiscript::fun(&Cursor::begin), "begin");
 m->add(chaiscript::fun(&Cursor::end), "end");
@@ -799,23 +895,41 @@ m->add(chaiscript::fun(static_cast<bool(Cursor::*)(size_t, size_t)>(&Cursor::set
 m->add(chaiscript::fun(static_cast<bool(Cursor::*)(size_t, size_t)>(&Cursor::set_range)), "set_range");
 m->add(chaiscript::fun(static_cast<void(Cursor::*)(size_t)>(&Cursor::set_min_range)), "set_min_range");
 m->add(chaiscript::fun(static_cast<void(Cursor::*)(size_t)>(&Cursor::set_max_range)), "set_max_range");
+
 m->add(chaiscript::fun(&Cursor::reset), "reset");
 m->add(chaiscript::fun(&Cursor::get_min_range), "get_min_range");
 m->add(chaiscript::fun(&Cursor::get_max_range), "get_max_range");
 
-m->add(chaiscript::fun(&Cursor::operator +=), "+=");
-m->add(chaiscript::fun(&Cursor::operator ++), "++");
-m->add(chaiscript::fun(&Cursor::operator +), "+");
-m->add(chaiscript::fun(&Cursor::operator -=), "-=");
-m->add(chaiscript::fun(&Cursor::operator --), "--");
-m->add(chaiscript::fun(&Cursor::operator -), "-");
+m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const Cursor&)>(&Cursor::operator +=)), "+=");
+m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(size_t)>(&Cursor::operator +=)), "+=");
+m->add(chaiscript::fun(static_cast<Cursor (Cursor::*)(const Cursor&)>(&Cursor::operator +)), "+");
+m->add(chaiscript::fun(static_cast<Cursor (Cursor::*)(size_t)>(&Cursor::operator +)), "+");
+m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const Cursor&)>(&Cursor::operator -=)), "-=");
+m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(size_t)>(&Cursor::operator -=)), "-=");
+m->add(chaiscript::fun(static_cast<Cursor(Cursor::*)(const Cursor&)>(&Cursor::operator -)), "-");
+m->add(chaiscript::fun(static_cast<Cursor(Cursor::*)(size_t)>(&Cursor::operator +)), "-");
 
-m->add(chaiscript::fun(&Cursor::operator <), "<");
-m->add(chaiscript::fun(&Cursor::operator <=), "<=");
-m->add(chaiscript::fun(&Cursor::operator >), ">");
-m->add(chaiscript::fun(&Cursor::operator >=), ">=");
-m->add(chaiscript::fun(&Cursor::operator ==), "==");
-m->add(chaiscript::fun(&Cursor::operator !=), "!=");
+m->add(chaiscript::fun(&Cursor::operator ++), "++");
+m->add(chaiscript::fun(&Cursor::operator --), "--");
+
+
+m->add(chaiscript::fun(static_cast<bool (Cursor::*)(const Cursor&)>(&Cursor::operator <)), "<");
+m->add(chaiscript::fun(static_cast<bool (Cursor::*)(size_t)>(&Cursor::operator <)), "<");
+
+m->add(chaiscript::fun(static_cast<bool (Cursor::*)(const Cursor&)>(&Cursor::operator <=)), "<=");
+m->add(chaiscript::fun(static_cast<bool (Cursor::*)(size_t)>(&Cursor::operator <=)), "<=");
+
+m->add(chaiscript::fun(static_cast<bool (Cursor::*)(const Cursor&)>(&Cursor::operator >)), ">");
+m->add(chaiscript::fun(static_cast<bool (Cursor::*)(size_t)>(&Cursor::operator >)), ">");
+
+m->add(chaiscript::fun(static_cast<bool (Cursor::*)(const Cursor&)>(&Cursor::operator >=)), ">=");
+m->add(chaiscript::fun(static_cast<bool (Cursor::*)(size_t)>(&Cursor::operator >=)), ">=");
+
+m->add(chaiscript::fun(static_cast<bool (Cursor::*)(const Cursor&)>(&Cursor::operator ==)), "==");
+m->add(chaiscript::fun(static_cast<bool (Cursor::*)(size_t)>(&Cursor::operator ==)), "==");
+
+m->add(chaiscript::fun(static_cast<bool (Cursor::*)(const Cursor&)>(&Cursor::operator !=)), "!=");
+m->add(chaiscript::fun(static_cast<bool (Cursor::*)(size_t)>(&Cursor::operator !=)), "!=");
 
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const Cursor&)>(&Cursor::operator =)), "=");
 m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(size_t)>(&Cursor::operator =)), "=");
@@ -828,11 +942,10 @@ m->add(chaiscript::user_type<Cursor>(), "Cursor");
 m->add(chaiscript::constructor<Cursor(Text&, const string&, find_func)>(), "Cursor");
 m->add(chaiscript::constructor<Cursor(const Cursor&, const string&, find_func)>(), "Cursor");
 
-//m->add(chaiscript::type_conversion<Cursor, Position>());
 m->add(chaiscript::type_conversion<Cursor, bool>([](const Cursor& c)-> bool { return c.is_eof() == false;}));
 
-m->add(chaiscript::type_conversion<Position, size_t>());
-m->add(chaiscript::user_type<Position>(), "Position");
+//m->add(chaiscript::type_conversion<Position, size_t>());
+//m->add(chaiscript::user_type<Position>(), "Position");
 
 m->add_global_const(chaiscript::const_var(Position::eof), "eof");
 END_DECLARE(CURSOR)

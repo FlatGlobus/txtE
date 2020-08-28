@@ -21,7 +21,6 @@ class Text
 {
     string text;
     el_types original_endl;
-    bool changed;
 
     el_types find_endl_type();
 protected:
@@ -43,7 +42,7 @@ public:
 
     void set(const Cursor&, const string&);
     void set_line(const Cursor&, const string&);
-
+    
     void insert(const Cursor&, const string&);
     void insert_line(const Cursor&, const string&);
 
@@ -63,15 +62,19 @@ public:
     el_types get_endl_type() const { return original_endl; }
 
     operator const string& () const { return text; }
-    bool is_changed() { return changed; };
 
     Text& operator = (const string&);
     Text& operator = (const Text&);
 
     //internal methods
+    string substr(Cursor, Cursor) const;
+    string substr(const Cursor&, size_t) const;
+    char substr(const Cursor&) const;
+
     string substr(Position, Position) const;
-    string substr(Position, size_t) const;
-    char substr(Position) const;
+    string substr(const Position&, size_t) const;
+    char substr(const Position&) const;
+
     //TODO sort
 };
 

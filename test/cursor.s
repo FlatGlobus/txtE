@@ -5,23 +5,23 @@ text_c.load("txt.txt");
 var cursor_c  = Cursor(text_c);
 
 cursor_c = 2;
-if(cursor_c.move_to_begin_of_word() == 0)
+if(cursor_c.move_to_word_begin() == 0)
 {
-	print("Cursor: move_to_begin_of_word true");
+	print("Cursor: move_to_word_begin true");
 }
 else
 {
-	print("Cursor: move_to_begin_of_word false");
+	print("Cursor: move_to_word_begin false");
 }
 
 cursor_c = 10;
-if(cursor_c.move_to_begin_of_word() == 6)
+if(cursor_c.move_to_word_begin() == 6)
 {
-	print("Cursor: move_to_begin_of_word true");
+	print("Cursor: move_to_word_begin true");
 }
 else
 {
-	print("Cursor: move_to_begin_of_word false");
+	print("Cursor: move_to_word_begin false");
 }
 
 cursor_c = 0;
@@ -177,25 +177,25 @@ else
 	print("Cursor: next_word false");
 }
 
-if(cursor_m.move_to_begin_of_word() == 6)
+if(cursor_m.move_to_word_begin() == 6)
 {
-	print("Cursor: move_to_begin_of_word true");
+	print("Cursor: move_to_word_begin true");
 }
 else
 {
-	print("Cursor: move_to_begin_of_word false");
+	print("Cursor: move_to_word_begin false");
 }
 
-if(cursor_m.move_to_end_of_word() == 10)
+if(cursor_m.move_to_word_end() == 10)
 {
-	print("Cursor: move_to_end_of_word true");
+	print("Cursor: move_to_word_end true");
 }
 else
 {
-	print("Cursor: move_to_end_of_word false");
+	print("Cursor: move_to_word_end false");
 }
 
-if(text_c.get_line(cursor_c.goto_line(21)) == "voluptas nulla pariatur?")
+if(text_c.get_line(cursor_c.goto_line(21)) == "voluptas nulla pariatur?\n")
 {
 	print("Cursor: goto_line true");
 }
@@ -204,7 +204,7 @@ else
 	print("Cursor: goto_line false");
 }
 
-if(text_c.get_line(cursor_c.prev_line(2)) == "consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit ")
+if(text_c.get_line(cursor_c.prev_line(2)) == "consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit \n")
 {
 	print("Cursor: prev_line true");
 }
@@ -213,7 +213,7 @@ else
 	print("Cursor: prev_line false");
 }
 
-cursor_c.move_to_begin_of_line();
+cursor_c.move_to_line_begin();
 if(text_c.get(cursor_c.goto_col(5), 6) == "quatur")
 {
 	print("Cursor: goto_col true");
@@ -221,4 +221,49 @@ if(text_c.get(cursor_c.goto_col(5), 6) == "quatur")
 else
 {
 	print("Cursor: goto_col false");
+}
+
+cursor_c = 0;
+cursor_c.move_to_line_begin();
+if( cursor_c == 0)
+{
+	print("Cursor: move_to_line_begin true");
+}
+else
+{
+	print("Cursor: move_to_line_begin false");
+}
+
+cursor_c.goto_line(2);
+cursor_c.move_to_line_begin();
+if( text_c.get_line(cursor_c) == "incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis \n")
+{
+	print("Cursor: move_to_line_begin true");
+}
+else
+{
+	print("Cursor: move_to_line_begin false");
+}
+
+cursor_c = 0;
+cursor_c.move_to_line_end();
+if( cursor_c == 79)
+{
+	print("Cursor: move_to_line_end true");
+}
+else
+{
+	print("Cursor: move_to_line_end false");
+}
+
+cursor_c = 0;
+cursor_c.goto_line(24);
+cursor_c.move_to_line_end();
+if( cursor_c == 1451)
+{
+	print("Cursor: move_to_line_end true");
+}
+else
+{
+	print("Cursor: move_to_line_end false");
 }

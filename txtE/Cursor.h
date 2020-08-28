@@ -6,7 +6,6 @@
 #include <map>
 #include <functional>
 #include <algorithm>
-#include <compare>
 #include <chaiscript/chaiscript.hpp>
 #include "text.h"
 #include <memory>
@@ -24,11 +23,11 @@ class Position
 
     inline size_t inc(size_t delta) const
     {
-        if(is_eof(pos))
+        if (is_eof(pos))
             return Position::eof;
 
         size_t temp_pos = pos + delta;
-        if(temp_pos < pos || max_pos < temp_pos)
+        if (temp_pos < pos || max_pos < temp_pos)
             return Position::eof;
 
         return pos + delta;
@@ -79,8 +78,26 @@ public:
         return *this;
     }
 
+    inline Position& operator = (size_t p)
+    {
+        pos = p;
+        return *this;
+    }
+
     inline operator size_t () const { return pos; }
     inline operator string () const { return to_string(pos); }
+
+    inline Position operator + (size_t delta)
+    {
+        Position ret(*this);
+        return  ret.inc(delta);
+    }
+
+    inline Position operator - (size_t delta)
+    {
+        Position ret(*this);
+        return  ret.dec(delta);
+    }
 
     inline Position& operator ++()
     {
@@ -88,7 +105,7 @@ public:
         return *this;
     }
 
-    inline const Position& operator --()
+    inline Position& operator --()
     {
         pos = dec(1);
         return *this;
@@ -100,7 +117,7 @@ public:
         return *this;
     }
 
-    inline const Position& operator -=(size_t delta)
+    inline Position& operator -=(size_t delta)
     {
         pos = dec(delta);
         return *this;
@@ -112,7 +129,7 @@ public:
         return *this;
     }
 
-    inline const Position& operator -=(const Position& delta)
+    inline Position& operator -=(const Position& delta)
     {
         pos = dec(delta.pos);
         return *this;
@@ -131,7 +148,7 @@ public:
     inline void set_to_min() { pos = min_pos; }
     inline void set_to_max() { pos = max_pos; }
 
-    void reset()
+    inline void reset()
     {
         size_t pos = 0;
         size_t min_pos = 0;
@@ -153,11 +170,11 @@ class Cursor
 {
 protected:
     posMap labels;
-    Text&  text;
+    Text& text;
     Position pos;
     string name;
 
-    Position rfind_first_of(const string& pattern, const Position & p);
+    Position rfind_first_of(const string& pattern, const Position& p);
     void check_cursor(const Cursor& c);
     Position multi_find(const vector<string>& pattern, find_func func, size_t& idx);
     int find_count(const string& pattern, const Position& from_pos, const Position& until_pos, find_func func);
@@ -170,24 +187,37 @@ public:
     Cursor(Text& t, const string& pattern, find_func func);
     Cursor(const Cursor& c, const string& pattern, find_func func);
 
-    Cursor& inc(size_t p);
-    Cursor& dec(size_t p);
-    Cursor& operator += (size_t p);
-    size_t operator + (size_t p);
+    Cursor& inc(size_t);
+    Cursor& dec(size_t);
+
+    Cursor& operator += (const Cursor&);
+    Cursor& operator += (size_t);
+    Cursor operator + (const Cursor&);
+    Cursor operator + (size_t);
     Cursor& operator ++ ();
-    Cursor& operator -= (size_t p);
-    size_t operator - (size_t p);
+
+    Cursor& operator -= (const Cursor&);
+    Cursor& operator -= (size_t);
+    Cursor operator - (const Cursor&);
+    Cursor operator - (size_t);
     Cursor& operator -- ();
 
-    Cursor& operator = (const Cursor& c);
-    Cursor& operator = (size_t p);
+    Cursor& operator = (const Cursor&);
+    Cursor& operator = (size_t);
 
-    bool operator == (size_t p);
-    bool operator != (size_t p);
-    bool operator < (size_t p);
-    bool operator <= (size_t p);
-    bool operator >= (size_t p);
-    bool operator > (size_t p);
+    bool operator == (const Cursor&);
+    bool operator != (const Cursor&);
+    bool operator < (const Cursor&);
+    bool operator <= (const Cursor&);
+    bool operator >= (const Cursor&);
+    bool operator > (const Cursor&);
+
+    bool operator == (size_t);
+    bool operator != (size_t);
+    bool operator < (size_t);
+    bool operator <= (size_t);
+    bool operator >= (size_t);
+    bool operator > (size_t);
 
     Cursor& move_to(size_t p);
     Cursor& move_to(const string& pattern, find_func func);
@@ -204,11 +234,11 @@ public:
     Cursor& next_word(const string& pattern);
     Cursor& next_word();
 
-    Cursor& move_to_begin_of_word(const string& pattern);
-    Cursor& move_to_begin_of_word();
+    Cursor& move_to_word_begin(const string& pattern);
+    Cursor& move_to_word_begin();
 
-    Cursor& move_to_end_of_word(const string& pattern);
-    Cursor& move_to_end_of_word();
+    Cursor& move_to_word_end(const string& pattern);
+    Cursor& move_to_word_end();
 
     Cursor& goto_line(size_t line_num);
     Cursor& goto_col(size_t col);
@@ -219,8 +249,8 @@ public:
     Cursor& prev_line();
     Cursor& prev_line(size_t count);
 
-    Cursor& move_to_begin_of_line();
-    Cursor& move_to_end_of_line();
+    Cursor& move_to_line_begin();
+    Cursor& move_to_line_end();
 
     Cursor& begin();
     Cursor& end();
@@ -232,11 +262,6 @@ public:
 
     bool is_eof() const;
     bool is_eof(size_t p) const;
-
-    inline operator Position () const
-    {
-        return pos;
-    }
 
     inline const Position& get_pos() const
     {
