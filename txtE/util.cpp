@@ -1,8 +1,9 @@
 #include "util.h"
-#include "chaiscript/extras/string_methods.hpp"
+#include "extras/string_methods.hpp"
 #include <chaiscript/chaiscript.hpp>
 #include <intrin.h>
 #include "strtk/strtk.hpp"
+#include <time.h>
 
 //////////////////////////////////////////////////////////////////////////
 ChaiEngine::module_type * ChaiEngine::_modules;
@@ -167,6 +168,29 @@ void exit_if(bool flag, const string& msg)
     }
 }
 
+class Timer
+{
+    clock_t start_time { 0 };
+    int result { 0 };
+public:
+    Timer() {}
+
+    void start()
+    {
+        result = 0;
+        start_time = clock();
+    }
+
+    void stop()
+    {
+        result = (clock() - start_time);
+    }
+
+    double time()
+    {
+        return result / 1000.0;
+    }
+};
 //////////////////////////////////////////////////////////////////////////
 DECLARE_MODULE(THINGS)
 m->add(chaiscript::type_conversion<int, size_t>([](const int& t_bt) { return size_t(t_bt); }));
@@ -188,5 +212,12 @@ m->add(chaiscript::type_conversion<vector<chaiscript::Boxed_Value>, vector<strin
         for (const auto& bv : vec) ret.emplace_back(chaiscript::boxed_cast<string>(bv));
         return ret;})
 );
+
+m->add(chaiscript::constructor<Timer()>(), "Timer");
+m->add(chaiscript::user_type<Timer>(), "Timer");
+m->add(chaiscript::fun(&Timer::start), "start");
+m->add(chaiscript::fun(&Timer::stop), "stop");
+m->add(chaiscript::fun(&Timer::time), "time");
+
 
 END_DECLARE(THINGS)

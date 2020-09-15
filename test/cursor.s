@@ -34,7 +34,7 @@ else
 	print("Cursor: inc false");
 }
 
-if(cursor_c.end().inc(1).is_eof())
+if(cursor_c.end().inc(1).eof())
 {
 	print("Cursor: inc true");
 }
@@ -44,7 +44,7 @@ else
 }
 
 cursor_c = npos - 1;
-if(cursor_c.inc(2).is_eof())
+if(cursor_c.inc(2).eof())
 {
 	print("Cursor: inc (npos -1) + 2 true");
 }
@@ -54,7 +54,7 @@ else
 }
 
 cursor_c = 0;
-if(cursor_c.dec(2).is_eof())
+if(cursor_c.dec(2).eof())
 {
 	print("Cursor: dec 0 - 2 true");
 }

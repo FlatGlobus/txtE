@@ -1,5 +1,5 @@
 print("----------------Text---------------------------");
-var text_t = Text();
+var text_t = Text();  
 text_t.load("txt.txt");
 var cursor_t  = Cursor(text_t);
 

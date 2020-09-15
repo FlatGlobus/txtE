@@ -10,74 +10,78 @@
 #include <filesystem>
 
 namespace fs = std::filesystem;
-using namespace std;
 
-class Cursor;
-class Position;
-
-enum class el_types { elNone, elWin, elUnix, elMac };
-
-class Text
+namespace cursor
 {
-    string text;
-    el_types original_endl;
+    class Cursor;
+    class Position;
+}
 
-    el_types find_endl_type();
-protected:
-    void check_cursor(const Cursor&);
-public:
-    Text();
-    Text(const string&);
-    ~Text();
+namespace text
+{
+    enum class el_types { elNone, elWin, elUnix, elMac };
 
-    size_t load(const fs::path&);
-    size_t write(const fs::path&);
-    size_t write(const fs::path&, el_types);
+    class Text
+    {
+        std::string text;
+        el_types original_endl;
 
-    string get(const Cursor&, size_t);
-    string get_to_endl(const Cursor&);
-    string get_line(const Cursor& start);
-    string get_word(const Cursor& start);
-    string get_between(const Cursor&, const Cursor&);
+        el_types find_endl_type();
+    protected:
+        void check_cursor(const cursor::Cursor&);
+    public:
+        Text();
+        Text(const std::string&);
+        ~Text();
 
-    void set(const Cursor&, const string&);
-    void set_line(const Cursor&, const string&);
-    
-    void insert(const Cursor&, const string&);
-    void insert_line(const Cursor&, const string&);
+        size_t load(const fs::path&);
+        size_t write(const fs::path&);
+        size_t write(const fs::path&, el_types);
 
-    void add(const string&);
-    void add(const Text&);
+        std::string get(const cursor::Cursor&, size_t);
+        std::string get_to_endl(const cursor::Cursor&);
+        std::string get_line(const cursor::Cursor& start);
+        std::string get_word(const cursor::Cursor& start);
+        std::string get_between(const cursor::Cursor&, const cursor::Cursor&);
 
-    Cursor diff(const Cursor& start, const string& text1, string& result);
-    Cursor diff(const Cursor& start, const Text& text1, string& result);
+        void set(const cursor::Cursor&, const std::string&);
+        void set_line(const cursor::Cursor&, const std::string&);
 
-    size_t size() const;
+        void insert(const cursor::Cursor&, const std::string&);
+        void insert_line(const cursor::Cursor&, const std::string&);
 
-    void erase(const Cursor& pos, size_t count);
-    void erase_between(const Cursor& from, const Cursor& to);
-    void erase_line(const Cursor& pos);
-    void clear();
+        void add(const std::string&);
+        void add(const Text&);
 
-    el_types get_endl_type() const { return original_endl; }
+        cursor::Cursor diff(const cursor::Cursor& start, const std::string& text1, std::string& result);
+        cursor::Cursor diff(const cursor::Cursor& start, const Text& text1, std::string& result);
 
-    operator const string& () const { return text; }
+        size_t size() const;
 
-    Text& operator = (const string&);
-    Text& operator = (const Text&);
+        void erase(const cursor::Cursor& pos, size_t count);
+        void erase_between(const cursor::Cursor& from, const cursor::Cursor& to);
+        void erase_line(const cursor::Cursor& pos);
+        void clear();
 
-    //internal methods
-    string substr(Cursor, Cursor) const;
-    string substr(const Cursor&, size_t) const;
-    char substr(const Cursor&) const;
+        el_types get_endl_type() const { return original_endl; }
 
-    string substr(Position, Position) const;
-    string substr(const Position&, size_t) const;
-    char substr(const Position&) const;
+        operator const std::string& () const { return text; }
 
-    //TODO sort
-};
+        Text& operator = (const std::string&);
+        Text& operator = (const Text&);
 
+        //internal methods
+        std::string substr(cursor::Cursor, cursor::Cursor) const;
+        std::string substr(const cursor::Cursor&, size_t) const;
+        char substr(const cursor::Cursor&) const;
+
+        std::string substr(cursor::Position, cursor::Position) const;
+        std::string substr(const cursor::Position&, size_t) const;
+        char substr(const cursor::Position&) const;
+
+        //TODO sort
+    };
+}
 
 
 
