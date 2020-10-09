@@ -129,7 +129,7 @@ namespace text
         if (end.eof())
         {
             end = text.size();
-            end.dec(ENDL_SIZE);
+            end -= ENDL_SIZE;
         }
 
         string str = substr(start, end);
@@ -295,7 +295,7 @@ namespace text
         check_cursor(from);
         check_cursor(to);
 
-        if (from.eof() || to.eof() || to.get_pos() < from.get_pos())
+        if (from.eof() || to.eof() || to < from)
             return;
 
         text.erase(from.get_pos(), to.get_pos() - from.get_pos() + 1);
@@ -413,13 +413,13 @@ namespace text
     //////////////////////////////////////////////////////////////////////////
     string Text::substr(Cursor pos1, Cursor pos2) const
     {
-        if (pos1.eof() || text.size() <= pos1.get_pos())
+        if (pos1.eof() || text.size() <= pos1)
             return "";
 
         if (pos2.eof())
             pos2 = text.size() - 1;
 
-        if (pos2.get_pos() < pos1.get_pos() || text.size() < pos2.get_pos())
+        if (pos2 < pos1 || text.size() < pos2)
             return "";
 
         return text.substr(pos1.get_pos(), (pos2.get_pos() - pos1.get_pos()) + 1);
@@ -430,7 +430,7 @@ namespace text
         if (pos.eof())
             return "";
 
-        if (pos.eof(pos.get_pos() + count))
+        if (pos.eof(pos + count))
             return "";
 
         return text.substr(pos.get_pos(), count);

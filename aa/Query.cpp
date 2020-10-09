@@ -241,8 +241,8 @@ namespace query
                 size_t qty = distance(query->get_cursor()->get_string().begin() + pos, i);
                 string result = query->get_cursor()->get_text().substr(pos, qty);
                 set_out(result);
-                TRACE_OUT << "found " << "text = " << result TRACE_END;
-                query->get_cursor()->inc(qty);
+                TRACE_OUT << "found " << "text = " << result TRACE_END
+                    query->get_cursor()->inc(qty);
                 return true;
             }
         }
@@ -287,11 +287,11 @@ namespace query
 
             if (check_count(found_qty))
             {
-                size_t qty = distance(query->get_cursor()->get_string().begin() + pos, i);
+                //size_t qty = distance(query->get_cursor()->get_string().begin() + pos, i);
                 string result = query->get_cursor()->get_text().substr(pos, found_qty);
                 set_out(result);
                 TRACE_OUT << "found text = " << result TRACE_END;
-                query->get_cursor()->inc(qty);
+                query->get_cursor()->inc(found_qty);
                 return true;
             }
         }

@@ -166,7 +166,7 @@ namespace cursor
         return addressof(a) == addressof(b);
     }
 
-    const std::string space_pattern = " \t\n\r";
+    const std::string space_pattern = " \t\n\r;:.,?!";
     using posMap = map<std::string, Position>;
     using strVector = vector<std::string>;
     using find_func = function<size_t(const std::string&, const std::string&, size_t)>;
@@ -180,6 +180,7 @@ namespace cursor
         std::string name;
 
         Position rfind_first_of(const std::string& pattern, const Position& p);
+        void check_cursor(const Cursor& c);
         Position multi_find(const vector<std::string>& pattern, find_func func, size_t& idx);
         int find_count(const std::string& pattern, const Position& from_pos, const Position& until_pos, find_func func);
 
@@ -194,8 +195,36 @@ namespace cursor
         Cursor& inc(size_t);
         Cursor& dec(size_t);
 
+        Cursor& operator += (const Cursor&);
+        Cursor& operator += (size_t);
+        Cursor operator + (const Cursor&);
+        Cursor operator + (size_t);
+        Cursor& operator ++ ();
+
+        Cursor& operator -= (const Cursor&);
+        Cursor& operator -= (size_t);
+        Cursor operator - (const Cursor&);
+        Cursor operator - (size_t);
+        Cursor& operator -- ();
+
         Cursor& operator = (const Cursor&);
         Cursor& operator = (size_t);
+
+        bool operator == (const Cursor&);
+        bool operator != (const Cursor&);
+        //bool operator < (const Cursor&);
+        friend bool operator < (const Cursor& ,const Cursor&);
+        bool operator < (const Cursor&);
+        bool operator <= (const Cursor&);
+        bool operator >= (const Cursor&);
+        bool operator > (const Cursor&);
+
+        bool operator == (size_t);
+        bool operator != (size_t);
+        bool operator < (size_t);
+        bool operator <= (size_t);
+        bool operator >= (size_t);
+        bool operator > (size_t);
 
         Cursor& move_to(size_t p);
         Cursor& move_to(const std::string& pattern, find_func func);
@@ -286,27 +315,5 @@ namespace cursor
         {
             pos = EOF;
         }
-
-        protected:
-            const std::string check_cursor_msg1{ "Cursor object : \"" };
-            const std::string check_cursor_msg2{ "\" is created for other Text object." };
-        public:
-
-        inline void check_cursor(const Cursor& c)
-        {
-            if (AreEqual(c.text, text) == false)
-            {
-                throw runtime_error(check_cursor_msg1 + c.get_name() + check_cursor_msg2);
-            }
-        }
-
-        inline void check_cursor(const Cursor& c) const
-        {
-            if (AreEqual(c.text, text) == false)
-            {
-                throw runtime_error(check_cursor_msg1 + c.get_name() + check_cursor_msg2);
-            }
-        }
-
     };
 }

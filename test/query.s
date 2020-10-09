@@ -166,23 +166,23 @@ else
 	print("Query: Word false");
 }
 
-cursor_q =	6;
-if(Number(q, ret))
-{
-	print("Query: Number true " + ret);
-}
-else
-{
-	print("Query: Number false");
-}
+//cursor_q =	6;
+//if(Number(q, ret))
+//{
+//	print("Query: Number1 true " + ret);
+//}
+//else
+//{
+//	print("Query: Number1 false");
+//}
 
 if(Number(q) == false)
 {
-	print("Query: Number true");
+	print("Query: Number2 true");
 }
 else
 {
-	print("Query: Number false");
+	print("Query: Number2 false");
 }
 
 cursor_q = 0;
