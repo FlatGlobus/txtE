@@ -87,7 +87,7 @@ namespace cursor
 
     int Cursor::find_count(const string& pattern, const Position& from_pos, const Position& until_pos, find_func func)
     {
-        TRACE_FUNC;
+        //TRACE_FUNC;
         int count = 0;
 
         Position i = from_pos;
