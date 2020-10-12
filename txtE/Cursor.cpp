@@ -521,7 +521,6 @@ namespace cursor
     bool Cursor::goto_label(const string& key)
     {
         TRACE_FUNC;
-        //if (positions.contains(key))
         if (labels.count(key))
         {
             pos = labels[key];
@@ -705,21 +704,27 @@ namespace cursor
     
     m->add(chaiscript::fun([](const Cursor& c1, const Cursor& c2) { c1.check_cursor(c2); return c1.get_pos() < c2.get_pos(); }), "<");
     m->add(chaiscript::fun([](const Cursor& c1, size_t c2) { return c1.get_pos() < c2; }), "<");
+    m->add(chaiscript::fun([](size_t c1, const Cursor& c2) { return c1 < c2.get_pos(); }), "<");
 
     m->add(chaiscript::fun([](const Cursor& c1, const Cursor& c2) { c1.check_cursor(c2); return c1.get_pos() <= c2.get_pos(); }), "<=");
     m->add(chaiscript::fun([](const Cursor& c1, size_t c2) { return c1.get_pos() <= c2; }), "<=");
+    m->add(chaiscript::fun([](size_t c1, const Cursor& c2) { return c1 <= c2.get_pos(); }), "<=");
 
     m->add(chaiscript::fun([](const Cursor& c1, const Cursor& c2) { c1.check_cursor(c2); return c1.get_pos() > c2.get_pos(); }), ">");
     m->add(chaiscript::fun([](const Cursor& c1, size_t c2) { return c1.get_pos() > c2; }), ">");
+    m->add(chaiscript::fun([](size_t c1, const Cursor& c2) { return c1 > c2.get_pos(); }), ">");
 
     m->add(chaiscript::fun([](const Cursor& c1, const Cursor& c2) { c1.check_cursor(c2); return c1.get_pos() >= c2.get_pos(); }), ">=");
     m->add(chaiscript::fun([](const Cursor& c1, size_t c2) { return c1.get_pos() >= c2; }), ">=");
+    m->add(chaiscript::fun([](size_t c1, const Cursor& c2) { return c1 >= c2.get_pos(); }), ">=");
 
     m->add(chaiscript::fun([](const Cursor& c1, const Cursor& c2) { c1.check_cursor(c2); return c1.get_pos() == c2.get_pos(); }), "==");
     m->add(chaiscript::fun([](const Cursor& c1, size_t c2) { return c1.get_pos() == c2; }), "==");
+    m->add(chaiscript::fun([](size_t c1, const Cursor& c2) { return c1 == c2.get_pos(); }), "==");
 
     m->add(chaiscript::fun([](const Cursor& c1, const Cursor& c2) { c1.check_cursor(c2); return c1.get_pos() != c2.get_pos(); }), "!=");
     m->add(chaiscript::fun([](const Cursor& c1, size_t c2) { return c1.get_pos() != c2; }), "!=");
+    m->add(chaiscript::fun([](size_t c1, const Cursor& c2) { return c1 != c2.get_pos(); }), "!=");
 
     m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(const Cursor&)>(&Cursor::operator =)), "=");
     m->add(chaiscript::fun(static_cast<Cursor& (Cursor::*)(size_t)>(&Cursor::operator =)), "=");
