@@ -45,6 +45,7 @@ int main(int argc, char* argv[])
         {
             ChaiEngine::start();
             ChaiEngine::get_engine()->add_global(chaiscript::var(ChaiEngine::get_program_options()), ("program_options"));
+
             auto val = ChaiEngine::get_engine()->eval_file(execute_script);
         }
     }

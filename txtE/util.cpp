@@ -1,10 +1,10 @@
 #include "util.h"
-#include "extras/string_methods.hpp"
+
 #include <chaiscript/chaiscript.hpp>
 #include <intrin.h>
 #include "strtk/strtk.hpp"
 #include <time.h>
-
+#include "extras/string_methods.hpp"
 //////////////////////////////////////////////////////////////////////////
 ChaiEngine::module_type * ChaiEngine::_modules;
 unique_ptr<chaiscript::ChaiScript> ChaiEngine::engine;
@@ -46,9 +46,9 @@ vector<string>* ChaiEngine::get_program_options()
 void  ChaiEngine::init_std()
 {
     auto stringmethods = chaiscript::extras::string_methods::bootstrap();
+    chaiscript::bootstrap::standard_library::vector_type<std::vector<string> >("VectorString", *stringmethods);
+    chaiscript::bootstrap::standard_library::string_type<wstring>("wstring", *stringmethods);
     ChaiEngine::get_engine()->add(stringmethods);
-    ChaiEngine::get_engine()->add(chaiscript::bootstrap::standard_library::vector_type<vector<string>>("VectorString"));
-	ChaiEngine::get_engine()->add(chaiscript::bootstrap::standard_library::string_type<wstring>("wstring"));
 }
 //////////////////////////////////////////////////////////////////////////
 size_t _TRACE_TEXT_DELTA = 8;

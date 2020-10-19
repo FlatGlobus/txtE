@@ -31,7 +31,7 @@ protected:
 };
 
 #define ENDL "\n"
-#define ENDL_SIZE (size_t)1
+#define CHAR_SIZE sizeof(std::string::value_type)
 
 extern bool enable_trace;
 extern size_t _TRACE_TEXT_DELTA;

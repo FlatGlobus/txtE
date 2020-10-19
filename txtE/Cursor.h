@@ -171,6 +171,9 @@ namespace cursor
     using strVector = vector<std::string>;
     using find_func = function<size_t(const std::string&, const std::string&, size_t)>;
 
+    const std::string check_cursor_msg1{ "Cursor object : \"" };
+    const std::string check_cursor_msg2{ "\" is created for other Text object." };
+
     class Cursor
     {
     protected:
@@ -286,11 +289,6 @@ namespace cursor
         {
             pos = EOF;
         }
-
-        protected:
-            const std::string check_cursor_msg1{ "Cursor object : \"" };
-            const std::string check_cursor_msg2{ "\" is created for other Text object." };
-        public:
 
         inline void check_cursor(const Cursor& c)
         {

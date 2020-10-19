@@ -65,7 +65,7 @@ else
 
 cursor_t.end();
 cursor_t -= 3;
-if(text_t.get_word(cursor_t) == "6603")
+if(text_t.get_word(cursor_t) == "-7.6603")
 {
 	print("Text: get_word true");
 }

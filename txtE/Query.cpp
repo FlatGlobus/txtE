@@ -170,7 +170,10 @@ namespace query
                 {
                     ++found_qty;
                     if (count != -1 && count == found_qty)
+                    {
+                        ++i;
                         break;
+                    }
                     continue;
                 }
                 break;
@@ -230,7 +233,10 @@ namespace query
                 {
                     ++found_qty;
                     if (count != -1 && count == found_qty)
+                    {
+                        ++i;
                         break;
+                    }
                     continue;
                 }
                 break;
@@ -279,7 +285,10 @@ namespace query
                 {
                     ++found_qty;
                     if (count != -1 && count == found_qty)
+                    {
+                        ++i;
                         break;
+                    }
                     continue;
                 }
                 break;
@@ -288,7 +297,7 @@ namespace query
             if (check_count(found_qty))
             {
                 size_t qty = distance(query->get_cursor()->get_string().begin() + pos, i);
-                string result = query->get_cursor()->get_text().substr(pos, found_qty);
+                string result = query->get_cursor()->get_text().substr(pos, qty);
                 set_out(result);
                 TRACE_OUT << "found text = " << result TRACE_END;
                 query->get_cursor()->inc(qty);
@@ -328,7 +337,10 @@ namespace query
                 {
                     ++found_qty;
                     if (count != -1 && count == found_qty)
+                    {
+                        ++i;
                         break;
+                    }
                     continue;
                 }
                 break;
@@ -394,7 +406,7 @@ namespace query
             if (text == ENDL)
             {
                 TRACE_OUT << "found ENDL" TRACE_END;
-                query->get_cursor()->inc(ENDL_SIZE);
+                query->get_cursor()->inc(CHAR_SIZE);
                 return true;
             }
         }
@@ -880,7 +892,8 @@ namespace query
     m->add(chaiscript::base_class<QueryBase, SkipSpace>());
     m->add(chaiscript::type_conversion<SkipSpace, bool>([](const SkipSpace& q) { return q.execute(); }));
 
-    ChaiEngine::get_engine()->add(chaiscript::bootstrap::standard_library::vector_type<VectorQuery>("VectorQuery"));
+    chaiscript::bootstrap::standard_library::vector_type<std::vector<VectorQuery> >("VectorQuery", *m);
+    //ChaiEngine::get_engine()->add(chaiscript::bootstrap::standard_library::vector_type<VectorQuery>("VectorQuery"));
 
 
     END_DECLARE(QUERY)

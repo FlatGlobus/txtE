@@ -1,3 +1,4 @@
+//txtE -e xamarin_ctrl.s -f <filename.cs>
 //declare property //[prop name type def]  //[prop BackgroundColor Color Color.White]
 //====================================================
 def gen_property(class_name, prop_name, prop_type, def_val)

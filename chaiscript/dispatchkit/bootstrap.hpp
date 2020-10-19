@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2018, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
@@ -22,11 +22,12 @@ namespace chaiscript
     template<typename T, typename = typename std::enable_if<std::is_array<T>::value>::type >
       void array(const std::string &type, Module& m)
       {
-        typedef typename std::remove_extent<T>::type ReturnType;
+        using ReturnType = typename std::remove_extent<T>::type;
+
         m.add(user_type<T>(), type);
         m.add(fun(
               [](T& t, size_t index)->ReturnType &{
-                constexpr auto extent = std::extent<T>::value;
+                constexpr const auto extent = std::extent<T>::value;
                 if (extent > 0 && index >= extent) {
                   throw std::range_error("Array index out of range. Received: " + std::to_string(index)  + " expected < " + std::to_string(extent));
                 } else {
@@ -38,7 +39,7 @@ namespace chaiscript
 
         m.add(fun(
               [](const T &t, size_t index)->const ReturnType &{
-                constexpr auto extent = std::extent<T>::value;
+                constexpr const auto extent = std::extent<T>::value;
                 if (extent > 0 && index >= extent) {
                   throw std::range_error("Array index out of range. Received: " + std::to_string(index)  + " expected < " + std::to_string(extent));
                 } else {
@@ -50,8 +51,7 @@ namespace chaiscript
 
         m.add(fun(
               [](const T &) {
-                constexpr auto extent = std::extent<T>::value;
-                return extent;
+                return std::extent<T>::value;
               }), "size");
       }
 
@@ -111,30 +111,19 @@ namespace chaiscript
     /// Internal function for converting from a string to a value
     /// uses ostream operator >> to perform the conversion
     template<typename Input>
-    auto parse_string(const std::string &i)
-      -> typename std::enable_if<
-             !std::is_same<Input, wchar_t>::value
-             && !std::is_same<Input, char16_t>::value
-             && !std::is_same<Input, char32_t>::value,
-      Input>::type
+    Input parse_string(const std::string &i)
     {
-      std::stringstream ss(i);
-      Input t;
-      ss >> t;
-      return t;
+      if constexpr (!std::is_same<Input, wchar_t>::value
+          && !std::is_same<Input, char16_t>::value
+          && !std::is_same<Input, char32_t>::value) {
+        std::stringstream ss(i);
+        Input t;
+        ss >> t;
+        return t;
+      } else {
+        throw std::runtime_error("Parsing of wide characters is not yet supported");
+      }
     }
-
-    template<typename Input>
-    auto parse_string(const std::string &) 
-      -> typename std::enable_if<
-             std::is_same<Input, wchar_t>::value
-             || std::is_same<Input, char16_t>::value
-             || std::is_same<Input, char32_t>::value,
-      Input>::type
-    {
-      throw std::runtime_error("Parsing of wide characters is not yet supported");
-    }
-
 
     /// Add all common functions for a POD type. All operators, and
     /// common conversions
@@ -163,7 +152,7 @@ namespace chaiscript
 
     /// Specific version of shared_ptr_clone just for Proxy_Functions
     template<typename Type>
-    std::shared_ptr<typename std::remove_const<Type>::type> shared_ptr_unconst_clone(const std::shared_ptr<typename std::add_const<Type>::type> &p)
+    std::shared_ptr<std::remove_const_t<Type>> shared_ptr_unconst_clone(const std::shared_ptr<std::add_const_t<Type>> &p)
     {
       return std::const_pointer_cast<typename std::remove_const<Type>::type>(p);
     }
@@ -202,12 +191,12 @@ namespace chaiscript
         }
       }
 
-      static void print(const std::string &s)
+      static void print(const std::string &s) noexcept
       {
         fwrite(s.c_str(), 1, s.size(), stdout);
       }
 
-      static void println(const std::string &s)
+      static void println(const std::string &s) noexcept
       {
         puts(s.c_str());
       }
@@ -253,7 +242,7 @@ namespace chaiscript
 
       /// Create a bound function object. The first param is the function to bind
       /// the remaining parameters are the args to bind into the result
-      static Boxed_Value bind_function(const std::vector<Boxed_Value> &params)
+      static Boxed_Value bind_function(const Function_Params &params)
       {
         if (params.empty()) {
           throw exception::arity_error(0, 1);
@@ -271,10 +260,10 @@ namespace chaiscript
       }
 
 
-      static bool has_guard(const Const_Proxy_Function &t_pf)
+      static bool has_guard(const Const_Proxy_Function &t_pf) noexcept
       {
         auto pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
-        return pf && pf->get_guard();
+        return pf && pf->has_guard();
       }
 
       static Const_Proxy_Function get_guard(const Const_Proxy_Function &t_pf)
@@ -305,7 +294,7 @@ namespace chaiscript
         }
 
 
-      static bool has_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
+      static bool has_parse_tree(const chaiscript::Const_Proxy_Function &t_pf) noexcept
       {
         const auto pf = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
         return bool(pf);

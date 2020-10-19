@@ -128,8 +128,7 @@ namespace text
         end = text.find(ENDL, start.get_pos());
         if (end.eof())
         {
-            end = text.size();
-            end.dec(ENDL_SIZE);
+            end = text.size() - CHAR_SIZE;
         }
 
         string str = substr(start, end);
@@ -223,7 +222,7 @@ namespace text
         TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
 
         size_t spos = text.rfind(ENDL, pos.get_pos());
-        spos = spos != string::npos ? spos + ENDL_SIZE : 0;
+        spos = spos != string::npos ? spos + CHAR_SIZE : 0;
         erase_line(pos);
 
         if (pos.eof(spos) == false)
@@ -312,7 +311,7 @@ namespace text
         size_t spos = text.rfind(ENDL, pos.get_pos());
         size_t epos = text.find(ENDL, pos.get_pos());
 
-        spos = spos != string::npos ? spos + ENDL_SIZE : 0;
+        spos = spos != string::npos ? spos + CHAR_SIZE : 0;
         epos = epos != string::npos ? epos : text.size() - 1;
 
         if (pos.eof(spos) == false && pos.eof(epos) == false && spos <= epos)
@@ -430,7 +429,7 @@ namespace text
         if (pos.eof())
             return "";
 
-        if (pos.eof(pos.get_pos() + count))
+        if (pos.eof(pos.get_pos() + count - sizeof(string::value_type)))
             return "";
 
         return text.substr(pos.get_pos(), count);

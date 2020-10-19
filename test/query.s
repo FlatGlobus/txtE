@@ -246,7 +246,7 @@ cur_date=0;
 /////////////////////////////////////////////////////////////////////////
 
 cursor_q = 0; //" Abcd 123z4a  5678-44?"
-if(Is(q, isspace) && Match(q, "Abcd 123z4a") && Is(q, isspace) && Is(q, isdigit, 4, ret) && Match(q, "-"))
+if(Is(q, isspace) && Match(q, "Abcd 123z4a") && Is(q, isspace, 2) && Is(q, isdigit, 4, ret) && Match(q, "-"))
 {
 	if(ret == "5678")
 	{
@@ -267,11 +267,11 @@ if(Space(q) && Word(q) && Space(q) && Word(q, ret) && Space(q) && Match(q, "5678
 {
 	if(ret == "123z4a")
 	{
-		print("Query: query 1 ret true " + ret);
+		print("Query: query 2 ret true " + ret);
 	}
 	else
 	{
-		print("Query: query 1 ret false" + ret);
+		print("Query: query 2 ret false" + ret);
 	}
 }
 else

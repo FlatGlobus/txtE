@@ -414,7 +414,7 @@ namespace cursor
         TRACE_FUNC;
 
         size_t p = get_string().find(ENDL, pos);
-        if (eof(p) == false && eof(p += ENDL_SIZE) == false)
+        if (eof(p) == false && eof(p += CHAR_SIZE) == false)
         {
             pos = p;
             TRACE_POS(pos);
@@ -445,7 +445,7 @@ namespace cursor
         Position p = get_string().rfind(ENDL, pos);
         if (p.eof() == false)
         {
-            pos = p - ENDL_SIZE;
+            pos = p - CHAR_SIZE;
         }
 
         TRACE_POS(pos);
@@ -477,7 +477,7 @@ namespace cursor
             return *this;
         }
 
-        pos += ENDL_SIZE;
+        pos += CHAR_SIZE;
         TRACE_POS(pos);
 
         return *this;
@@ -488,7 +488,7 @@ namespace cursor
         TRACE_FUNC;
         pos = get_string().find(ENDL, pos);
         if (pos.eof())
-            pos = get_string().size() - ENDL_SIZE;
+            pos = get_string().size() - CHAR_SIZE;
 
         TRACE_POS(pos);
         return *this;
