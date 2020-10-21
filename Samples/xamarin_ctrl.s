@@ -36,7 +36,8 @@ var changed = false;
 
 while(cursor)
 {
-	if(SkipSpace(query, true) && Match(query, "public") && Match(query, "class") && Is(query, iscsym, -1, class_name) && Match(query, ":") && Match(query, "SKCanvasView"))
+//Group is used for test 
+	if(SkipSpace(query, true) && Match(query, "public") && ZeroOne(query, Group(query, [Match(query, "partial")])) && Match(query, "class") && Is(query, iscsym, -1, class_name) && Match(query, ":") && Match(query, "SKCanvasView"))
 	{
 		print("found class : " + class_name);
 		cursor.label("class_decl");

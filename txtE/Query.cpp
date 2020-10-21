@@ -675,6 +675,15 @@ namespace query
         return false;
     }
     //////////////////////////////////////////////////////////////////////////
+    Group::Group(const Query* q, const vector<chaiscript::Boxed_Value>& v) :QueryBase(q, -1)
+    {
+        chaiscript::Type_Info ut = chaiscript::user_type<QueryBase>();
+        for (auto p : v)
+        {
+            query_vector.push_back((QueryBase*)p.get_ptr());//TODO check pointer
+        }
+    }
+
     Group::Group(const Query* q, int c, const vector<chaiscript::Boxed_Value>& v) :QueryBase(q, c)
     {
         chaiscript::Type_Info ut = chaiscript::user_type<QueryBase>();
@@ -721,7 +730,7 @@ namespace query
         }
         return false;
     }
-
+//////////////////////////////////////////////////////////////////////////
     SkipSpace::SkipSpace(Query* q, bool skip) :QueryBase(q)
     {
         q->set_skip_space(skip);
@@ -729,6 +738,35 @@ namespace query
 
     bool SkipSpace::execute() const
     {
+        return true;
+    }
+//////////////////////////////////////////////////////////////////////////
+    ZeroOne::ZeroOne(const Query* q, chaiscript::Boxed_Value& _query) :QueryBase(q)//, query_to_execute(_query)
+    {
+        //chaiscript::Type_Info ut = chaiscript::user_type<QueryBase>();TODO
+        //to fix the chaiscript behaviour. it destroys the object on the stack before calling the bool operator
+        QueryBase* query_to_execute = (QueryBase*)_query.get_ptr();
+        if (query_to_execute)
+        {
+            Position p = query->get_cursor()->get_pos();
+            if (query_to_execute->execute() == false)
+            {
+                query->get_cursor()->move_to(p);
+            }
+        }
+    }
+
+    bool ZeroOne::execute() const
+    {
+        //if (query_to_execute.get_ptr()) 
+        //{
+        //    Position p = query->get_cursor()->get_pos();
+        //    if (static_cast<QueryBase*>(query_to_execute.get_ptr())->execute() == false)
+        //    {
+        //        query->get_cursor()->move_to(p);
+        //    }
+        //}
+
         return true;
     }
 
@@ -846,6 +884,7 @@ namespace query
     m->add(chaiscript::base_class<QueryBase, Space>());
     m->add(chaiscript::type_conversion<Space, bool>([](const Space& q) { return q.execute(); }));
 
+    m->add(chaiscript::constructor<Group(const Query*, const vector<chaiscript::Boxed_Value>&)>(), "Group");
     m->add(chaiscript::constructor<Group(const Query*, int, const vector<chaiscript::Boxed_Value>&)>(), "Group");
     m->add(chaiscript::constructor<Group(const Query*, int, bool, const vector<chaiscript::Boxed_Value>&)>(), "Group");
     m->add(chaiscript::user_type<Group>(), "Count");
@@ -892,9 +931,12 @@ namespace query
     m->add(chaiscript::base_class<QueryBase, SkipSpace>());
     m->add(chaiscript::type_conversion<SkipSpace, bool>([](const SkipSpace& q) { return q.execute(); }));
 
+    m->add(chaiscript::constructor<ZeroOne(Query*, chaiscript::Boxed_Value&)>(), "ZeroOne");
+    m->add(chaiscript::user_type<ZeroOne>(), "ZeroOne");
+    m->add(chaiscript::base_class<QueryBase, ZeroOne>());
+    m->add(chaiscript::type_conversion<ZeroOne, bool>([](const ZeroOne& q) { return q.execute(); }));
+
     chaiscript::bootstrap::standard_library::vector_type<std::vector<VectorQuery> >("VectorQuery", *m);
-    //ChaiEngine::get_engine()->add(chaiscript::bootstrap::standard_library::vector_type<VectorQuery>("VectorQuery"));
-
-
+    
     END_DECLARE(QUERY)
 }

@@ -254,6 +254,7 @@ namespace query
         VectorQuery query_vector;
         bool shift = false;
     public:
+        Group(const Query*, const std::vector<chaiscript::Boxed_Value>&);
         Group(const Query*, int, const std::vector<chaiscript::Boxed_Value>&);
         Group(const Query*, int, bool, const std::vector<chaiscript::Boxed_Value>&);
         virtual bool execute() const;
@@ -263,6 +264,14 @@ namespace query
     {
     public:
         SkipSpace(Query*, bool);
+        virtual bool execute() const;
+    };
+
+    class ZeroOne : public QueryBase
+    {
+//        chaiscript::Boxed_Value& query_to_execute;
+    public:
+        ZeroOne(const Query*, chaiscript::Boxed_Value&);
         virtual bool execute() const;
     };
 

@@ -55,13 +55,17 @@ def load_ids(cursor)
 	var IDs = Map();
 	var line = 0;
 	cursor.begin();
+	var q = Query(cursor);
+	SkipSpace(q, true);
+
 	while(cursor)
 	{
 		var ID = "";
 		var ID_NUM = "";
 
 		cursor.label("line");
-		if(Query(cursor) && Exact("#define") && Is(isspace) && Is(iscsym,-1, ID) && Is(isspace) && Is(isdigit,-1, ID_NUM))
+		
+		if(Math(q, "#define") && Is(q, iscsym,-1, ID) && Is(q, isdigit,-1, ID_NUM))
 		{
 			IDs[ID] = ResItem(ID, to_int(ID_NUM), line);
 		}
@@ -91,12 +95,15 @@ def load_rc(cursor, IDs)
 
 	trace(true);
 	cursor.begin();
+	var q = Query(cursor);
+	SkipSpace(q, true);
+
 	while(cursor)
 	{
 		var ID = "";
 		var found = false;
 		//BITMAP
-		if(Query(cursor.move_to_begin_of_line()) && Is(iscsym,-1, ID) && Is(isspace) && Exact("BITMAP") && Is(isspace) && Exact("\""))
+		if(cursor.move_to_begin_of_line() && Is(q, iscsym,-1, ID) && Math(q, "BITMAP") && Math(q, "\""))
 		{
 			print("BITMAP : " + ID);
 			if(IDs.count(ID) > 0)
