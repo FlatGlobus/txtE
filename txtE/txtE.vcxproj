@@ -166,6 +166,7 @@
     <ClCompile Include="Cursor.cpp" />
     <ClCompile Include="DateFun.cpp" />
     <ClCompile Include="FileFunc.cpp" />
+    <ClCompile Include="Mustache.cpp" />
     <ClCompile Include="Query.cpp" />
     <ClCompile Include="StrFun.cpp" />
     <ClCompile Include="StrtkFun.cpp" />
@@ -181,6 +182,7 @@
     <ClInclude Include="..\chaiscript\chaiscript_threading.hpp" />
     <ClInclude Include="..\strtk\strtk.hpp" />
     <ClInclude Include="Cursor.h" />
+    <ClInclude Include="Mustache.h" />
     <ClInclude Include="Query.h" />
     <ClInclude Include="StrFun.h" />
     <ClInclude Include="Text.h" />

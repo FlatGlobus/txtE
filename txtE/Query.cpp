@@ -10,24 +10,62 @@ using namespace text;
 //////////////////////////////////////////////////////////////////////////
 namespace query
 {
+    QData::QData()
+    {
+    }
+
+    void QData::set(const std::string& key, const std::string& val)
+    {
+        if (key.empty())
+            throw std::runtime_error("Query::set: key is empty");
+
+        data[key] = val;
+    }
+
+    const string& QData::get(const std::string& key)
+    {
+        auto val = data.find(key);
+        if (val != data.end())
+            return val->second;
+
+        throw std::runtime_error("Query::get: no value for " + key + " key");
+    }
+
+    void QData::reset_data()
+    {
+        if (freeze_data == false)
+            data.clear();
+    }
+
+    void QData::reset_data(const std::string& key)
+    {
+        if (freeze_data == false)
+            data[key] = "";//TODO check?
+    }
+
+    void QData::set_freeze_data(bool val)
+    {
+        freeze_data = val;
+    }
+    //////////////////////////////////////////////////////////////////////////
     QueryBase::QueryBase()
     {
     }
 
-    QueryBase::QueryBase(const Query* q) :query(q)
+    QueryBase::QueryBase(Query* q) :query(q)
     {
     }
 
-    QueryBase::QueryBase(const Query* q, int c) : query(q), count(c)
+    QueryBase::QueryBase(Query* q, int c) : query(q), count(c)
     {
     }
 
-    QueryBase::QueryBase(const Query* q, int c, string* o) : query(q), count(c), out(o)
+    QueryBase::QueryBase(Query* q, int c, const std::string& o) : query(q), count(c), key(o)
     {
         reset();
     }
 
-    QueryBase::QueryBase(const Query* q, int c, vector<chaiscript::Boxed_Value>* o) : query(q), count(c), outs(o)
+    QueryBase::QueryBase(Query* q, const std::string& o) : query(q), key(o)
     {
         reset();
     }
@@ -50,13 +88,16 @@ namespace query
         return query->get_cursor()->eof() == false;
     }
 
+    void QueryBase::set_out(const std::string& s) const
+    {
+        if (query && key.empty() == false)
+            query->set(key, s);
+    }
+
     void QueryBase::reset()
     {
-        if (out)
-            out->clear();
-
-        if (outs)
-            outs->clear();
+        if (query && key.empty() == false)
+            query->reset_data(key);
     }
 
     bool QueryBase::check_count(int c) const
@@ -98,19 +139,19 @@ namespace query
         return QueryBase::execute();
     }
 
+    void Query::reset_last_data()
+    {
+        QData::reset_data();//TODO vector
+    }
     //////////////////////////////////////////////////////////////////////////
-    Match::Match(const Query* q, const string& p) : QueryBase(q), pattern(p)
+    Match::Match(Query* q, const string& p) : QueryBase(q), pattern(p)
     {
     }
 
-    Match::Match(const Query* q, const string& p, string* o) : QueryBase(q, -1, o), pattern(p)
+    Match::Match(Query* q, const string& p, const std::string& o) : QueryBase(q, o), pattern(p)
     {
     }
 
-    Match::Match(const Query* q, const string& p, vector<chaiscript::Boxed_Value>* o) : QueryBase(q, -1, o), pattern(p)
-    {
-
-    }
     bool Match::execute() const
     {
         TRACE_FUNC;
@@ -126,32 +167,24 @@ namespace query
                 return true;
             }
         }
+        query->reset_last_data();
         return false;
     }
     //////////////////////////////////////////////////////////////////////////
-    AnyOf::AnyOf(const Query* q, const string& p) : QueryBase(q), pattern(p)
+    AnyOf::AnyOf(Query* q, const string& p) : QueryBase(q), pattern(p)
     {
     }
 
-    AnyOf::AnyOf(const Query* q, const string& p, int c) : QueryBase(q, c), pattern(p)
-    {
-
-    }
-
-    AnyOf::AnyOf(const Query* q, const string& p, int c, string* o) : QueryBase(q, c, o), pattern(p)
-    {
-    }
-
-    AnyOf::AnyOf(const Query* q, int c, string* o) : QueryBase(q, c, o)
+    AnyOf::AnyOf(Query* q, const string& p, int c) : QueryBase(q, c), pattern(p)
     {
 
     }
 
-    AnyOf::AnyOf(const Query* q, const string& p, int c, vector<chaiscript::Boxed_Value>* o) : QueryBase(q, c, o), pattern(p)
+    AnyOf::AnyOf(Query* q, const string& p, int c, const std::string& o) : QueryBase(q, c, o), pattern(p)
     {
     }
 
-    AnyOf::AnyOf(const Query* q, int c, vector<chaiscript::Boxed_Value>* o) : QueryBase(q, c, o)
+    AnyOf::AnyOf(Query* q, const string& p, const std::string& o) : QueryBase(q, o), pattern(p)
     {
     }
 
@@ -189,32 +222,24 @@ namespace query
                 return true;
             }
         }
+        query->reset_last_data();
         return false;
     }
     //////////////////////////////////////////////////////////////////////////
-    AnyNot::AnyNot(const Query* q, const string& p) : QueryBase(q), pattern(p)
+    AnyNot::AnyNot(Query* q, const string& p) : QueryBase(q), pattern(p)
     {
     }
 
-    AnyNot::AnyNot(const Query* q, const string& p, int c) : QueryBase(q, c), pattern(p)
-    {
-
-    }
-
-    AnyNot::AnyNot(const Query* q, const string& p, int c, string* o) : QueryBase(q, c, o), pattern(p)
-    {
-    }
-
-    AnyNot::AnyNot(const Query* q, int c, string* o) : QueryBase(q, c, o)
+    AnyNot::AnyNot(Query* q, const string& p, int c) : QueryBase(q, c), pattern(p)
     {
 
     }
 
-    AnyNot::AnyNot(const Query* q, const string& p, int c, vector<chaiscript::Boxed_Value>* o) : QueryBase(q, c, o), pattern(p)
+    AnyNot::AnyNot(Query* q, const string& p, int c, const std::string& o) : QueryBase(q, c, o), pattern(p)
     {
     }
 
-    AnyNot::AnyNot(const Query* q, int c, vector<chaiscript::Boxed_Value>* o) : QueryBase(q, c, o)
+    AnyNot::AnyNot(Query* q, const string& p, const std::string& o) : QueryBase(q, o), pattern(p)
     {
     }
 
@@ -252,22 +277,23 @@ namespace query
                 return true;
             }
         }
+        query->reset_last_data();
         return false;
     }
     //////////////////////////////////////////////////////////////////////////
-    Is::Is(const Query* q, const is_func f) : QueryBase(q), func(f)
+    Is::Is(Query* q, const is_func f) : QueryBase(q), func(f)
     {
     }
 
-    Is::Is(const Query* q, const is_func f, int c) : func(f), QueryBase(q, c)
+    Is::Is(Query* q, const is_func f, int c) : func(f), QueryBase(q, c)
     {
     }
 
-    Is::Is(const Query* q, const is_func f, int c, string* o) : func(f), QueryBase(q, c, o)
+    Is::Is(Query* q, const is_func f, int c, const std::string& o) : func(f), QueryBase(q, c, o)
     {
     }
 
-    Is::Is(const Query* q, const is_func f, int c, vector<chaiscript::Boxed_Value>* o) : func(f), QueryBase(q, c, o)
+    Is::Is(Query* q, const is_func f, const std::string& o) : func(f), QueryBase(q, o)
     {
     }
 
@@ -304,22 +330,23 @@ namespace query
                 return true;
             }
         }
+        query->reset_last_data();
         return false;
     }
     //////////////////////////////////////////////////////////////////////////
-    Range::Range(const Query* q, char f, char t) : QueryBase(q), from(f), to(t)
+    Range::Range(Query* q, char f, char t) : QueryBase(q), from(f), to(t)
     {
     }
 
-    Range::Range(const Query* q, char f, char t, int c) : from(f), to(t), QueryBase(q, c)
+    Range::Range(Query* q, char f, char t, int c) : from(f), to(t), QueryBase(q, c)
     {
     }
 
-    Range::Range(const Query* q, char f, char t, int c, string* o) : from(f), to(t), QueryBase(q, c, o)
+    Range::Range(Query* q, char f, char t, int c, const std::string& o) : from(f), to(t), QueryBase(q, c, o)
     {
     }
 
-    Range::Range(const Query* q, char f, char t, int c, vector<chaiscript::Boxed_Value>* o) : from(f), to(t), QueryBase(q, c, o)
+    Range::Range(Query* q, char f, char t, const std::string& o) : from(f), to(t), QueryBase(q, o)
     {
     }
 
@@ -356,18 +383,15 @@ namespace query
                 return true;
             }
         }
+        query->reset_last_data();
         return false;
     }
     //////////////////////////////////////////////////////////////////////////
-    Set::Set(const Query* q, const VectorString& p) : QueryBase(q), pattern(p)
+    Set::Set(Query* q, const VectorString& p) : QueryBase(q), pattern(p)
     {
     }
 
-    Set::Set(const Query* q, const VectorString& p, string* o) : pattern(p), QueryBase(q, -1, o)
-    {
-    }
-
-    Set::Set(const Query* q, const VectorString& p, vector<chaiscript::Boxed_Value>* o) : pattern(p), QueryBase(q, -1, o)
+    Set::Set(Query* q, const VectorString& p, const std::string& o) : pattern(p), QueryBase(q, o)
     {
     }
 
@@ -388,10 +412,11 @@ namespace query
                 }
             }
         }
+        query->reset_last_data();
         return false;
     }
     //////////////////////////////////////////////////////////////////////////
-    Endl::Endl(const  Query* q) : QueryBase(q)
+    Endl::Endl(Query* q) : QueryBase(q)
     {
     }
 
@@ -410,18 +435,15 @@ namespace query
                 return true;
             }
         }
+        query->reset_last_data();
         return false;
     }
     //////////////////////////////////////////////////////////////////////////
-    Word::Word(const Query* q) : QueryBase(q)
+    Word::Word(Query* q) : QueryBase(q)
     {
     }
 
-    Word::Word(const Query* q, string* o) : QueryBase(q, -1, o)
-    {
-    }
-
-    Word::Word(const Query* q, vector<chaiscript::Boxed_Value>* o) : QueryBase(q, -1, o)
+    Word::Word(Query* q, const std::string& o) : QueryBase(q, o)
     {
     }
 
@@ -444,17 +466,14 @@ namespace query
                 }
             }
         }
+        query->reset_last_data();
         return false;
     }
     //////////////////////////////////////////////////////////////////////////
-    RegEx::RegEx(const Query* q, const VectorString& rg) : QueryBase(q), rg_pattern(rg)
+    RegEx::RegEx(Query* q, const VectorString& rg) : QueryBase(q), rg_pattern(rg)
     {
     }
-    RegEx::RegEx(const Query* q, const VectorString& rg, std::string* o) : QueryBase(q, -1, o), rg_pattern(rg)
-    {
-    }
-
-    RegEx::RegEx(const Query* q, const VectorString& rg, vector<chaiscript::Boxed_Value>* o) : QueryBase(q, -1, o), rg_pattern(rg)
+    RegEx::RegEx(Query* q, const VectorString& rg, const std::string& o) : QueryBase(q, o), rg_pattern(rg)
     {
     }
 
@@ -485,7 +504,10 @@ namespace query
             tie(begin, end) = extract_string();
 
             if (begin == query->get_cursor()->get_string().end())
+            {
+                query->reset_last_data();
                 return false;
+            }
 
             smatch match;
             for (const auto& i : rg_pattern)
@@ -502,6 +524,7 @@ namespace query
                 }
             }
         }
+        query->reset_last_data();
         return false;
     }
     //////////////////////////////////////////////////////////////////////////
@@ -510,15 +533,11 @@ namespace query
         "^[+-]?([0-9]*\\.?[0-9]+|[0-9]+\\.?[0-9]*)([eE][+-]?[0-9]+)?$"//,
         //"^0x[0-9a-f]+"
     };
-    Number::Number(const Query* q) : RegEx(q, number_rg_pattern)
+    Number::Number(Query* q) : RegEx(q, number_rg_pattern)
     {
     }
 
-    Number::Number(const Query* q, string* o) : RegEx(q, number_rg_pattern, o)
-    {
-    }
-
-    Number::Number(const Query* q, vector<chaiscript::Boxed_Value>* o) : RegEx(q, number_rg_pattern, o)
+    Number::Number(Query* q, const std::string& o) : RegEx(q, number_rg_pattern, o)
     {
     }
     //////////////////////////////////////////////////////////////////////////
@@ -526,15 +545,11 @@ namespace query
     {
         "^0x[0-9a-f]+"
     };
-    Hex::Hex(const Query* q) : RegEx(q, hex_rg_pattern)
+    Hex::Hex(Query* q) : RegEx(q, hex_rg_pattern)
     {
     }
 
-    Hex::Hex(const Query* q, string* o) : RegEx(q, hex_rg_pattern, o)
-    {
-    }
-
-    Hex::Hex(const Query* q, vector<chaiscript::Boxed_Value>* o) : RegEx(q, hex_rg_pattern, o)
+    Hex::Hex(Query* q, const std::string& o) : RegEx(q, hex_rg_pattern, o)
     {
     }
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -547,15 +562,11 @@ namespace query
         "^(([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9])",
         "^(?:[01]\\d|2[0-3]):(?:[0-5]\\d):(?:[0-5])"
     };
-    Time::Time(const Query* q) : RegEx(q, time_rg_pattern)
+    Time::Time(Query* q) : RegEx(q, time_rg_pattern)
     {
     }
 
-    Time::Time(const Query* q, string* o) : RegEx(q, time_rg_pattern, o)
-    {
-    }
-
-    Time::Time(const Query* q, vector<chaiscript::Boxed_Value>* o) : RegEx(q, time_rg_pattern, o)
+    Time::Time(Query* q, const std::string& o) : RegEx(q, time_rg_pattern, o)
     {
     }
     //////////////////////////////////////////////////////////////////////////
@@ -565,15 +576,11 @@ namespace query
         "^(?:(?:31(\\/|-|\\.)(?:0?[13578]|1[02]))\\1|(?:(?:29|30)(\\/|-|\\.)(?:0?[1,3-9]|1[0-2])\\2))(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$|^(?:29(\\/|-|\\.)0?2\\3(?:(?:(?:1[6-9]|[2-9]\\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\\d|2[0-8])(\\/|-|\\.)(?:(?:0?[1-9])|(?:1[0-2]))\\4(?:(?:1[6-9]|[2-9]\\d)?\\d{2})",
         "^(?:(?:31(\\/|-|\\.)(?:0?[13578]|1[02]|(?:Jan|Mar|May|Jul|Aug|Oct|Dec)))\\1|(?:(?:29|30)(\\/|-|\\.)(?:0?[1,3-9]|1[0-2]|(?:Jan|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec))\\2))(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$|^(?:29(\\/|-|\\.)(?:0?2|(?:Feb))\\3(?:(?:(?:1[6-9]|[2-9]\\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\\d|2[0-8])(\\/|-|\\.)(?:(?:0?[1-9]|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep))|(?:1[0-2]|(?:Oct|Nov|Dec)))\\4(?:(?:1[6-9]|[2-9]\\d)?\\d{2})"
     };
-    Date::Date(const Query* q) : RegEx(q, date_rg_pattern)
+    Date::Date(Query* q) : RegEx(q, date_rg_pattern)
     {
     }
 
-    Date::Date(const Query* q, string* o) : RegEx(q, date_rg_pattern, o)
-    {
-    }
-
-    Date::Date(const Query* q, vector<chaiscript::Boxed_Value>* o) : RegEx(q, date_rg_pattern, o)
+    Date::Date(Query* q, const std::string& o) : RegEx(q, date_rg_pattern, o)
     {
     }
     //////////////////////////////////////////////////////////////////////////
@@ -581,15 +588,11 @@ namespace query
     {
         "(https?:\\/\\/)?(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)"
     };
-    Url::Url(const Query* q) : RegEx(q, url_rg_pattern)
+    Url::Url(Query* q) : RegEx(q, url_rg_pattern)
     {
     }
 
-    Url::Url(const Query* q, string* o) : RegEx(q, url_rg_pattern, o)
-    {
-    }
-
-    Url::Url(const Query* q, vector<chaiscript::Boxed_Value>* o) : RegEx(q, url_rg_pattern, o)
+    Url::Url(Query* q, const std::string& o) : RegEx(q, url_rg_pattern, o)
     {
     }
     //////////////////////////////////////////////////////////////////////////
@@ -597,31 +600,24 @@ namespace query
     {
         "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])"
     };
-    IPv4::IPv4(const Query* q) : RegEx(q, ipv4_rg_pattern)
+    IPv4::IPv4(Query* q) : RegEx(q, ipv4_rg_pattern)
     {
     }
 
-    IPv4::IPv4(const Query* q, string* o) : RegEx(q, ipv4_rg_pattern, o)
+    IPv4::IPv4(Query* q, const std::string& o) : RegEx(q, ipv4_rg_pattern, o)
     {
     }
 
-    IPv4::IPv4(const Query* q, vector<chaiscript::Boxed_Value>* o) : RegEx(q, ipv4_rg_pattern, o)
-    {
-    }
     //////////////////////////////////////////////////////////////////////////
     const VectorString ipv6_rg_pattern
     {
         "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))"
     };
-    IPv6::IPv6(const Query* q) : RegEx(q, ipv6_rg_pattern)
+    IPv6::IPv6(Query* q) : RegEx(q, ipv6_rg_pattern)
     {
     }
 
-    IPv6::IPv6(const Query* q, string* o) : RegEx(q, ipv6_rg_pattern, o)
-    {
-    }
-
-    IPv6::IPv6(const Query* q, vector<chaiscript::Boxed_Value>* o) : RegEx(q, ipv6_rg_pattern, o)
+    IPv6::IPv6(Query* q, const std::string& o) : RegEx(q, ipv6_rg_pattern, o)
     {
     }
     //////////////////////////////////////////////////////////////////////////
@@ -629,15 +625,11 @@ namespace query
     {
         "^(?:(?:\\(?(?:00|\\+)([1-4]\\d\\d|[1-9]\\d?)\\)?)?[\\-\\.\\ \\\\\\/]?)?((?:\\(?\\d{1,}\\)?[\\-\\.\\ \\\\\\/]?){0,})(?:[\\-\\.\\ \\\\\\/]?(?:#|ext\\.?|extension|x)[\\-\\.\\ \\\\\\/]?(\\d+))?"
     };
-    Phone::Phone(const Query* q) : RegEx(q, phone_rg_pattern)
+    Phone::Phone(Query* q) : RegEx(q, phone_rg_pattern)
     {
     }
 
-    Phone::Phone(const Query* q, string* o) : RegEx(q, phone_rg_pattern, o)
-    {
-    }
-
-    Phone::Phone(const Query* q, vector<chaiscript::Boxed_Value>* o) : RegEx(q, phone_rg_pattern, o)
+    Phone::Phone(Query* q, const std::string& o) : RegEx(q, phone_rg_pattern, o)
     {
     }
     //////////////////////////////////////////////////////////////////////////
@@ -647,20 +639,16 @@ namespace query
         "^(.+)/([^/]+)",
         "^[\\w,\\s-]+\\.[A-Za-z]{3}"
     };
-    Path::Path(const Query* q) : RegEx(q, path_rg_pattern)
+    Path::Path(Query* q) : RegEx(q, path_rg_pattern)
     {
     }
 
-    Path::Path(const Query* q, string* o) : RegEx(q, path_rg_pattern, o)
-    {
-    }
-
-    Path::Path(const Query* q, vector<chaiscript::Boxed_Value>* o) : RegEx(q, path_rg_pattern, o)
+    Path::Path(Query* q, const std::string& o) : RegEx(q, path_rg_pattern, o)
     {
     }
     //////////////////////////////////////////////////////////////////////////
 
-    Space::Space(const Query* q) : QueryBase(q)
+    Space::Space(Query* q) : QueryBase(q)
     {
     }
 
@@ -672,10 +660,11 @@ namespace query
         {
             return skip_space();
         }
+        query->reset_last_data();
         return false;
     }
     //////////////////////////////////////////////////////////////////////////
-    Group::Group(const Query* q, const vector<chaiscript::Boxed_Value>& v) :QueryBase(q, -1)
+    Group::Group(Query* q, const vector<chaiscript::Boxed_Value>& v) :QueryBase(q, -1)
     {
         chaiscript::Type_Info ut = chaiscript::user_type<QueryBase>();
         for (auto p : v)
@@ -684,7 +673,7 @@ namespace query
         }
     }
 
-    Group::Group(const Query* q, int c, const vector<chaiscript::Boxed_Value>& v) :QueryBase(q, c)
+    Group::Group(Query* q, int c, const vector<chaiscript::Boxed_Value>& v) :QueryBase(q, c)
     {
         chaiscript::Type_Info ut = chaiscript::user_type<QueryBase>();
         for (auto p : v)
@@ -693,7 +682,7 @@ namespace query
         }
     }
 
-    Group::Group(const Query* q, int c, bool s, const vector<chaiscript::Boxed_Value>& v) :QueryBase(q, c), shift(s)
+    Group::Group(Query* q, int c, bool s, const vector<chaiscript::Boxed_Value>& v) :QueryBase(q, c), shift(s)
     {
         chaiscript::Type_Info ut = chaiscript::user_type<QueryBase>();
         for (auto p : v)
@@ -728,9 +717,10 @@ namespace query
 
             return (count == -1 && c > 0) || (count != -1 && c == count);
         }
+        query->reset_last_data();
         return false;
     }
-//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
     SkipSpace::SkipSpace(Query* q, bool skip) :QueryBase(q)
     {
         q->set_skip_space(skip);
@@ -740,8 +730,8 @@ namespace query
     {
         return true;
     }
-//////////////////////////////////////////////////////////////////////////
-    ZeroOne::ZeroOne(const Query* q, chaiscript::Boxed_Value& _query) :QueryBase(q)//, query_to_execute(_query)
+    //////////////////////////////////////////////////////////////////////////
+    ZeroOne::ZeroOne(Query* q, chaiscript::Boxed_Value& _query) :QueryBase(q)//, query_to_execute(_query)
     {
         //chaiscript::Type_Info ut = chaiscript::user_type<QueryBase>();TODO
         //to fix the chaiscript behaviour. it destroys the object on the stack before calling the bool operator
@@ -749,10 +739,12 @@ namespace query
         if (query_to_execute)
         {
             Position p = query->get_cursor()->get_pos();
+            query->set_freeze_data(true);
             if (query_to_execute->execute() == false)
             {
                 query->get_cursor()->move_to(p);
             }
+            query->set_freeze_data(false);
         }
     }
 
@@ -773,156 +765,146 @@ namespace query
     //////////////////////////////////////////////////////////////////////////
     DECLARE_MODULE(QUERY)
 
+    //m->add(chaiscript::user_type<QData>(), "QData");
     //m->add(chaiscript::constructor<QueryBase()>(), "QueryBase");
     m->add(chaiscript::user_type<QueryBase>(), "QueryBase");
     //m->add(chaiscript::type_conversion<QueryBase, bool>([](QueryBase& q) { return q.execute(); }));
+
+    //m->add(chaiscript::base_class<QData, QueryBase>());
 
     m->add(chaiscript::constructor<Query(Cursor*)>(), "Query");
     m->add(chaiscript::constructor<Query(Cursor*, bool)>(), "Query");
     m->add(chaiscript::base_class<QueryBase, Query>());
     m->add(chaiscript::type_conversion<Query, bool>([](const Query& q) {return q.execute(); }));
+    m->add(chaiscript::fun(static_cast<void(Query::*)(const string&, const string&)>(&Query::set)), "set");
+    m->add(chaiscript::fun(static_cast<const string& (Query::*)(const string&)>(&Query::get)), "get");
+    
+    m->add(chaiscript::fun(static_cast<void(Query::*)()>(&Query::reset_data)), "reset");
+    m->add(chaiscript::fun(static_cast<void(Query::*)(const string&)>(&Query::reset_data)), "reset");
 
-
-    m->add(chaiscript::constructor<Match(const Query*, const string&)>(), "Match");
-    m->add(chaiscript::constructor<Match(const Query*, const string&, string*)>(), "Match");
-    m->add(chaiscript::constructor<Match(const Query*, const string&, vector<chaiscript::Boxed_Value>*)>(), "Match");
+    m->add(chaiscript::constructor<Match(Query*, const string&)>(), "Match");
+    m->add(chaiscript::constructor<Match(Query*, const string&, const std::string&)>(), "Match");
     m->add(chaiscript::user_type<Match>(), "Match");
     m->add(chaiscript::base_class<QueryBase, Match>());
     m->add(chaiscript::type_conversion<Match, bool>([](const Match& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<AnyOf(const Query*, const string&)>(), "AnyOf");
-    m->add(chaiscript::constructor<AnyOf(const Query*, const string&, int)>(), "AnyOf");
-    m->add(chaiscript::constructor<AnyOf(const Query*, const string&, int, string*)>(), "AnyOf");
-    m->add(chaiscript::constructor<AnyOf(const Query*, int, string*)>(), "AnyOf");
-    m->add(chaiscript::constructor<AnyOf(const Query*, const string&, int, vector<chaiscript::Boxed_Value>*)>(), "AnyOf");
-    m->add(chaiscript::constructor<AnyOf(const Query*, int, vector<chaiscript::Boxed_Value>*)>(), "AnyOf");
+    m->add(chaiscript::constructor<AnyOf(Query*, const string&)>(), "AnyOf");
+    m->add(chaiscript::constructor<AnyOf(Query*, const string&, int)>(), "AnyOf");
+    m->add(chaiscript::constructor<AnyOf(Query*, const string&, int, const std::string&)>(), "AnyOf");
+    m->add(chaiscript::constructor<AnyOf(Query*, const string&, const std::string&)>(), "AnyOf");
     m->add(chaiscript::user_type<AnyOf>(), "Any");
     m->add(chaiscript::base_class<QueryBase, AnyOf>());
     m->add(chaiscript::type_conversion<AnyOf, bool>([](const AnyOf& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<AnyNot(const Query*, const string&)>(), "AnyNot");
-    m->add(chaiscript::constructor<AnyNot(const Query*, const string&, int)>(), "AnyNot");
-    m->add(chaiscript::constructor<AnyNot(const Query*, const string&, int, string*)>(), "AnyNot");
-    m->add(chaiscript::constructor<AnyNot(const Query*, int, string*)>(), "AnyNot");
-    m->add(chaiscript::constructor<AnyNot(const Query*, const string&, int, vector<chaiscript::Boxed_Value>*)>(), "AnyNot");
-    m->add(chaiscript::constructor<AnyNot(const Query*, int, vector<chaiscript::Boxed_Value>*)>(), "AnyNot");
+    m->add(chaiscript::constructor<AnyNot(Query*, const string&)>(), "AnyNot");
+    m->add(chaiscript::constructor<AnyNot(Query*, const string&, int)>(), "AnyNot");
+    m->add(chaiscript::constructor<AnyNot(Query*, const string&, int, const std::string&)>(), "AnyNot");
+    m->add(chaiscript::constructor<AnyNot(Query*, const string&, const std::string&)>(), "AnyNot");
     m->add(chaiscript::user_type<AnyNot>(), "AnyNot");
     m->add(chaiscript::base_class<QueryBase, AnyNot>());
     m->add(chaiscript::type_conversion<AnyNot, bool>([](const AnyNot& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<Is(const Query*, const is_func)>(), "Is");
-    m->add(chaiscript::constructor<Is(const Query*, const is_func, int)>(), "Is");
-    m->add(chaiscript::constructor<Is(const Query*, const is_func, int, string*)>(), "Is");
-    m->add(chaiscript::constructor<Is(const Query*, const is_func, int, vector<chaiscript::Boxed_Value>*)>(), "Is");
+    m->add(chaiscript::constructor<Is(Query*, const is_func)>(), "Is");
+    m->add(chaiscript::constructor<Is(Query*, const is_func, int)>(), "Is");
+    m->add(chaiscript::constructor<Is(Query*, const is_func, int, const std::string&)>(), "Is");
+    m->add(chaiscript::constructor<Is(Query*, const is_func, const std::string&)>(), "Is");
     m->add(chaiscript::user_type<Is>(), "Is");
     m->add(chaiscript::base_class<QueryBase, Is>());
     m->add(chaiscript::type_conversion<Is, bool>([](const Is& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<Range(const Query*, char, char)>(), "Range");
-    m->add(chaiscript::constructor<Range(const Query*, char, char, int)>(), "Range");
-    m->add(chaiscript::constructor<Range(const Query*, char, char, int, string*)>(), "Range");
-    m->add(chaiscript::constructor<Range(const Query*, char, char, int, vector<chaiscript::Boxed_Value>*)>(), "Range");
+    m->add(chaiscript::constructor<Range(Query*, char, char)>(), "Range");
+    m->add(chaiscript::constructor<Range(Query*, char, char, int)>(), "Range");
+    m->add(chaiscript::constructor<Range(Query*, char, char, int, const std::string&)>(), "Range");
+    m->add(chaiscript::constructor<Range(Query*, char, char, const std::string&)>(), "Range");
     m->add(chaiscript::user_type<Range>(), "Range");
     m->add(chaiscript::base_class<QueryBase, Range>());
     m->add(chaiscript::type_conversion<Range, bool>([](const Range& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<Set(const Query*, const VectorString&)>(), "Set");
-    m->add(chaiscript::constructor<Set(const Query*, const VectorString&, string*)>(), "Set");
-    m->add(chaiscript::constructor<Set(const Query*, const VectorString&, vector<chaiscript::Boxed_Value>*)>(), "Set");
+    m->add(chaiscript::constructor<Set(Query*, const VectorString&)>(), "Set");
+    m->add(chaiscript::constructor<Set(Query*, const VectorString&, const std::string&)>(), "Set");
     m->add(chaiscript::user_type<Set>(), "Set");
     m->add(chaiscript::base_class<QueryBase, Set>());
     m->add(chaiscript::type_conversion<Set, bool>([](const Set& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<Endl(const Query*)>(), "Endl");
+    m->add(chaiscript::constructor<Endl(Query*)>(), "Endl");
     m->add(chaiscript::base_class<QueryBase, Endl>());
     m->add(chaiscript::type_conversion<Endl, bool>([](const Endl& q) {return q.execute(); }));
 
-    m->add(chaiscript::constructor<Word(const Query*)>(), "Word");
-    m->add(chaiscript::constructor<Word(const Query*, string*)>(), "Word");
-    m->add(chaiscript::constructor<Word(const Query*, vector<chaiscript::Boxed_Value>*)>(), "Word");
+    m->add(chaiscript::constructor<Word(Query*)>(), "Word");
+    m->add(chaiscript::constructor<Word(Query*, const std::string&)>(), "Word");
     m->add(chaiscript::user_type<Word>(), "Word");
     m->add(chaiscript::base_class<QueryBase, Word>());
     m->add(chaiscript::type_conversion<Word, bool>([](const Word& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<Number(const Query*)>(), "Number");
-    m->add(chaiscript::constructor<Number(const Query*, string*)>(), "Number");
-    m->add(chaiscript::constructor<Number(const Query*, vector<chaiscript::Boxed_Value>*)>(), "Number");
+    m->add(chaiscript::constructor<Number(Query*)>(), "Number");
+    m->add(chaiscript::constructor<Number(Query*, const std::string&)>(), "Number");
     m->add(chaiscript::user_type<Number>(), "Number");
     m->add(chaiscript::base_class<QueryBase, Number>());
     m->add(chaiscript::type_conversion<Number, bool>([](const Number& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<Hex(const Query*)>(), "Hex");
-    m->add(chaiscript::constructor<Hex(const Query*, string*)>(), "Hex");
-    m->add(chaiscript::constructor<Hex(const Query*, vector<chaiscript::Boxed_Value>*)>(), "Hex");
+    m->add(chaiscript::constructor<Hex(Query*)>(), "Hex");
+    m->add(chaiscript::constructor<Hex(Query*, const std::string&)>(), "Hex");
     m->add(chaiscript::user_type<Hex>(), "Hex");
     m->add(chaiscript::base_class<QueryBase, Hex>());
     m->add(chaiscript::type_conversion<Hex, bool>([](const Hex& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<RegEx(const Query*, const VectorString&)>(), "RegEx");
-    m->add(chaiscript::constructor<RegEx(const Query*, const VectorString&, string*)>(), "RegEx");
-    m->add(chaiscript::constructor<RegEx(const Query*, const VectorString&, vector<chaiscript::Boxed_Value>*)>(), "RegEx");
+    m->add(chaiscript::constructor<RegEx(Query*, const VectorString&)>(), "RegEx");
+    m->add(chaiscript::constructor<RegEx(Query*, const VectorString&, const std::string&)>(), "RegEx");
     m->add(chaiscript::user_type<RegEx>(), "RegEx");
     m->add(chaiscript::base_class<QueryBase, RegEx>());
     m->add(chaiscript::type_conversion<RegEx, bool>([](const RegEx& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<Date(const Query*)>(), "Date");
-    m->add(chaiscript::constructor<Date(const Query*, string*)>(), "Date");
-    m->add(chaiscript::constructor<Date(const Query*, vector<chaiscript::Boxed_Value>*)>(), "Date");
+    m->add(chaiscript::constructor<Date(Query*)>(), "Date");
+    m->add(chaiscript::constructor<Date(Query*, const std::string&)>(), "Date");
     m->add(chaiscript::user_type<Date>(), "Date");
     m->add(chaiscript::base_class<QueryBase, Date>());
     m->add(chaiscript::type_conversion<Date, bool>([](const Date& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<Time(const Query*)>(), "Time");
-    m->add(chaiscript::constructor<Time(const Query*, string*)>(), "Time");
-    m->add(chaiscript::constructor<Time(const Query*, vector<chaiscript::Boxed_Value>*)>(), "Time");
+    m->add(chaiscript::constructor<Time(Query*)>(), "Time");
+    m->add(chaiscript::constructor<Time(Query*, const std::string&)>(), "Time");
     m->add(chaiscript::user_type<Time>(), "Time");
     m->add(chaiscript::base_class<QueryBase, Time>());
     m->add(chaiscript::type_conversion<Time, bool>([](const Time& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<Space(const Query*)>(), "Space");
+    m->add(chaiscript::constructor<Space(Query*)>(), "Space");
     m->add(chaiscript::user_type<Space>(), "Space");
     m->add(chaiscript::base_class<QueryBase, Space>());
     m->add(chaiscript::type_conversion<Space, bool>([](const Space& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<Group(const Query*, const vector<chaiscript::Boxed_Value>&)>(), "Group");
-    m->add(chaiscript::constructor<Group(const Query*, int, const vector<chaiscript::Boxed_Value>&)>(), "Group");
-    m->add(chaiscript::constructor<Group(const Query*, int, bool, const vector<chaiscript::Boxed_Value>&)>(), "Group");
+    m->add(chaiscript::constructor<Group(Query*, const vector<chaiscript::Boxed_Value>&)>(), "Group");
+    m->add(chaiscript::constructor<Group(Query*, int, const vector<chaiscript::Boxed_Value>&)>(), "Group");
+    m->add(chaiscript::constructor<Group(Query*, int, bool, const vector<chaiscript::Boxed_Value>&)>(), "Group");
     m->add(chaiscript::user_type<Group>(), "Count");
     m->add(chaiscript::base_class<QueryBase, Group>());
     m->add(chaiscript::type_conversion<Group, bool>([](const Group& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<Url(const Query*)>(), "Url");
-    m->add(chaiscript::constructor<Url(const Query*, string*)>(), "Url");
-    m->add(chaiscript::constructor<Url(const Query*, vector<chaiscript::Boxed_Value>*)>(), "Url");
+    m->add(chaiscript::constructor<Url(Query*)>(), "Url");
+    m->add(chaiscript::constructor<Url(Query*, const std::string&)>(), "Url");
     m->add(chaiscript::user_type<Url>(), "Url");
     m->add(chaiscript::base_class<QueryBase, Url>());
     m->add(chaiscript::type_conversion<Url, bool>([](const Url& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<IPv4(const Query*)>(), "IPv4");
-    m->add(chaiscript::constructor<IPv4(const Query*, string*)>(), "IPv4");
-    m->add(chaiscript::constructor<IPv4(const Query*, vector<chaiscript::Boxed_Value>*)>(), "IPv4");
+    m->add(chaiscript::constructor<IPv4(Query*)>(), "IPv4");
+    m->add(chaiscript::constructor<IPv4(Query*, const std::string&)>(), "IPv4");
     m->add(chaiscript::user_type<IPv4>(), "IPv4");
     m->add(chaiscript::base_class<QueryBase, IPv4>());
     m->add(chaiscript::type_conversion<IPv4, bool>([](const IPv4& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<IPv6(const Query*)>(), "IPv6");
-    m->add(chaiscript::constructor<IPv6(const Query*, string*)>(), "IPv6");
-    m->add(chaiscript::constructor<IPv6(const Query*, vector<chaiscript::Boxed_Value>*)>(), "IPv6");
-    m->add(chaiscript::user_type<IPv4>(), "IPv6");
+    m->add(chaiscript::constructor<IPv6(Query*)>(), "IPv6");
+    m->add(chaiscript::constructor<IPv6(Query*, const std::string&)>(), "IPv6");
+    m->add(chaiscript::user_type<IPv6>(), "IPv6");
     m->add(chaiscript::base_class<QueryBase, IPv6>());
     m->add(chaiscript::type_conversion<IPv6, bool>([](const IPv6& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<Phone(const Query*)>(), "Phone");
-    m->add(chaiscript::constructor<Phone(const Query*, string*)>(), "Phone");
-    m->add(chaiscript::constructor<Phone(const Query*, vector<chaiscript::Boxed_Value>*)>(), "Phone");
-    m->add(chaiscript::user_type<IPv4>(), "Phone");
+    m->add(chaiscript::constructor<Phone(Query*)>(), "Phone");
+    m->add(chaiscript::constructor<Phone(Query*, const std::string&)>(), "Phone");
+    m->add(chaiscript::user_type<Phone>(), "Phone");
     m->add(chaiscript::base_class<QueryBase, Phone>());
     m->add(chaiscript::type_conversion<Phone, bool>([](const Phone& q) { return q.execute(); }));
 
-    m->add(chaiscript::constructor<Path(const Query*)>(), "Path");
-    m->add(chaiscript::constructor<Path(const Query*, string*)>(), "Path");
-    m->add(chaiscript::constructor<Path(const Query*, vector<chaiscript::Boxed_Value>*)>(), "Path");
-    m->add(chaiscript::user_type<IPv4>(), "Path");
+    m->add(chaiscript::constructor<Path(Query*)>(), "Path");
+    m->add(chaiscript::constructor<Path(Query*, const std::string&)>(), "Path");
+    m->add(chaiscript::user_type<Path>(), "Path");
     m->add(chaiscript::base_class<QueryBase, Path>());
     m->add(chaiscript::type_conversion<Path, bool>([](const Path& q) { return q.execute(); }));
 
@@ -937,6 +919,6 @@ namespace query
     m->add(chaiscript::type_conversion<ZeroOne, bool>([](const ZeroOne& q) { return q.execute(); }));
 
     chaiscript::bootstrap::standard_library::vector_type<std::vector<VectorQuery> >("VectorQuery", *m);
-    
+
     END_DECLARE(QUERY)
 }

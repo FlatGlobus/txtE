@@ -95,7 +95,7 @@ using VectorString = vector<std::string>;
 class ChaiEngine
 {
 protected:
-    using module_type = list<ChaiEngine*>;
+    using module_type = std::list<ChaiEngine*>;
     static module_type *_modules;
     chaiscript::ModulePtr m = make_shared<chaiscript::Module>();
     static unique_ptr<chaiscript::ChaiScript> engine;

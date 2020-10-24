@@ -1,31 +1,36 @@
 #pragma once
 #include "cursor.h"
+//#include "Mustache.h"
+#include "map"
 //////////////////////////////////////////////////////////////////////////
 namespace query
 {
+    using qdata_map = std::map < std::string, std::string > ;
+    class QData
+    {
+        bool freeze_data = false;
+        qdata_map data;
+    public:
+        QData();
+       
+        void set(const std::string&, const std::string&);
+        const string& get(const std::string&);
+        void reset_data();
+        void reset_data(const std::string&);
+        void set_freeze_data(bool val);
+
+        const qdata_map& get_data() { return data; }
+    };
+
     class Query;
     class QueryBase
     {
     protected:
         int count = -1;
-        std::string* out = nullptr;
-        std::vector<chaiscript::Boxed_Value>* outs = nullptr;
-        const Query* query = nullptr;
+        Query* query = nullptr;
+        std::string key;
 
-        inline void set_out(const std::string& s) const
-        {
-            if (out != nullptr)
-            {
-                *out = s;
-                return;
-            }
-
-            if (outs != nullptr)
-            {
-                outs->push_back(chaiscript::var(s));
-            }
-        }
-
+        void set_out(const std::string& s) const;
         void reset();
         bool check_count(int) const;
         bool skip_space() const;
@@ -33,20 +38,18 @@ namespace query
         QueryBase();
     public:
 
-        QueryBase(const Query*);
-        QueryBase(const Query*, int);
-        QueryBase(const Query*, int, std::string*);
-        QueryBase(const Query*, int, std::vector<chaiscript::Boxed_Value>*);
+        QueryBase(Query*);
+        QueryBase(Query*, int);
+        QueryBase(Query*, const std::string&);
+        QueryBase(Query*, int, const std::string&);
 
         virtual ~QueryBase();
         virtual bool execute() const;
-
     };
-
 
     using VectorQuery = std::vector<QueryBase*>;
     //////////////////////////////////////////////////////////////////////////
-    class Query :public QueryBase
+    class Query :public QueryBase, public QData
     {
     protected:
         cursor::Cursor* cursor = nullptr;
@@ -63,15 +66,16 @@ namespace query
 
         inline cursor::Cursor* get_cursor() const { return cursor; }
         virtual bool execute() const;
+        void reset_last_data();
+        const string& get(const std::string& key) { return QData::get(key); }
     };
 
     class Match : public QueryBase
     {
         std::string pattern;
     public:
-        Match(const Query*, const std::string&);
-        Match(const Query*, const std::string&, std::string* out);
-        Match(const Query*, const std::string&, std::vector<chaiscript::Boxed_Value>* out);
+        Match(Query*, const std::string&);
+        Match(Query*, const std::string&, const std::string& out);
         virtual bool execute() const;
     };
 
@@ -80,12 +84,10 @@ namespace query
     {
         std::string pattern;
     public:
-        AnyOf(const Query*, const std::string&);
-        AnyOf(const Query*, const std::string&, int count);
-        AnyOf(const Query*, const std::string&, int count, std::string* out);
-        AnyOf(const Query*, const std::string&, int count, std::vector<chaiscript::Boxed_Value>* outs);
-        AnyOf(const Query*, int count, std::string* out);
-        AnyOf(const Query*, int count, std::vector<chaiscript::Boxed_Value>* outs);
+        AnyOf(Query*, const std::string&);
+        AnyOf(Query*, const std::string&, int count);
+        AnyOf(Query*, const std::string&, int count, const std::string& out);
+        AnyOf(Query*, const std::string&, const std::string& out);
         virtual bool execute() const;
     };
 
@@ -93,12 +95,10 @@ namespace query
     {
         std::string pattern;
     public:
-        AnyNot(const Query*, const std::string&);
-        AnyNot(const Query*, const std::string&, int count);
-        AnyNot(const Query*, const std::string&, int count, std::string* out);
-        AnyNot(const Query*, const std::string&, int count, std::vector<chaiscript::Boxed_Value>* outs);
-        AnyNot(const Query*, int count, std::string* out);
-        AnyNot(const Query*, int count, std::vector<chaiscript::Boxed_Value>* outs);
+        AnyNot(Query*, const std::string&);
+        AnyNot(Query*, const std::string&, int count);
+        AnyNot(Query*, const std::string&, int count, const std::string& out);
+        AnyNot(Query*, const std::string&, const std::string& out);
         virtual bool execute() const;
     };
 
@@ -108,10 +108,10 @@ namespace query
     public:
         is_func func;
 
-        Is(const Query*, const is_func func);
-        Is(const Query*, const is_func func, int count);
-        Is(const Query*, const is_func func, int count, std::string* out);
-        Is(const Query*, const is_func func, int count, std::vector<chaiscript::Boxed_Value>* out);
+        Is(Query*, const is_func func);
+        Is(Query*, const is_func func, int count);
+        Is(Query*, const is_func func, int count, const std::string& out);
+        Is(Query*, const is_func func, const std::string& out);
 
         virtual bool execute() const;
     };
@@ -121,10 +121,10 @@ namespace query
     public:
         char from = '\0', to = '\0';
 
-        Range(const Query*, char from, char to);
-        Range(const Query*, char from, char to, int count);
-        Range(const Query*, char from, char to, int count, std::string* out);
-        Range(const Query*, char from, char to, int count, std::vector<chaiscript::Boxed_Value>* out);
+        Range(Query*, char from, char to);
+        Range(Query*, char from, char to, int count);
+        Range(Query*, char from, char to, int count, const std::string& out);
+        Range(Query*, char from, char to, const std::string& out);
 
         virtual bool execute() const;
     };
@@ -133,9 +133,8 @@ namespace query
     {
         VectorString pattern;
     public:
-        Set(const Query*, const VectorString&);
-        Set(const Query*, const VectorString&, std::string* out);
-        Set(const Query*, const VectorString&, std::vector<chaiscript::Boxed_Value>* out);
+        Set(Query*, const VectorString&);
+        Set(Query*, const VectorString&, const std::string&);
 
         virtual bool execute() const;
     };
@@ -143,16 +142,16 @@ namespace query
     class Endl : public QueryBase
     {
     public:
-        Endl(const Query* q);
+        Endl(Query* q);
         virtual bool execute() const;
     };
 
     class Word : public QueryBase
     {
     public:
-        Word(const Query*);
-        Word(const Query*, std::string* out);
-        Word(const Query*, std::vector<chaiscript::Boxed_Value>* out);
+        Word(Query*);
+        Word(Query*, const std::string& out);
+        
 
         virtual bool execute() const;
     };
@@ -163,89 +162,79 @@ namespace query
         const VectorString& rg_pattern;
         virtual std::tuple<std::string::const_iterator, std::string::const_iterator> extract_string() const;
     public:
-        RegEx(const Query*, const VectorString& rg_pattern);
-        RegEx(const Query*, const VectorString& rg_pattern, std::string* out);
-        RegEx(const Query*, const VectorString& rg_pattern, std::vector<chaiscript::Boxed_Value>* out);
-
+        RegEx(Query*, const VectorString& rg_pattern);
+        RegEx(Query*, const VectorString& rg_pattern, const std::string& out);
+        
         virtual bool execute() const;
     };
 
     class Number : public RegEx
     {
     public:
-        Number(const Query*);
-        Number(const Query*, std::string* out);
-        Number(const Query*, std::vector<chaiscript::Boxed_Value>* out);
+        Number(Query*);
+        Number(Query*, const std::string& out);
     };
 
     class Hex : public RegEx
     {
     public:
-        Hex(const Query*);
-        Hex(const Query*, std::string* out);
-        Hex(const Query*, std::vector<chaiscript::Boxed_Value>* out);
+        Hex(Query*);
+        Hex(Query*, const std::string& out);
     };
 
     class Date : public RegEx
     {
     public:
-        Date(const Query*);
-        Date(const Query*, std::string* out);
-        Date(const Query*, std::vector<chaiscript::Boxed_Value>* out);
+        Date(Query*);
+        Date(Query*, const std::string& out);
     };
 
     class Time : public RegEx
     {
     public:
-        Time(const Query*);
-        Time(const Query*, std::string* out);
-        Time(const Query*, std::vector<chaiscript::Boxed_Value>* out);
+        Time(Query*);
+        Time(Query*, const std::string& out);
     };
 
     class Url : public RegEx
     {
     public:
-        Url(const Query*);
-        Url(const Query*, std::string* out);
-        Url(const Query*, std::vector<chaiscript::Boxed_Value>* out);
+        Url(Query*);
+        Url(Query*, const std::string& out);
     };
 
     class IPv4 : public RegEx
     {
     public:
-        IPv4(const Query*);
-        IPv4(const Query*, std::string* out);
-        IPv4(const Query*, std::vector<chaiscript::Boxed_Value>* out);
+        IPv4(Query*);
+        IPv4(Query*, const std::string& out);
     };
 
     class IPv6 : public RegEx
     {
     public:
-        IPv6(const Query*);
-        IPv6(const Query*, std::string* out);
-        IPv6(const Query*, std::vector<chaiscript::Boxed_Value>* out);
+        IPv6(Query*);
+        IPv6(Query*, const std::string& out);
     };
 
     class Phone : public RegEx
     {
     public:
-        Phone(const Query*);
-        Phone(const Query*, std::string* out);
-        Phone(const Query*, std::vector<chaiscript::Boxed_Value>* out);
+        Phone(Query*);
+        Phone(Query*, const std::string& out);
     };
 
     class Path : public RegEx
     {
     public:
-        Path(const Query*);
-        Path(const Query*, std::string* out);
-        Path(const Query*, std::vector<chaiscript::Boxed_Value>* out);
+        Path(Query*);
+        Path(Query*, const std::string& out);
     };
 
     class Space : public QueryBase
     {
     public:
-        Space(const Query*);
+        Space(Query*);
         virtual bool execute() const;
     };
 
@@ -254,9 +243,9 @@ namespace query
         VectorQuery query_vector;
         bool shift = false;
     public:
-        Group(const Query*, const std::vector<chaiscript::Boxed_Value>&);
-        Group(const Query*, int, const std::vector<chaiscript::Boxed_Value>&);
-        Group(const Query*, int, bool, const std::vector<chaiscript::Boxed_Value>&);
+        Group(Query*, const std::vector<chaiscript::Boxed_Value>&);
+        Group(Query*, int, const std::vector<chaiscript::Boxed_Value>&);
+        Group(Query*, int, bool, const std::vector<chaiscript::Boxed_Value>&);
         virtual bool execute() const;
     };
 
@@ -271,7 +260,7 @@ namespace query
     {
 //        chaiscript::Boxed_Value& query_to_execute;
     public:
-        ZeroOne(const Query*, chaiscript::Boxed_Value&);
+        ZeroOne(Query*, chaiscript::Boxed_Value&);
         virtual bool execute() const;
     };
 

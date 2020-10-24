@@ -1,16 +1,17 @@
 //txtE -e xamarin_ctrl.s -f <filename.cs>
 //declare property //[prop name type def]  //[prop BackgroundColor Color Color.White]
 //====================================================
-def gen_property(class_name, prop_name, prop_type, def_val)
+def gen_property(query)
 {
-	var str = "\tpublic static readonly BindableProperty " + prop_name + "Property = \n";
-        str += "\t\tBindableProperty.Create(nameof(" + prop_name+"), typeof(" + prop_type + "), typeof(" + class_name + "), " + def_val + ", propertyChanged: OnPropertyChanged);\n";
-	str += "\tpublic " + prop_type + " " + prop_name + "\n";
+	var str = "\tpublic static readonly BindableProperty {{prop_name}}Property = \n";
+        str += "\t\tBindableProperty.Create(nameof({{prop_name}}), typeof({{prop_name}}), typeof({{class_name}}), {{def_val}}, propertyChanged: OnPropertyChanged);\n";
+	str += "\tpublic {{prop_type}} {{prop_name}}\n";
 	str += "\t{\n";
-	str += "\t\tget => (" + prop_type +")GetValue(" + prop_name + "Property);\n";
-  	str += "\t\tset => SetValue(" + prop_name + "Property, value);\n\t}\n";
-
-        return str;
+	str += "\t\tget => ({{prop_type}})GetValue({{prop_name}}Property);\n";
+  	str += "\t\tset => SetValue({{prop_name}}Property, value);\n\t}\n";
+	
+	var tmpl = Mustache(str);
+        return tmpl.render(query);
 }
 
 if(program_options.size() == 0)
@@ -31,37 +32,30 @@ if(source.load(source_file_name) == 0)
 
 var cursor = Cursor(source);
 var query = Query(cursor);
-var class_name = "";
 var changed = false;
 
 while(cursor)
 {
-//Group is used for test 
-	if(SkipSpace(query, true) && Match(query, "public") && ZeroOne(query, Group(query, [Match(query, "partial")])) && Match(query, "class") && Is(query, iscsym, -1, class_name) && Match(query, ":") && Match(query, "SKCanvasView"))
+	if(SkipSpace(query, true) && Match(query, "public") && ZeroOne(query, Match(query, "partial")) && Match(query, "class") && Is(query, iscsym, "class_name") && Match(query, ":") && Match(query, "SKCanvasView"))
 	{
-		print("found class : " + class_name);
+		print("found class : " + query.get("class_name"));
 		cursor.label("class_decl");
 		break;
 	} 
-	class_name = "";
 	cursor.next_line();
 }
 
 cursor = 0;
 while(cursor)
 {
-	var prop_name = "";
-	var prop_type = "";
-	var def_val = "";
-
 	cursor.label("line");
-	if(SkipSpace(query, true) && Match(query,"//[prop") && Is(query, iscsym, -1, prop_name) && Is(query, iscsym, -1, prop_type) && AnyNot(query, " ]", -1, def_val) && Match(query,"]"))
+	if(SkipSpace(query, true) && Match(query,"//[prop") && Is(query, iscsym, "prop_name") && Is(query, iscsym, "prop_type") && AnyNot(query, " ]", "def_val") && Match(query, "]") )
 	{
-		print("property : " + prop_name);
-		if(source.contains("BindableProperty " + prop_name + "Property") == false)
+		print("property : " + query.get("prop_name"));
+		if(source.contains("BindableProperty " + query.get("prop_name") + "Property") == false)
 		{		
-			print("generate property : " + prop_name);
-			source.insert_line(cursor, gen_property(class_name, prop_name, prop_type, def_val));
+			print("generate property : " + query.get("prop_name"));
+			source.insert_line(cursor, gen_property(query));
 			changed = true;
 		}
 		else
