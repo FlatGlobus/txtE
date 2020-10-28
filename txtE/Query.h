@@ -1,25 +1,32 @@
 #pragma once
 #include "cursor.h"
-//#include "Mustache.h"
-#include "map"
+#include <map>
+#include <vector>
 //////////////////////////////////////////////////////////////////////////
 namespace query
 {
     using qdata_map = std::map < std::string, std::string > ;
+    using qdata_vector = std::vector < qdata_map >;
     class QData
     {
-        bool freeze_data = false;
-        qdata_map data;
+        bool freeze{ false };
+        qdata_vector data_vector;
+        size_t       current_data {0};
     public:
         QData();
-       
+        virtual ~QData();
         void set(const std::string&, const std::string&);
-        const string& get(const std::string&);
-        void reset_data();
-        void reset_data(const std::string&);
-        void set_freeze_data(bool val);
+        const string& get(const std::string&) const;
+        VectorString get_vector(const std::string&) const;
+        void reset_all_data();
+        void reset_data(const std::string& key);
+        void freeze_data(bool val);
 
-        const qdata_map& get_data() { return data; }
+        void next_data();
+        const qdata_map& get_data() const { return *(data_vector.begin() + current_data); }
+
+        size_t size() const { return data_vector.size(); }
+        void set_current(size_t);
     };
 
     class Query;
@@ -44,7 +51,7 @@ namespace query
         QueryBase(Query*, int, const std::string&);
 
         virtual ~QueryBase();
-        virtual bool execute() const;
+        virtual bool execute() const ;
     };
 
     using VectorQuery = std::vector<QueryBase*>;
@@ -54,7 +61,7 @@ namespace query
     protected:
         cursor::Cursor* cursor = nullptr;
         bool case_insensitive = true;
-        bool skip_space = false; // TODO после найденного совпадения будет устанавливать текущцю позицию курсора на следующий не пробельный символ
+        bool skip_space = false; // после найденного совпадения будет устанавливать текущцю позицию курсора на следующий не пробельный символ
                                  // таким образом можно будет избавится от использования Space в query
     public:
         Query(cursor::Cursor*);
@@ -67,7 +74,6 @@ namespace query
         inline cursor::Cursor* get_cursor() const { return cursor; }
         virtual bool execute() const;
         void reset_last_data();
-        const string& get(const std::string& key) { return QData::get(key); }
     };
 
     class Match : public QueryBase
@@ -261,6 +267,14 @@ namespace query
 //        chaiscript::Boxed_Value& query_to_execute;
     public:
         ZeroOne(Query*, chaiscript::Boxed_Value&);
+        virtual bool execute() const;
+    };
+
+    class NextData : public QueryBase
+    {
+        
+    public:
+        NextData(Query*);
         virtual bool execute() const;
     };
 

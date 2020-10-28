@@ -2,9 +2,7 @@ print("----------------Query---------------------------");
 
 var text_q = Text(" Abcd 123z4a  5678-44?");
 var cursor_q = Cursor(text_q);
-var ret = "";
 var q = Query(cursor_q);
-var ret_val ="";
 
 cursor_q = 1;
 if(Match(q, "Abcd"))
@@ -29,41 +27,41 @@ else
 cursor_q = 1;
 if(AnyOf(q, "v") == false)
 {
-	print("Query: Any true");
+	print("Query: AnyOf true");
 }
 else
 {
-	print("Query: Any false");
+	print("Query: AnyOf false");
 }
 
 cursor_q = 1;
 if(AnyOf(q, "dcbA"))
 {
-	print("Query: Any true");
+	print("Query: AnyOf true");
 }
 else
 {
-	print("Query: Any false");
+	print("Query: AnyOf false");
 }
 
 cursor_q = 1;
-if(AnyOf(q, "dcbA", 3, ret))
+if(AnyOf(q, "dcbA", 3, "ret"))
 {
-	print("Query: Any true " + ret );
+	print("Query: AnyOf true " + q.get("ret"));
 }
 else
 {
-	print("Query: Any false " + ret);
+	print("Query: AnyOf false " + q.get("ret"));
 }
 
 cursor_q = 1;
-if(AnyOf(q, "dcbA", -1, ret))
+if(AnyOf(q, "dcbA", "ret"))
 {
-	print("Query: Any true " + ret );
+	print("Query: AnyOf true " + q.get("ret") );
 }
 else
 {
-	print("Query: Any false " + ret);
+	print("Query: AnyOf false " + q.get("ret"));
 }
 
 cursor_q = 0;
@@ -117,13 +115,13 @@ else
 }
 
 cursor_q =	2;
-if(Range(q, 'a', 'z', -1, ret))
+if(Range(q, 'a', 'z', -1, "ret"))
 {
-	print("Query: Range true " + ret);
+	print("Query: Range true " + q.get("ret"));
 }
 else
 {
-	print("Query: Range false" + ret);
+	print("Query: Range false" + q.get("ret"));
 }
 
 cursor_q =	2;
@@ -137,9 +135,9 @@ else
 }
 
 cursor_q =	1;
-if(Set(q, ["fgtr","Abcd"], ret))
+if(Set(q, ["fgtr","Abcd"], "ret"))
 {
-	print("Query: Set true  " + ret);
+	print("Query: Set true  " + q.get("ret"));
 }
 else
 {
@@ -157,9 +155,9 @@ else
 }
 
 cursor_q =	1;
-if(Word(q, ret))
+if(Word(q, "ret"))
 {
-	print("Query: Word true " + ret);
+	print("Query: Word true " + q.get("ret"));
 }
 else
 {
@@ -167,9 +165,9 @@ else
 }
 
 //cursor_q =	6;
-//if(Number(q, ret))
+//if(Number(q, "ret"))
 //{
-//	print("Query: Number1 true " + ret);
+//	print("Query: Number1 true " + q.get("ret"));
 //}
 //else
 //{
@@ -210,9 +208,9 @@ else
 
 txt_date = " 12:08 22:08 time to go"; 
 cur_date = 1;
-if(Time(q_date) && Space(q_date) && Time(q_date, ret))
+if(Time(q_date) && Space(q_date) && Time(q_date, "ret"))
 {
-	print("Query: Time true " + ret );
+	print("Query: Time true " + q.get("ret") );
 }
 else
 {
@@ -246,15 +244,15 @@ cur_date=0;
 /////////////////////////////////////////////////////////////////////////
 
 cursor_q = 0; //" Abcd 123z4a  5678-44?"
-if(Is(q, isspace) && Match(q, "Abcd 123z4a") && Is(q, isspace, 2) && Is(q, isdigit, 4, ret) && Match(q, "-"))
+if(Is(q, isspace) && Match(q, "Abcd 123z4a") && Is(q, isspace, 2) && Is(q, isdigit, 4, "ret") && Match(q, "-"))
 {
-	if(ret == "5678")
+	if(q.get("ret") == "5678")
 	{
-		print("Query: query 1 true " + ret);
+		print("Query: query 1 true " + q.get("ret"));
 	}
 	else
 	{
-		print("Query: query 1 false" + ret);
+		print("Query: query 1 false" + q.get("ret"));
 	}
 }
 else
@@ -263,15 +261,15 @@ else
 }
 
 cursor_q = 0; //" Abcd 123z4a  5678-44?"
-if(Space(q) && Word(q) && Space(q) && Word(q, ret) && Space(q) && Match(q, "5678-44?"))
+if(Space(q) && Word(q) && Space(q) && Word(q, "ret") && Space(q) && Match(q, "5678-44?"))
 {
-	if(ret == "123z4a")
+	if(q.get("ret") == "123z4a")
 	{
-		print("Query: query 2 ret true " + ret);
+		print("Query: query 2 ret true " + q.get("ret"));
 	}
 	else
 	{
-		print("Query: query 2 ret false" + ret);
+		print("Query: query 2 ret false" + q.get("ret"));
 	}
 }
 else
@@ -286,29 +284,28 @@ var txt_cur_q = Cursor(txt_q);
 print("print 5 words");
 txt_cur_q = 0;
 var qq = Query(txt_cur_q);
-for(var i =0; i < 5; ++i)
+for(var i = 0; i < 5; ++i)
 {
-	if(Word(qq, ret) && Space(qq))
+	if(Word(qq, "ret") && Space(qq))
 	{
-		print(ret);
+		print(qq.get("ret"));
 	}
 }
 
 txt_cur_q = 0;
-var w = [];
-
-if( Group(qq, -1, true, [Word(qq, w), Space(qq)]) )
+qq.reset();
+if( Group(qq, -1, true, [Word(qq, "word"), Space(qq), NextData(qq)]))
 {
-	print("Group:true "+ "size = " + to_string(w.size()) + " words = " + to_string(w));
+	print("Group word:true "+ "size = " + to_string(qq.size()) + " words = " + to_string(qq.get_vector("word")));
 }
 
 txt_cur_q = 0;
-var n = [];
 var timer = Timer();
 timer.start();
-if( Group(qq, -1, true, [Number(qq, n)]) )
+qq.reset();
+if( Group(qq, -1, true, [Number(qq, "num"), NextData(qq)]) )
 {
-	print("Group:true "+ "size = " + to_string(n.size()) + " numbers = " + to_string(n));
+	print("Group num:true "+ "size = " + to_string(qq.size()) + " numbers = " + to_string(qq.get_vector("num")));
 }
 timer.stop();
 print("time : " + to_string(timer.time()));

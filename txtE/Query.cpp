@@ -12,40 +12,84 @@ namespace query
 {
     QData::QData()
     {
+        next_data();
+    }
+
+    QData::~QData()
+    {
+
     }
 
     void QData::set(const std::string& key, const std::string& val)
     {
+        TRACE_FUNC;
         if (key.empty())
             throw std::runtime_error("Query::set: key is empty");
 
-        data[key] = val;
+        (data_vector.begin() + current_data)->insert_or_assign(key, val);
     }
 
-    const string& QData::get(const std::string& key)
+    const string& QData::get(const std::string& key) const
     {
-        auto val = data.find(key);
-        if (val != data.end())
+        TRACE_FUNC;
+        auto val = (data_vector.begin() + current_data)->find(key);
+        if (val != (data_vector.begin() + current_data)->end())
             return val->second;
 
         throw std::runtime_error("Query::get: no value for " + key + " key");
     }
-
-    void QData::reset_data()
+    
+    VectorString QData::get_vector(const std::string& key) const
     {
-        if (freeze_data == false)
-            data.clear();
+        TRACE_FUNC;
+        VectorString vs;
+
+        for (auto& m : data_vector)
+        {
+            auto val = m.find(key);
+            if (val != m.end())
+                vs.push_back(val->second);
+        }
+        if(vs.empty())
+            throw std::runtime_error("Query::get: no value for " + key + " key");
+        return vs;
+    }
+
+    void QData::reset_all_data()
+    {
+        TRACE_FUNC;
+        if (freeze == false)
+        {
+            data_vector.clear();
+            next_data();
+        }
+            
     }
 
     void QData::reset_data(const std::string& key)
     {
-        if (freeze_data == false)
-            data[key] = "";//TODO check?
+        TRACE_FUNC;
+        if (key.size() && freeze == false)
+            (data_vector.begin() + current_data)->erase(key);
     }
 
-    void QData::set_freeze_data(bool val)
+    void QData::freeze_data(bool val)
     {
-        freeze_data = val;
+        freeze = val;
+    }
+
+    void QData::next_data()
+    {
+        TRACE_FUNC;
+        data_vector.push_back(qdata_map());
+        current_data = data_vector.size() - 1;
+    }
+
+    void QData::set_current(size_t idx)
+    {
+        TRACE_FUNC;
+        if(idx < data_vector.size())
+            current_data = idx;
     }
     //////////////////////////////////////////////////////////////////////////
     QueryBase::QueryBase()
@@ -141,7 +185,7 @@ namespace query
 
     void Query::reset_last_data()
     {
-        QData::reset_data();//TODO vector
+        reset_data(key);
     }
     //////////////////////////////////////////////////////////////////////////
     Match::Match(Query* q, const string& p) : QueryBase(q), pattern(p)
@@ -733,18 +777,19 @@ namespace query
     //////////////////////////////////////////////////////////////////////////
     ZeroOne::ZeroOne(Query* q, chaiscript::Boxed_Value& _query) :QueryBase(q)//, query_to_execute(_query)
     {
+        TRACE_FUNC;
         //chaiscript::Type_Info ut = chaiscript::user_type<QueryBase>();TODO
         //to fix the chaiscript behaviour. it destroys the object on the stack before calling the bool operator
         QueryBase* query_to_execute = (QueryBase*)_query.get_ptr();
         if (query_to_execute)
         {
             Position p = query->get_cursor()->get_pos();
-            query->set_freeze_data(true);
+            query->freeze_data(true);
             if (query_to_execute->execute() == false)
             {
                 query->get_cursor()->move_to(p);
             }
-            query->set_freeze_data(false);
+            query->freeze_data(false);
         }
     }
 
@@ -761,26 +806,36 @@ namespace query
 
         return true;
     }
+    //////////////////////////////////////////////////////////////////////////
+    NextData::NextData(Query* q) :QueryBase(q)
+    {
+    }
+
+    bool NextData::execute() const
+    {
+        TRACE_FUNC;
+        query->next_data();
+        return true;
+    }
 
     //////////////////////////////////////////////////////////////////////////
     DECLARE_MODULE(QUERY)
 
-    //m->add(chaiscript::user_type<QData>(), "QData");
-    //m->add(chaiscript::constructor<QueryBase()>(), "QueryBase");
+    m->add(chaiscript::user_type<QData>(), "QData");
     m->add(chaiscript::user_type<QueryBase>(), "QueryBase");
-    //m->add(chaiscript::type_conversion<QueryBase, bool>([](QueryBase& q) { return q.execute(); }));
-
-    //m->add(chaiscript::base_class<QData, QueryBase>());
-
+    
     m->add(chaiscript::constructor<Query(Cursor*)>(), "Query");
     m->add(chaiscript::constructor<Query(Cursor*, bool)>(), "Query");
     m->add(chaiscript::base_class<QueryBase, Query>());
+    m->add(chaiscript::base_class<QData, Query>());
     m->add(chaiscript::type_conversion<Query, bool>([](const Query& q) {return q.execute(); }));
-    m->add(chaiscript::fun(static_cast<void(Query::*)(const string&, const string&)>(&Query::set)), "set");
-    m->add(chaiscript::fun(static_cast<const string& (Query::*)(const string&)>(&Query::get)), "get");
-    
-    m->add(chaiscript::fun(static_cast<void(Query::*)()>(&Query::reset_data)), "reset");
-    m->add(chaiscript::fun(static_cast<void(Query::*)(const string&)>(&Query::reset_data)), "reset");
+    m->add(chaiscript::fun(static_cast<void(QData::*)(const string&, const string&)>(&QData::set)), "set");
+    m->add(chaiscript::fun(static_cast<const string& (QData::*)(const string&) const>(&QData::get)), "get");
+    m->add(chaiscript::fun(static_cast<VectorString(QData::*)(const string&) const>(&QData::get_vector)), "get_vector");
+    m->add(chaiscript::fun(static_cast<void(QData::*)()>(&QData::reset_all_data)), "reset");
+    m->add(chaiscript::fun(static_cast<void(QData::*)(const string&)>(&QData::reset_data)), "reset");
+    m->add(chaiscript::fun(static_cast<size_t(QData::*)() const>(&QData::size)), "size");
+    m->add(chaiscript::fun(static_cast<void(QData::*)(size_t)>(&QData::set_current)), "set_current");
 
     m->add(chaiscript::constructor<Match(Query*, const string&)>(), "Match");
     m->add(chaiscript::constructor<Match(Query*, const string&, const std::string&)>(), "Match");
@@ -918,7 +973,12 @@ namespace query
     m->add(chaiscript::base_class<QueryBase, ZeroOne>());
     m->add(chaiscript::type_conversion<ZeroOne, bool>([](const ZeroOne& q) { return q.execute(); }));
 
-    chaiscript::bootstrap::standard_library::vector_type<std::vector<VectorQuery> >("VectorQuery", *m);
+    m->add(chaiscript::constructor<NextData(Query*)>(), "NextData");
+    m->add(chaiscript::user_type<NextData>(), "NextData");
+    m->add(chaiscript::base_class<QueryBase, NextData>());
+    m->add(chaiscript::type_conversion<NextData, bool>([](const NextData& q) { return q.execute(); }));
 
+    chaiscript::bootstrap::standard_library::vector_type<std::vector<VectorQuery> >("VectorQuery", *m);
+ 
     END_DECLARE(QUERY)
 }

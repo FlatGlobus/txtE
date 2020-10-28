@@ -102,7 +102,6 @@ protected:
     static vector<string>* program_options;
 
     virtual void register_module() = 0;
-    static void init_std();
 public:
     ChaiEngine()
     {

@@ -210,7 +210,6 @@ m->add(chaiscript::type_conversion<string, fs::path>([](const string& s) { retur
 m->add(chaiscript::fun(static_cast<VectorPath(*)(fs::path, bool, const VectorString&)>(&GetAllFilesFromFolderProxy)), "get_files_from_folder");
 
 chaiscript::bootstrap::standard_library::vector_type<std::vector<fs::path> >("VectorPath", *m);
-//ChaiEngine::get_engine()->add(chaiscript::bootstrap::standard_library::vector_type<vector<fs::path>>("VectorPath", *m));
 
 m->add(chaiscript::fun(static_cast<bool (*)(const fs::path&)>(&fs::create_directory)), "create_directory");
 m->add(chaiscript::fun(static_cast<fs::path (*)()>(&fs::current_path)), "current_path");

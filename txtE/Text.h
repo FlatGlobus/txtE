@@ -34,9 +34,9 @@ namespace text
         Text(const std::string&);
         ~Text();
 
-        size_t load(const fs::path&);
-        size_t write(const fs::path&);
-        size_t write(const fs::path&, el_types);
+        bool load(const fs::path&);
+        bool write(const fs::path&);
+        bool write(const fs::path&, el_types);
 
         std::string get(const cursor::Cursor&, size_t);
         std::string get_to_endl(const cursor::Cursor&);
@@ -44,24 +44,24 @@ namespace text
         std::string get_word(const cursor::Cursor& start);
         std::string get_between(const cursor::Cursor&, const cursor::Cursor&);
 
-        void set(const cursor::Cursor&, const std::string&);
-        void set_line(const cursor::Cursor&, const std::string&);
+        bool set(const cursor::Cursor&, const std::string&);
+        bool set_line(const cursor::Cursor&, const std::string&);
 
-        void insert(const cursor::Cursor&, const std::string&);
-        void insert_line(const cursor::Cursor&, const std::string&);
+        bool insert(const cursor::Cursor&, const std::string&);
+        bool insert_line(const cursor::Cursor&, const std::string&);
 
-        void add(const std::string&);
-        void add(const Text&);
+        bool add(const std::string&);
+        bool add(const Text&);
 
         cursor::Cursor diff(const cursor::Cursor& start, const std::string& text1, std::string& result);
         cursor::Cursor diff(const cursor::Cursor& start, const Text& text1, std::string& result);
 
         size_t size() const;
 
-        void erase(const cursor::Cursor& pos, size_t count);
-        void erase_between(const cursor::Cursor& from, const cursor::Cursor& to);
-        void erase_line(const cursor::Cursor& pos);
-        void clear();
+        bool erase(const cursor::Cursor& pos, size_t count);
+        bool erase_between(const cursor::Cursor& from, const cursor::Cursor& to);
+        bool erase_line(const cursor::Cursor& pos);
+        bool clear();
 
         el_types get_endl_type() const { return original_endl; }
 

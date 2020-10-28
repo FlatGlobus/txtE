@@ -15,13 +15,12 @@ string _Trace::tab(string sym) { return strtk::replicate(level, sym); }
 
 void ChaiEngine::start()
 {
-	init_std();
 	if (_modules)
 	{
-		for (auto modul : *_modules)
+		for (auto module : *_modules)
 		{
-			modul->register_module();
-			ChaiEngine::get_engine()->add(modul->m);
+			module->register_module();
+			ChaiEngine::get_engine()->add(module->m);
 		}
 	}
 }
@@ -41,14 +40,6 @@ chaiscript::ChaiScript* ChaiEngine::get_engine()
 vector<string>* ChaiEngine::get_program_options()
 {
     return program_options;
-}
-
-void  ChaiEngine::init_std()
-{
-    auto stringmethods = chaiscript::extras::string_methods::bootstrap();
-    chaiscript::bootstrap::standard_library::vector_type<std::vector<string> >("VectorString", *stringmethods);
-    chaiscript::bootstrap::standard_library::string_type<wstring>("wstring", *stringmethods);
-    ChaiEngine::get_engine()->add(stringmethods);
 }
 //////////////////////////////////////////////////////////////////////////
 size_t _TRACE_TEXT_DELTA = 8;
@@ -193,6 +184,10 @@ public:
 };
 //////////////////////////////////////////////////////////////////////////
 DECLARE_MODULE(THINGS)
+
+chaiscript::bootstrap::standard_library::vector_type<std::vector<string> >("VectorString", *m);
+chaiscript::bootstrap::standard_library::string_type<wstring>("wstring", *m);
+
 m->add(chaiscript::type_conversion<int, size_t>([](const int& t_bt) { return size_t(t_bt); }));
 m->add(chaiscript::fun(trace), "trace");
 m->add(chaiscript::fun(set_trace_text_delta), "trace_text_delta");
@@ -212,6 +207,13 @@ m->add(chaiscript::type_conversion<vector<chaiscript::Boxed_Value>, vector<strin
         for (const auto& bv : vec) ret.emplace_back(chaiscript::boxed_cast<string>(bv));
         return ret;})
 );
+
+//m->add(chaiscript::type_conversion<vector<string>, vector<chaiscript::Boxed_Value>>(
+    //[](const vector<string>& vec) {
+        //vector<chaiscript::Boxed_Value> ret;
+        //for (const auto& bv : vec) ret.emplace_back(chaiscript::Boxed_Value(bv));
+        //return ret; })
+//);
 
 m->add(chaiscript::constructor<Timer()>(), "Timer");
 m->add(chaiscript::user_type<Timer>(), "Timer");

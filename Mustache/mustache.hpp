@@ -393,15 +393,15 @@ public:
     const basic_lambda2<string_type>& lambda2_value() const {
         return lambda_->type2_value();
     }
-    /////////////////////////////////////////////////
-    void clear()
-    {
-        if (is_non_empty_list())
-            list_->clear();
+    ///////////////////////////////////////////////////
+    //void clear()
+    //{
+    //    if (is_non_empty_list())
+    //        list_->clear();
 
-        if(is_string())
-            str_->clear();
-    }
+    //    if(is_string())
+    //        str_->clear();
+    //}
 
 private:
     type type_;

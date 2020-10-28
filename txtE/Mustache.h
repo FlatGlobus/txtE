@@ -1,7 +1,7 @@
 #pragma once
 #include <chaiscript/chaiscript.hpp>
 #include"util.h"
-#include "Mustache/mustache.hpp"
+#include "Mustache/mustache.hpp" //https://github.com/kainjow/Mustache
 #include "query.h"
 
 namespace _mustache
@@ -69,6 +69,7 @@ namespace _mustache
 
         inline std::string render(const Data& d)
         {
+            TRACE_FUNC;
             std::string str = kainjow::mustache::mustache::render(d);
             if (is_valid() == false)
                 throw runtime_error("Mustache :" + error_message());
@@ -76,11 +77,12 @@ namespace _mustache
             return str;
         }
 
-        inline std::string render(const query::Query& query)
+        std::string render(query::Query& query)
         {
+            TRACE_FUNC;
             kainjow::mustache::data d;
 
-            for(auto var : ((query::QData&)query).get_data())
+            for(auto var : query.get_data())
             {
                 d.set(var.first, var.second);
             }
@@ -91,6 +93,23 @@ namespace _mustache
 
             return str;
         }
+        //TODO not tested yet
+        std::string render(query::Query& query, const string& name,const string& key)
+        {
+            TRACE_FUNC;
+            kainjow::mustache::data d = kainjow::mustache::data::type::list;
 
+            for (size_t i = 0; i < query.size(); ++i)
+            {
+                query.set_current(i);
+                d.push_back(kainjow::mustache::data(key, query.get(key)));
+            }
+
+            kainjow::mustache::data _data(name, d);
+            std::string str = kainjow::mustache::mustache::render(_data);
+            if (is_valid() == false)
+                throw runtime_error("Mustache :" + error_message());
+            return str;
+        }
     };
 }

@@ -40,7 +40,7 @@ namespace text
         }
     }
 
-    size_t Text::load(const fs::path& file_name)
+    bool Text::load(const fs::path& file_name)
     {
         TRACE_FUNC;
         TRACE_OUT << "filename = " << file_name TRACE_END;
@@ -50,12 +50,12 @@ namespace text
         if (!in)
         {
             std::cerr << "Error loading file " << file_name << " : " << strerror(errno) << std::endl;
-            return 0;
+            return false;
         }
 
         ifstream::pos_type fileSize = in.tellg();
         if (fileSize < 0)
-            return 0;
+            return false;
 
         in.seekg(0, ios::beg);
 
@@ -67,10 +67,10 @@ namespace text
         original_endl = find_endl_type();
         reset_endl(text);
 
-        return text.size();
+        return true;
     }
 
-    size_t Text::write(const fs::path& file_name, el_types t)
+    bool Text::write(const fs::path& file_name, el_types t)
     {
         TRACE_FUNC;
         TRACE_OUT << "filename = " << file_name TRACE_END;
@@ -79,7 +79,7 @@ namespace text
         if (!out)
         {
             std::cerr << "Error writing file " << file_name << " : " << strerror(errno) << std::endl;
-            return 0;
+            return false;
         }
 
         fs::resize_file(file_name, 0);
@@ -99,10 +99,10 @@ namespace text
             reset_endl(text);
         }
 
-        return text.size();
+        return true;
     }
 
-    size_t Text::write(const fs::path& file_name)
+    bool Text::write(const fs::path& file_name)
     {
         return write(file_name, original_endl);
     }
@@ -195,29 +195,30 @@ namespace text
         return str;
     }
 
-    void Text::set(const Cursor& pos, const string& str)
+    bool Text::set(const Cursor& pos, const string& str)
     {
         TRACE_FUNC;
         check_cursor(pos);
 
         if (pos.eof())
-            return;
+            return false;
 
         TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
         for (size_t i = 0; i < str.size() && (pos.get_pos() + i) < text.size(); i++)
         {
             if (pos.eof(pos.get_pos() + i))
-                break;
+                return false;
             text[pos.get_pos() + i] = str[i];
         }
+        return true;
     }
 
-    void Text::set_line(const Cursor& pos, const string& str)
+    bool Text::set_line(const Cursor& pos, const string& str)
     {
         TRACE_FUNC;
         check_cursor(pos);
         if (pos.eof())
-            return;
+            return false;
 
         TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
 
@@ -228,48 +229,56 @@ namespace text
         if (pos.eof(spos) == false)
         {
             text.insert(spos, str);
+            return true;
         }
+        return false;
     }
 
-    void Text::insert(const Cursor& pos, const string& str)
+    bool Text::insert(const Cursor& pos, const string& str)
     {
         TRACE_FUNC;
         check_cursor(pos);
 
         if (pos.eof())
-            return;
+            return false;
 
         TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
 
         text.insert(pos.get_pos(), str);
+        return true;
     }
 
-    void Text::insert_line(const Cursor& pos, const string& str)
+    bool Text::insert_line(const Cursor& pos, const string& str)
     {
         TRACE_FUNC;
         check_cursor(pos);
 
         if (pos.eof())
-            return;
+            return false;
 
         size_t p = text.find(ENDL, pos.get_pos());
 
         if (pos.eof(p) == false)
         {
             text.insert(p, ENDL + str);
+            return true;
         }
+
+        return false;
     }
 
-    void Text::add(const Text& t)
+    bool Text::add(const Text& t)
     {
         TRACE_FUNC;
         text += t.text;
+        return true;
     }
 
-    void Text::add(const string& str)
+    bool Text::add(const string& str)
     {
         TRACE_FUNC;
         text += str;
+        return true;
     }
 
     size_t Text::size() const
@@ -277,36 +286,38 @@ namespace text
         return text.size();
     }
 
-    void Text::erase(const Cursor& pos, size_t count)
+    bool Text::erase(const Cursor& pos, size_t count)
     {
         TRACE_FUNC;
         check_cursor(pos);
 
         if (pos.eof() || pos.eof(pos.get_pos() + count))
-            return;
+            return false;
 
         text.erase(pos.get_pos(), count);
+        return true;
     }
 
-    void Text::erase_between(const Cursor& from, const Cursor& to)
+    bool Text::erase_between(const Cursor& from, const Cursor& to)
     {
         TRACE_FUNC;
         check_cursor(from);
         check_cursor(to);
 
         if (from.eof() || to.eof() || to.get_pos() < from.get_pos())
-            return;
+            return false;
 
         text.erase(from.get_pos(), to.get_pos() - from.get_pos() + 1);
+        return true;
     }
 
-    void Text::erase_line(const Cursor& pos)
+    bool Text::erase_line(const Cursor& pos)
     {
         TRACE_FUNC;
         check_cursor(pos);
 
         if (pos.eof())
-            return;
+            return false;
 
         size_t spos = text.rfind(ENDL, pos.get_pos());
         size_t epos = text.find(ENDL, pos.get_pos());
@@ -317,13 +328,15 @@ namespace text
         if (pos.eof(spos) == false && pos.eof(epos) == false && spos <= epos)
         {
             text.erase(spos, epos - spos);
+            return true;
         }
+        return false;
     }
 
     Cursor Text::diff(const Cursor& pos, const string& text1, string& result)
     {
         TRACE_FUNC;
-
+        //TODO
         result.clear();
         Cursor found_cur(pos);
         found_cur.set_eof();
@@ -334,7 +347,7 @@ namespace text
     Cursor Text::diff(const Cursor& pos, const Text& text1, string& result)
     {
         TRACE_FUNC;
-
+        //TODO
         result.clear();
 
         Cursor found_cur(pos);
@@ -343,10 +356,11 @@ namespace text
         return found_cur;
     }
 
-    void Text::clear()
+    bool Text::clear()
     {
         TRACE_FUNC;
         text.clear();
+        return true;
     }
 
     el_types Text::find_endl_type()
@@ -480,8 +494,8 @@ namespace text
     DECLARE_MODULE(TEXT)
     m->add(chaiscript::fun(&Text::load), "load");
 
-    m->add(chaiscript::fun(static_cast<size_t(Text::*)(const fs::path&)>(&Text::write)), "write");
-    m->add(chaiscript::fun(static_cast<size_t(Text::*)(const fs::path&, el_types)>(&Text::write)), "write");
+    m->add(chaiscript::fun(static_cast<bool(Text::*)(const fs::path&)>(&Text::write)), "write");
+    m->add(chaiscript::fun(static_cast<bool(Text::*)(const fs::path&, el_types)>(&Text::write)), "write");
 
     m->add(chaiscript::fun(&Text::get), "get");
     m->add(chaiscript::fun(&Text::get_line), "get_line");
@@ -493,8 +507,8 @@ namespace text
     m->add(chaiscript::fun(&Text::set_line), "set_line");
     m->add(chaiscript::fun(&Text::insert), "insert");
     m->add(chaiscript::fun(&Text::insert_line), "insert_line");
-    m->add(chaiscript::fun(static_cast<void (Text::*)(const string&)>(&Text::add)), "add");
-    m->add(chaiscript::fun(static_cast<void (Text::*)(const Text&)>(&Text::add)), "add");
+    m->add(chaiscript::fun(static_cast<bool (Text::*)(const string&)>(&Text::add)), "add");
+    m->add(chaiscript::fun(static_cast<bool (Text::*)(const Text&)>(&Text::add)), "add");
     m->add(chaiscript::fun(&Text::size), "size");
     m->add(chaiscript::fun(&Text::erase), "erase");
     m->add(chaiscript::fun(&Text::erase_between), "erase_between");
