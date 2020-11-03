@@ -24,7 +24,9 @@ namespace text
     class Text
     {
         std::string text;
+        fs::path file_name;
         el_types original_endl;
+        bool changed {false};
 
         el_types find_endl_type();
     protected:
@@ -34,9 +36,9 @@ namespace text
         Text(const std::string&);
         ~Text();
 
-        bool load(const fs::path&);
-        bool write(const fs::path&);
-        bool write(const fs::path&, el_types);
+        void load(const fs::path&);
+        void write();
+        void write(const fs::path&, el_types);
 
         std::string get(const cursor::Cursor&, size_t);
         std::string get_to_endl(const cursor::Cursor&);

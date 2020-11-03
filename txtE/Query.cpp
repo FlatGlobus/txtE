@@ -38,7 +38,7 @@ namespace query
 
         throw std::runtime_error("Query::get: no value for " + key + " key");
     }
-    
+
     VectorString QData::get_vector(const std::string& key) const
     {
         TRACE_FUNC;
@@ -50,8 +50,8 @@ namespace query
             if (val != m.end())
                 vs.push_back(val->second);
         }
-        if(vs.empty())
-            throw std::runtime_error("Query::get: no value for " + key + " key");
+        if (vs.empty())
+            throw std::runtime_error("Query::get_vector: no value for " + key + " key");
         return vs;
     }
 
@@ -63,7 +63,6 @@ namespace query
             data_vector.clear();
             next_data();
         }
-            
     }
 
     void QData::reset_data(const std::string& key)
@@ -88,7 +87,7 @@ namespace query
     void QData::set_current(size_t idx)
     {
         TRACE_FUNC;
-        if(idx < data_vector.size())
+        if (idx < data_vector.size())
             current_data = idx;
     }
     //////////////////////////////////////////////////////////////////////////
@@ -303,12 +302,16 @@ namespace query
                     ++found_qty;
                     if (count != -1 && count == found_qty)
                     {
-                        ++i;
+                        //++i;
                         break;
                     }
                     continue;
                 }
-                break;
+                else
+                {
+                    ++i;
+                    break;
+                }
             }
 
             if (check_count(found_qty))
@@ -817,13 +820,12 @@ namespace query
         query->next_data();
         return true;
     }
-
     //////////////////////////////////////////////////////////////////////////
     DECLARE_MODULE(QUERY)
 
     m->add(chaiscript::user_type<QData>(), "QData");
     m->add(chaiscript::user_type<QueryBase>(), "QueryBase");
-    
+
     m->add(chaiscript::constructor<Query(Cursor*)>(), "Query");
     m->add(chaiscript::constructor<Query(Cursor*, bool)>(), "Query");
     m->add(chaiscript::base_class<QueryBase, Query>());
@@ -979,6 +981,6 @@ namespace query
     m->add(chaiscript::type_conversion<NextData, bool>([](const NextData& q) { return q.execute(); }));
 
     chaiscript::bootstrap::standard_library::vector_type<std::vector<VectorQuery> >("VectorQuery", *m);
- 
+
     END_DECLARE(QUERY)
 }

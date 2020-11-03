@@ -33,8 +33,8 @@ namespace query
     class QueryBase
     {
     protected:
-        int count = -1;
-        Query* query = nullptr;
+        int count{ -1 };
+        Query* query { nullptr };
         std::string key;
 
         void set_out(const std::string& s) const;
@@ -59,10 +59,9 @@ namespace query
     class Query :public QueryBase, public QData
     {
     protected:
-        cursor::Cursor* cursor = nullptr;
-        bool case_insensitive = true;
-        bool skip_space = false; // после найденного совпадени€ будет устанавливать текущцю позицию курсора на следующий не пробельный символ
-                                 // таким образом можно будет избавитс€ от использовани€ Space в query
+        cursor::Cursor* cursor{ nullptr };
+        bool case_insensitive{ true };
+        bool skip_space{ false }; 
     public:
         Query(cursor::Cursor*);
         Query(cursor::Cursor*, bool case_insensitive);

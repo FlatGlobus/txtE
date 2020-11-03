@@ -40,8 +40,9 @@ namespace text
         }
     }
 
-    bool Text::load(const fs::path& file_name)
+    void Text::load(const fs::path& fn)
     {
+        file_name = fn;
         TRACE_FUNC;
         TRACE_OUT << "filename = " << file_name TRACE_END;
         text.clear();
@@ -49,14 +50,15 @@ namespace text
         ifstream in(file_name, ios::in | ios::binary | ios::ate);
         if (!in)
         {
-            std::cerr << "Error loading file " << file_name << " : " << strerror(errno) << std::endl;
-            return false;
+            throw runtime_error("Error loading file " + file_name.string() + " : " + strerror(errno));
         }
 
         ifstream::pos_type fileSize = in.tellg();
-        if (fileSize < 0)
-            return false;
-
+        if (fileSize == ifstream::pos_type(-1))
+        {
+            throw runtime_error("File size error " + file_name.string() + " : " + strerror(errno));
+        }
+        
         in.seekg(0, ios::beg);
 
         vector<char> bytes(fileSize);
@@ -66,20 +68,33 @@ namespace text
 
         original_endl = find_endl_type();
         reset_endl(text);
-
-        return true;
+        changed = false;
     }
 
-    bool Text::write(const fs::path& file_name, el_types t)
+    void Text::write(const fs::path& fn, el_types t)
     {
+        if (file_name != fn && fn.empty() == false)
+        {
+            file_name = fn;
+            changed = true;
+        }
+        else
+        {
+            fs::path backup = file_name;
+            backup.replace_extension(".bak");
+            fs::copy(file_name, backup, fs::copy_options::overwrite_existing);
+        }
+
+        if (original_endl != t)
+            changed = true;
+
         TRACE_FUNC;
         TRACE_OUT << "filename = " << file_name TRACE_END;
 
         ofstream out(file_name, ios::out | ios::binary);
         if (!out)
         {
-            std::cerr << "Error writing file " << file_name << " : " << strerror(errno) << std::endl;
-            return false;
+            throw runtime_error("Error writing file " + file_name.string() + " : " + strerror(errno));
         }
 
         fs::resize_file(file_name, 0);
@@ -99,12 +114,12 @@ namespace text
             reset_endl(text);
         }
 
-        return true;
+        changed = false;
     }
 
-    bool Text::write(const fs::path& file_name)
+    void Text::write()
     {
-        return write(file_name, original_endl);
+        write("", original_endl);
     }
 
     string Text::get(const Cursor& start, size_t count)
@@ -200,7 +215,7 @@ namespace text
         TRACE_FUNC;
         check_cursor(pos);
 
-        if (pos.eof())
+        if (pos.eof() || str.empty())
             return false;
 
         TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
@@ -210,6 +225,8 @@ namespace text
                 return false;
             text[pos.get_pos() + i] = str[i];
         }
+        changed = true;
+
         return true;
     }
 
@@ -217,7 +234,7 @@ namespace text
     {
         TRACE_FUNC;
         check_cursor(pos);
-        if (pos.eof())
+        if (pos.eof() || str.empty())
             return false;
 
         TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
@@ -229,6 +246,8 @@ namespace text
         if (pos.eof(spos) == false)
         {
             text.insert(spos, str);
+            changed = true;
+
             return true;
         }
         return false;
@@ -239,12 +258,14 @@ namespace text
         TRACE_FUNC;
         check_cursor(pos);
 
-        if (pos.eof())
+        if (pos.eof() || str.empty())
             return false;
 
         TRACE_OUT << "text = \"" << str << "\"" TRACE_END;
 
         text.insert(pos.get_pos(), str);
+        changed = true;
+
         return true;
     }
 
@@ -253,7 +274,7 @@ namespace text
         TRACE_FUNC;
         check_cursor(pos);
 
-        if (pos.eof())
+        if (pos.eof() || str.empty())
             return false;
 
         size_t p = text.find(ENDL, pos.get_pos());
@@ -261,6 +282,8 @@ namespace text
         if (pos.eof(p) == false)
         {
             text.insert(p, ENDL + str);
+            changed = true;
+
             return true;
         }
 
@@ -271,6 +294,8 @@ namespace text
     {
         TRACE_FUNC;
         text += t.text;
+        changed = true;
+
         return true;
     }
 
@@ -278,6 +303,8 @@ namespace text
     {
         TRACE_FUNC;
         text += str;
+        changed = true;
+
         return true;
     }
 
@@ -295,6 +322,8 @@ namespace text
             return false;
 
         text.erase(pos.get_pos(), count);
+        changed = true;
+
         return true;
     }
 
@@ -308,6 +337,8 @@ namespace text
             return false;
 
         text.erase(from.get_pos(), to.get_pos() - from.get_pos() + 1);
+        changed = true;
+
         return true;
     }
 
@@ -328,6 +359,8 @@ namespace text
         if (pos.eof(spos) == false && pos.eof(epos) == false && spos <= epos)
         {
             text.erase(spos, epos - spos);
+            changed = true;
+
             return true;
         }
         return false;
@@ -360,6 +393,8 @@ namespace text
     {
         TRACE_FUNC;
         text.clear();
+        changed = true;
+
         return true;
     }
 
@@ -385,6 +420,8 @@ namespace text
         text = t;
         original_endl = find_endl_type();
         reset_endl(text);
+        changed = true;
+
         return *this;
     }
 
@@ -392,6 +429,7 @@ namespace text
     {
         text = t.text;
         original_endl = t.original_endl;
+        changed = true;
 
         return *this;
     }
@@ -494,8 +532,8 @@ namespace text
     DECLARE_MODULE(TEXT)
     m->add(chaiscript::fun(&Text::load), "load");
 
-    m->add(chaiscript::fun(static_cast<bool(Text::*)(const fs::path&)>(&Text::write)), "write");
-    m->add(chaiscript::fun(static_cast<bool(Text::*)(const fs::path&, el_types)>(&Text::write)), "write");
+    m->add(chaiscript::fun(static_cast<void(Text::*)()>(&Text::write)), "write");
+    m->add(chaiscript::fun(static_cast<void(Text::*)(const fs::path&, el_types)>(&Text::write)), "write");
 
     m->add(chaiscript::fun(&Text::get), "get");
     m->add(chaiscript::fun(&Text::get_line), "get_line");

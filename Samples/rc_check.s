@@ -23,8 +23,6 @@ var NEXT_CONTROL_VALUE_MAX = 0xDFFF;
 
 var NEXT_SYMED_VALUE = 101;
 
-var dlg_ctrl1 = ["AUTO3STATE","AUTOCHECKBOX","AUTORADIOBUTTON","CHECKBOX","CONTROL","CTEXT","DEFPUSHBUTTON","GROUPBOX","ICON","LTEXT","PUSHBOX","PUSHBUTTON","RADIOBUTTON","RTEXT","STATE3","CONTROL"];
-var dlg_ctrl2 = ["COMBOBOX","EDITTEXT","LISTBOX","SCROLLBAR"];
 //
 class ResItem
 {
@@ -54,24 +52,16 @@ def load_ids(cursor)
 {
 	var IDs = Map();
 	var line = 0;
-	cursor.begin();
+
+	cursor = 0;
 	var q = Query(cursor);
-	SkipSpace(q, true);
 
-	while(cursor)
+	while(cursor.next_line())
 	{
-		var ID = "";
-		var ID_NUM = "";
-
-		cursor.label("line");
-		
-		if(Math(q, "#define") && Is(q, iscsym,-1, ID) && Is(q, isdigit,-1, ID_NUM))
-		{
-			IDs[ID] = ResItem(ID, to_int(ID_NUM), line);
+		if(SkipSpace(q, true) && Match(q, "#define") && Is(q, iscsym, "ID") && Number(q, "ID_NUM"))
+                {
+			IDs[q.get("ID")] = ResItem(q.get("ID"),	to_int(q.get("ID_NUM")),++line);
 		}
-		cursor.goto_label("line");
-		cursor.next_line();
-		++line;
 	}
 	return IDs;
 }
@@ -86,125 +76,54 @@ def make_rc_id_string(rc_item)
 
 	return "#define "+ rc_item.second.id + replicate(count, " ") + to_string(rc_item.second.val);
 }
+
+def to_map(query, IDs, type)
+{
+	print("ID : "  + query.get("ID"));
+	if(IDs.count(query.get("ID")) > 0)
+	{
+		IDs[query.get("ID")].type = type;
+	}
+	return true;
+}
 //////////////////////////////////////////////////
 def load_rc(cursor, IDs)
 {
-	//type text id
-	
-	//type id
+	var dlg_ctrl1 = ["AUTO3STATE","AUTOCHECKBOX","AUTORADIOBUTTON","CHECKBOX","CONTROL","CTEXT","DEFPUSHBUTTON","GROUPBOX","ICON","LTEXT","PUSHBOX","PUSHBUTTON","RADIOBUTTON","RTEXT","STATE3","CONTROL"];
+	var dlg_ctrl2 = ["COMBOBOX","EDITTEXT","LISTBOX","SCROLLBAR"];
 
-	trace(true);
 	cursor.begin();
 	var q = Query(cursor);
 	SkipSpace(q, true);
 
 	while(cursor)
 	{
-		var ID = "";
 		var found = false;
 		//BITMAP
-		if(cursor.move_to_begin_of_line() && Is(q, iscsym,-1, ID) && Math(q, "BITMAP") && Math(q, "\""))
-		{
-			print("BITMAP : " + ID);
-			if(IDs.count(ID) > 0)
-			{
-				IDs[ID].type = BITMAP;
-			}
-			found = true;
-		}
+		found = cursor.move_to_line_begin() && Is(q, iscsym, "ID") && Match(q, "BITMAP") && Match(q, "\"") && to_map(q, IDs, BITMAP);
 		//ICON
-		if(found == false && Query(cursor.move_to_begin_of_line()) && Is(iscsym,-1, ID) && Is(isspace) && Exact("ICON") && Is(isspace) && Exact("\""))
-		{
-			print("ICON : " + ID);
-			if(IDs.count(ID) > 0)
-			{
-				IDs[ID].type = ICON;
-			}
-			found = true;
-		}
+		found = found == false && cursor.move_to_line_begin() && Is(q, iscsym, "ID") && Match(q, "ICON") && Match(q, "\"") && to_map(q, IDs, ICON);
 		//CURSOR
-		if(found == false && Query(cursor.move_to_begin_of_line()) && Is(iscsym,-1, ID) && Is(isspace) && Exact("CURSOR") && Is(isspace) && Exact("\""))
-		{
-			print("CURSOR : " + ID);
-			if(IDs.count(ID) > 0)
-			{
-				IDs[ID].type = CURSOR;
-			}
-			found = true;
-		}
+		found = found == false && cursor.move_to_line_begin() && Is(q, iscsym,-1, "ID") && Match(q, "CURSOR") && Match(q, "\"") && to_map(q, IDs, CURSOR);
 		//MENU
-		if(found == false && Query(cursor.move_to_begin_of_line()) && Is(iscsym,-1, ID) && Is(isspace) && Exact("MENU"))
-		{
-			print("MENU : " + ID);
-			if(IDs.count(ID) > 0)
-			{
-				IDs[ID].type = MENU;
-			}
-			found = true;
-		}
+		found = found == false && cursor.move_to_line_begin() && Is(q, iscsym, "ID") && Match(q, "MENU") && to_map(q, IDs, MENU);
 		//MENUITEM
-		if(found == false && Query(cursor.move_to_begin_of_line()) && Is(isspace) && Exact("MENUITEM") && cursor.move_to_end("\",", find) && Is(isspace) && Is(iscsym,-1, ID))
-		{
-			print("MENUITEM : " + ID);
-			if(IDs.count(ID) > 0)
-			{
-				IDs[ID].type = MENUITEM;
-			}
-			found = true;
-		}
+		found = found == false && cursor.move_to_line_begin() && Match(q, "MENUITEM") && AnyOf(q, "\"") && AnyNot(q, "\"") && Match(q, ",") && Is(q, iscsym, "ID") && to_map(q, IDs, MENUITEM);
 		//TOOLBAR
-		if(found == false && Query(cursor.move_to_begin_of_line()) && Is(iscsym,-1, ID) && Is(isspace) && Exact("TOOLBAR"))
-		{
-			print("TOOLBAR : " + ID);
-			if(IDs.count(ID) > 0)
-			{
-				IDs[ID].type = TOOLBAR;
-			}
-			found = true;
-		}
+		found = found == false && cursor.move_to_line_begin() && Is(q, iscsym, "ID") && Match(q, "TOOLBAR") && to_map(q, IDs, TOOLBAR);
 		//TOOLBAR BUTTON
-		if(found == false && Query(cursor.move_to_begin_of_line()) && Is(isspace) && Exact("BUTTON") && Is(isspace) && Is(iscsym,-1, ID))
-		{
-			print("BUTTON : " + ID);			
-			if(IDs.count(ID) > 0)
-			{
-				IDs[ID].type = BUTTON;
-			}
-		}
+		found = found == false && cursor.move_to_line_begin() && Match(q, "BUTTON") && Is(q, iscsym, "ID") && to_map(q, IDs, BUTTON);
 		//DIALOG
-		if(found == false && Query(cursor.move_to_begin_of_line()) && Is(iscsym,-1, ID) && Is(isspace) && Exact("DIALOGEX"))
-		{
-			print("DIALOG : " + ID);
-			if(IDs.count(ID) > 0)
-			{
-				IDs[ID].type = DIALOG;
-			}
-			found = true;
-		}
+		found = found == false && cursor.move_to_line_begin() && Is(q, iscsym, "ID") && Match(q, "DIALOGEX") && to_map(q, IDs, DIALOG);
 		//CONTROL
-		if(found == false && (Query(cursor.move_to_begin_of_line()) && Is(isspace) && Set(dlg_ctrl1) && cursor.move_to_end("\",", find) && Is(iscsym,-1, ID) ||
-		                      Query(cursor.move_to_begin_of_line()) && Is(isspace) && Set(dlg_ctrl2) && Is(isspace) && Is(iscsym,-1, ID)))
-		{
-			print("CONTROL : " + ID);	
-			if(IDs.count(ID) > 0)
-			{
-				IDs[ID].type = CONTROL;
-			}
-			found = true;
-		}
+		found = found == false && (cursor.move_to_line_begin() && Set(q, dlg_ctrl1) && cursor.move_to_end("\",", find) && Is(q, iscsym, "ID") ||
+		                      cursor.move_to_line_begin() && Set(q, dlg_ctrl2) && Is(q, iscsym, "ID")) && to_map(q, IDs, CONTROL);
 		//STRING
-		if(found == false && Query(cursor.move_to_begin_of_line()) && Is(isspace) && Exact("IDS_") && Is(iscsym,-1, ID) && Is(isspace))
-		{
-			ID = "IDS_"+ID;
-			print("STRING : " + ID);			
-			if(IDs.count(ID) > 0)
-			{
-				IDs[ID].type = STRING;
-			}
-		}
+		found = found == false && cursor.move_to_line_begin() && Match(q, "IDS_") && Word(q, "ID") && to_map(q, IDs, STRING);
+		
 		cursor.next_line();
 	}
-	trace(false);
+	//trace(false);
 }
 //////////////////////////////////////////////////////
 def find_item_line(IDs, line_num)
@@ -236,16 +155,11 @@ def find_item_by_val(IDs, val)
 }
 //////////////////////////////////////////////////////
 print("start");
-if(program_options.size() == 0)
-{
-	print("Error: no command line");
-	return;
-}
 
 var rc_path = get_options_value("-f");
 
 var h_fn = find_file(rc_path, "resource.h");
-exit_if(exists(h_fn) == false, rc_path + " " + "resource.h not found");
+exit_if(exists(h_fn) == false, rc_path + " " + "resource.h file not found");
 var header = Text();
 header.load(h_fn);
 var h_cursor = Cursor(header);
@@ -261,7 +175,7 @@ var IDs = load_ids(h_cursor);
 
 print("load rc file");
 load_rc(rc_cursor, IDs);
-trace(true);
+//trace(true);
 h_cursor.begin();
 (h_cursor.move_to("_APS_NEXT_RESOURCE_VALUE", find))
 {
@@ -286,5 +200,5 @@ if(h_cursor.move_to("_APS_NEXT_SYMED_VALUE", find))
 	NEXT_SYMED_VALUE = to_int(header.get_word(h_cursor.next_word()));
 }
 
-//left_h.write(left_h_fn + ".new");
+
 print("end.");

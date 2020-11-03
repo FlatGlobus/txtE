@@ -2,19 +2,11 @@
 //declare property //[prop name type def]  //[prop BackgroundColor Color Color.White]
 //====================================================
 
-var source_file_name = get_options_value("-f");
-print("start file : " + source_file_name);
-
 var source = Text();
-if(source.load(source_file_name) == false)
-{
-	print(ERROR + "File " + source_file_name + " is empty.");
-	return;
-}
+source.load(get_options_value("-f"));
 
 var cursor = Cursor(source);
 var query = Query(cursor);
-var changed = false;
 
 //starts from first line, class declaration can't be here
 while(cursor.next_line())
@@ -28,7 +20,7 @@ while(cursor.next_line())
 }
 
 var templ = "\tpublic static readonly BindableProperty {{prop_name}}Property = \n";
-        templ += "\t\tBindableProperty.Create(nameof({{prop_name}}), typeof({{prop_name}}), typeof({{class_name}}), {{def_val}}, propertyChanged: OnPropertyChanged);\n";
+        templ += "\t\tBindableProperty.Create(nameof({{prop_name}}), typeof({{prop_type}}), typeof({{class_name}}), {{def_val}}, propertyChanged: OnPropertyChanged);\n";
 	templ += "\tpublic {{prop_type}} {{prop_name}}\n";
 	templ += "\t{\n";
 	templ += "\t\tget => ({{prop_type}})GetValue({{prop_name}}Property);\n";
@@ -41,7 +33,6 @@ while(cursor.next_line())
 	{
 		print("generate property : " + query.get("prop_name"));
 		source.insert_line(cursor, Mustache(templ).render(query));
-		changed = true;
 	}
 	else
 	{
@@ -54,11 +45,8 @@ str += "\t{\n";
 str += "\t\tvar bar = bindable as GradientBar;\n";
 str += "\t\tbar?.InvalidateSurface();\n";
 str += "\t}";
-// "changed |= <expression>" gives a runtime error
-changed = source.contains("OnPropertyChanged(BindableObject") == false && cursor.goto_label("class_decl") && cursor.move_to("{", "}", find) && cursor.prev_line() && source.insert_line(cursor, str) || changed;
 
-if(changed == true)
-{
-	source.write(source_file_name);
-}
+source.contains("OnPropertyChanged(BindableObject") == false && cursor.goto_label("class_decl") && cursor.move_to("{", "}", find) && cursor.prev_line() && source.insert_line(cursor, str);
+
+source.write();
 print("end");
