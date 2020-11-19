@@ -1,4 +1,4 @@
-//
+//txtE -e rc_check.s  -f <path to resource.h and *.rc dir>
 //enum 
 global UNKNOWN = -1;
 global BITMAP = 1;
@@ -14,14 +14,18 @@ global BUTTON = 10;
 //
 var NEXT_RESOURCE_VALUE = 101;
 var NEXT_RESOURCE_VALUE_MAX = 0x6FFF;
+var RESOURCE_GROUP =[DIALOG, MENU];
 
 var NEXT_COMMAND_VALUE = 40001;
 var NEXT_COMMAND_VALUE_MAX = 0xDFFF;
+var COMMAND_GROUP =[];
 
 var NEXT_CONTROL_VALUE = 1000;
 var NEXT_CONTROL_VALUE_MAX = 0xDFFF;
+var CONTROL_GROUP =[CONTROL];
 
 var NEXT_SYMED_VALUE = 101;
+
 
 //
 class ResItem
@@ -59,8 +63,9 @@ def load_ids(cursor)
 	while(cursor.next_line())
 	{
 		if(SkipSpace(q, true) && Match(q, "#define") && Is(q, iscsym, "ID") && Number(q, "ID_NUM"))
-                {
-			IDs[q.get("ID")] = ResItem(q.get("ID"),	to_int(q.get("ID_NUM")),++line);
+		{
+			var d = ResItem(q.get("ID"),	to_int(q.get("ID_NUM")), ++line);
+			IDs[q.get("ID")] = d;
 		}
 	}
 	return IDs;
@@ -79,15 +84,17 @@ def make_rc_id_string(rc_item)
 
 def to_map(query, IDs, type)
 {
-	print("ID : "  + query.get("ID"));
 	if(IDs.count(query.get("ID")) > 0)
 	{
+		//print("ID found : "  + query.get("ID"));
 		IDs[query.get("ID")].type = type;
+		return true;
 	}
+	//print("ID not found : "  + query.get("ID"));
 	return true;
 }
 //////////////////////////////////////////////////
-def load_rc(cursor, IDs)
+def load_rc(cursor, IDs, rc)
 {
 	var dlg_ctrl1 = ["AUTO3STATE","AUTOCHECKBOX","AUTORADIOBUTTON","CHECKBOX","CONTROL","CTEXT","DEFPUSHBUTTON","GROUPBOX","ICON","LTEXT","PUSHBOX","PUSHBUTTON","RADIOBUTTON","RTEXT","STATE3","CONTROL"];
 	var dlg_ctrl2 = ["COMBOBOX","EDITTEXT","LISTBOX","SCROLLBAR"];
@@ -96,31 +103,36 @@ def load_rc(cursor, IDs)
 	var q = Query(cursor);
 	SkipSpace(q, true);
 
+	var found = false;
+	//trace(true);
 	while(cursor)
 	{
-		var found = false;
-		//BITMAP
-		found = cursor.move_to_line_begin() && Is(q, iscsym, "ID") && Match(q, "BITMAP") && Match(q, "\"") && to_map(q, IDs, BITMAP);
-		//ICON
-		found = found == false && cursor.move_to_line_begin() && Is(q, iscsym, "ID") && Match(q, "ICON") && Match(q, "\"") && to_map(q, IDs, ICON);
-		//CURSOR
-		found = found == false && cursor.move_to_line_begin() && Is(q, iscsym,-1, "ID") && Match(q, "CURSOR") && Match(q, "\"") && to_map(q, IDs, CURSOR);
-		//MENU
-		found = found == false && cursor.move_to_line_begin() && Is(q, iscsym, "ID") && Match(q, "MENU") && to_map(q, IDs, MENU);
-		//MENUITEM
-		found = found == false && cursor.move_to_line_begin() && Match(q, "MENUITEM") && AnyOf(q, "\"") && AnyNot(q, "\"") && Match(q, ",") && Is(q, iscsym, "ID") && to_map(q, IDs, MENUITEM);
-		//TOOLBAR
-		found = found == false && cursor.move_to_line_begin() && Is(q, iscsym, "ID") && Match(q, "TOOLBAR") && to_map(q, IDs, TOOLBAR);
-		//TOOLBAR BUTTON
-		found = found == false && cursor.move_to_line_begin() && Match(q, "BUTTON") && Is(q, iscsym, "ID") && to_map(q, IDs, BUTTON);
-		//DIALOG
-		found = found == false && cursor.move_to_line_begin() && Is(q, iscsym, "ID") && Match(q, "DIALOGEX") && to_map(q, IDs, DIALOG);
-		//CONTROL
-		found = found == false && (cursor.move_to_line_begin() && Set(q, dlg_ctrl1) && cursor.move_to_end("\",", find) && Is(q, iscsym, "ID") ||
-		                      cursor.move_to_line_begin() && Set(q, dlg_ctrl2) && Is(q, iscsym, "ID")) && to_map(q, IDs, CONTROL);
+		if(rc.get_line_size(cursor) > 16)//filter lines
+		{
+			//found ||= gives an error
+			//BITMAP
+			found = cursor.move_to_line_begin() && Is(q, iscsym, "ID") && Match(q, "BITMAP") && Match(q, "\"") && to_map(q, IDs, BITMAP) ;
+			//ICON
+			found = !found && cursor.move_to_line_begin() && Is(q, iscsym, "ID") && Match(q, "ICON") && Match(q, "\"") && to_map(q, IDs, ICON) || found;
+			//CURSOR
+			found = !found && cursor.move_to_line_begin() && Is(q, iscsym, "ID") && Match(q, "CURSOR") && Match(q, "\"") && to_map(q, IDs, CURSOR) || found;
+			//MENU
+			found = !found && cursor.move_to_line_begin() && Is(q, iscsym, "ID") && Match(q, "MENU") && to_map(q, IDs, MENU) || found;
+			//MENUITEM
+			found = !found && cursor.move_to_line_begin() && Match(q, "MENUITEM") && CStr(q) && Match(q, ",") && Is(q, iscsym, "ID") && to_map(q, IDs, MENUITEM) || found;
+			//TOOLBAR
+			found = !found && cursor.move_to_line_begin() && Is(q, iscsym, "ID") && Match(q, "TOOLBAR") && to_map(q, IDs, TOOLBAR) || found;
+			//TOOLBAR BUTTON
+			found = !found && cursor.move_to_line_begin() && Match(q, "BUTTON") && Is(q, iscsym, "ID") && to_map(q, IDs, BUTTON) || found;
+			//DIALOG
+			found = !found && cursor.move_to_line_begin() && Is(q, iscsym, "ID") && Match(q, "DIALOGEX") && to_map(q, IDs, DIALOG) || found;
+			//CONTROL
+			found = !found && cursor.move_to_line_begin() && (Set(q, dlg_ctrl1) && cursor.move_to_end("\",", find) && Is(q, iscsym, "ID")) ||
+		                      (cursor.move_to_line_begin() && Set(q, dlg_ctrl2) && Is(q, iscsym, "ID") && to_map(q, IDs, CONTROL))  || found;
 		//STRING
-		found = found == false && cursor.move_to_line_begin() && Match(q, "IDS_") && Word(q, "ID") && to_map(q, IDs, STRING);
-		
+			!found && cursor.move_to_line_begin() && Match(q, "IDS_") && Word(q, "ID") && to_map(q, IDs, STRING);
+		}
+		found = false;
 		cursor.next_line();
 	}
 	//trace(false);
@@ -141,17 +153,38 @@ def find_item_line(IDs, line_num)
 	return num;
 }
 //////////////////////////////////////////////////////
-def find_item_by_val(IDs, val)
+def find_item_by_val(IDs, id, val)
 {
 	for(i : IDs)
 	{
-		if(i.second.val == val)
+		if(i.second().val == val && i.second().id != id)
 		{
-			return i.id;
+			return i.second();
 		}
 	}
 
-	return "";
+	return ResItem()//empty;
+}
+
+def check_header(IDs)
+{
+	var printed = false;
+	var dup;
+	for(i : IDs)
+	{
+		dup = find_item_by_val(IDs, i.second().id, i.second().val);
+
+		//if(dup.is_var_undef() == false)
+		if(dup.id != "" && dup.type == i.second().type)
+		{
+			if(printed == false)
+			{
+			 	print("Duplicated items found");
+				printed = true;
+			}
+			print("\t" + i.second().id + " / " + dup.id + " value " + to_string(i.second().val));
+		}
+	}
 }
 //////////////////////////////////////////////////////
 print("start");
@@ -174,31 +207,13 @@ print("load h file");
 var IDs = load_ids(h_cursor);
 
 print("load rc file");
-load_rc(rc_cursor, IDs);
-//trace(true);
-h_cursor.begin();
-(h_cursor.move_to("_APS_NEXT_RESOURCE_VALUE", find))
-{
-	NEXT_RESOURCE_VALUE = to_int(header.get_word(h_cursor.next_word()));
-}
+load_rc(rc_cursor, IDs, rc);
 
-h_cursor.begin();
-if(h_cursor.move_to("_APS_NEXT_COMMAND_VALUE", find))
-{
-	NEXT_COMMAND_VALUE = to_int(header.get_word(h_cursor.next_word()));
-}
+h_cursor.begin() && h_cursor.move_to("_APS_NEXT_RESOURCE_VALUE", find) && to_true(NEXT_RESOURCE_VALUE = to_int(header.get_word(h_cursor.next_word())));
+h_cursor.begin() && h_cursor.move_to("_APS_NEXT_COMMAND_VALUE", find) && to_true(NEXT_COMMAND_VALUE = to_int(header.get_word(h_cursor.next_word())));
+h_cursor.begin() && h_cursor.move_to("_APS_NEXT_CONTROL_VALUE", find) && to_true(NEXT_CONTROL_VALUE = to_int(header.get_word(h_cursor.next_word())));
+h_cursor.begin() && h_cursor.move_to("_APS_NEXT_SYMED_VALUE", find) && to_true(NEXT_SYMED_VALUE = to_int(header.get_word(h_cursor.next_word()))) ;
 
-h_cursor.begin();
-if(h_cursor.move_to("_APS_NEXT_CONTROL_VALUE", find))
-{
-	NEXT_CONTROL_VALUE = to_int(header.get_word(h_cursor.next_word()));
-}
-
-h_cursor.begin();
-if(h_cursor.move_to("_APS_NEXT_SYMED_VALUE", find))
-{
-	NEXT_SYMED_VALUE = to_int(header.get_word(h_cursor.next_word()));
-}
-
+check_header(IDs);
 
 print("end.");

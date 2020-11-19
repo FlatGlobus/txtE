@@ -176,6 +176,28 @@ namespace text
         return str;
     }
 
+    size_t Text::get_line_size(const cursor::Cursor& start)
+    {
+        TRACE_FUNC;
+        check_cursor(start);
+
+        if (start.eof())
+            return 0;
+
+        Cursor spos = start;
+        Cursor epos = start;
+
+        size_t size = 0;
+        if (spos.move_to_line_begin() && epos.move_to_line_end())
+        {
+            size = epos.get_pos() - spos.get_pos();
+        }
+
+        TRACE_OUT << "size = \"" << size << "\"" TRACE_END;
+
+        return size;
+    }
+
     string Text::get_word(const Cursor& pos)
     {
         TRACE_FUNC;
@@ -553,6 +575,7 @@ namespace text
     m->add(chaiscript::fun(&Text::erase_line), "erase_line");
     m->add(chaiscript::fun(&Text::clear), "clear");
     m->add(chaiscript::fun(&Text::contains), "contains");
+    m->add(chaiscript::fun(&Text::get_line_size), "get_line_size");
 
     m->add(chaiscript::fun(static_cast<Cursor(Text::*)(const Cursor&, const string&, string&)>(&Text::diff)), "diff");
     m->add(chaiscript::fun(static_cast<Cursor(Text::*)(const Cursor&, const Text&, string&)>(&Text::diff)), "diff");

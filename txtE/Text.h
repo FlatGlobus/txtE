@@ -45,6 +45,7 @@ namespace text
         std::string get_line(const cursor::Cursor& start);
         std::string get_word(const cursor::Cursor& start);
         std::string get_between(const cursor::Cursor&, const cursor::Cursor&);
+        size_t get_line_size(const cursor::Cursor&);
 
         bool set(const cursor::Cursor&, const std::string&);
         bool set_line(const cursor::Cursor&, const std::string&);

@@ -98,7 +98,19 @@ namespace cursor
             return  ret.inc(delta);
         }
 
+        inline Position operator + (int delta)
+        {
+            Position ret(*this);
+            return  ret.inc(delta);
+        }
+
         inline Position operator - (size_t delta)
+        {
+            Position ret(*this);
+            return  ret.dec(delta);
+        }
+
+        inline Position operator - (int delta)
         {
             Position ret(*this);
             return  ret.dec(delta);
@@ -122,7 +134,19 @@ namespace cursor
             return *this;
         }
 
+        inline Position& operator +=(int delta)
+        {
+            pos = inc(delta);
+            return *this;
+        }
+
         inline Position& operator -=(size_t delta)
+        {
+            pos = dec(delta);
+            return *this;
+        }
+
+        inline Position& operator -=(int delta)
         {
             pos = dec(delta);
             return *this;

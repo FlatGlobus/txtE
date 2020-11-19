@@ -182,6 +182,11 @@ public:
         return result / 1000.0;
     }
 };
+
+bool to_true(const chaiscript::Boxed_Value&)
+{
+    return true;
+}
 //////////////////////////////////////////////////////////////////////////
 DECLARE_MODULE(THINGS)
 
@@ -221,5 +226,5 @@ m->add(chaiscript::fun(&Timer::start), "start");
 m->add(chaiscript::fun(&Timer::stop), "stop");
 m->add(chaiscript::fun(&Timer::time), "time");
 
-
+m->add(chaiscript::fun(to_true), "to_true");
 END_DECLARE(THINGS)

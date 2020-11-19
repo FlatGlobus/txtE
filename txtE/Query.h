@@ -18,6 +18,7 @@ namespace query
         void set(const std::string&, const std::string&);
         const string& get(const std::string&) const;
         VectorString get_vector(const std::string&) const;
+        bool exists(const std::string&) const;
         void reset_all_data();
         void reset_data(const std::string& key);
         void freeze_data(bool val);
@@ -156,7 +157,15 @@ namespace query
     public:
         Word(Query*);
         Word(Query*, const std::string& out);
-        
+
+        virtual bool execute() const;
+    };
+
+    class CStr : public QueryBase
+    {
+    public:
+        CStr(Query*);
+        CStr(Query*, const std::string& out);
 
         virtual bool execute() const;
     };
@@ -276,5 +285,6 @@ namespace query
         NextData(Query*);
         virtual bool execute() const;
     };
+
 
 }

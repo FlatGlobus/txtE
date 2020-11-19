@@ -14,10 +14,10 @@ m->add(chaiscript::fun([](const std::string::value_type & s1, const std::string:
 m->add(chaiscript::fun([](const std::string& s1, const std::string& s2, std::string& s3) { return remove_pattern(s1, s2, s3); }), "remove_pattern");
 m->add(chaiscript::fun(strtk::sort), "sort");
 m->add(chaiscript::fun(strtk::ifind), "ifind");
-m->add(chaiscript::fun(strtk::begins_with), "begins_with");
-m->add(chaiscript::fun(strtk::ibegins_with), "ibegins_with");
-m->add(chaiscript::fun(strtk::ends_with), "ends_with");
-m->add(chaiscript::fun(strtk::iends_with), "iends_with");
+m->add(chaiscript::fun([](const std::string& s1, const std::string& s2) { return begins_with(s1, s2); }), "begins_with");
+m->add(chaiscript::fun([](const std::string& s1, const std::string& s2) { return ibegins_with(s1, s2); }), "ibegins_with");
+m->add(chaiscript::fun([](const std::string& s1, const std::string& s2) { return ends_with(s1, s2); }), "ends_with");
+m->add(chaiscript::fun([](const std::string& s1, const std::string& s2) { return iends_with(s1, s2); }), "iends_with");
 m->add(chaiscript::fun(strtk::index_of), "index_of");
 m->add(chaiscript::fun([](std::string& s1) { return lexicographically_canonicalize(s1); }), "lexicographically_canonicalize");
 m->add(chaiscript::fun([](const std::string& s1) { return first_non_repeated_char(s1); }), "first_non_repeated_char");

@@ -473,6 +473,7 @@ namespace cursor
         pos = get_string().rfind(ENDL, pos);
         if (pos.eof())
         {
+            pos = 0;
             TRACE_POS(pos);
             return *this;
         }

@@ -55,6 +55,21 @@ namespace query
         return vs;
     }
 
+    bool QData::exists(const std::string& key) const
+    {
+        auto val = (data_vector.begin() + current_data)->find(key);
+        if (val != (data_vector.begin() + current_data)->end())
+            return true;
+
+        for (auto& m : data_vector)
+        {
+            if (m.find(key) != m.end())
+                return true;
+        }
+
+        return false;
+    }
+
     void QData::reset_all_data()
     {
         TRACE_FUNC;
@@ -153,7 +168,7 @@ namespace query
         const string& text = query->get_cursor()->get_text();
         size_t p = query->get_cursor()->get_pos();
 
-        if (space_pattern.find(*(text.begin() + p)) != string::npos)
+        if (p < text.size() &&  space_pattern.find(*(text.begin() + p)) != string::npos)
         {
             Position p1 = text.find_first_not_of(space_pattern, p);
             if (p1.eof() == false)
@@ -302,7 +317,7 @@ namespace query
                     ++found_qty;
                     if (count != -1 && count == found_qty)
                     {
-                        //++i;
+                        ++i;
                         break;
                     }
                     continue;
@@ -503,6 +518,49 @@ namespace query
             if (space_pattern.find(*(query->get_cursor()->get_string().begin() + p)) == string::npos)
             {
                 Position p1 = (query->get_cursor()->get_string()).find_first_of(space_pattern, p);
+                if (query->get_cursor()->eof(p1) == false)
+                {
+                    string result = query->get_cursor()->get_text().substr(p, (size_t)(p1 - p));
+                    set_out(result);
+                    TRACE_OUT << "found text = " << result TRACE_END;
+                    query->get_cursor()->move_to(p1);
+                    return true;
+                }
+            }
+        }
+        query->reset_last_data();
+        return false;
+    }
+    //////////////////////////////////////////////////////////////////////////
+    CStr::CStr(Query* q) : QueryBase(q)
+    {
+    }
+
+    CStr::CStr(Query* q, const std::string& o) : QueryBase(q, o)
+    {
+    }
+
+    bool CStr::execute() const
+    {
+        string str_pattern = "\"";
+        TRACE_FUNC;
+        if (QueryBase::execute())
+        {
+            Position p = query->get_cursor()->get_pos();
+            if (str_pattern.find(*(query->get_cursor()->get_string().begin() + p)) != string::npos)
+            {
+                Position p1(p);
+                p1 += 1;
+                do 
+                {
+                    p1 = (query->get_cursor()->get_string()).find_first_of(str_pattern, p1);
+                    if (p1.eof() == false && query->get_cursor()->get_string()[p1 - 1] != '\\')
+                    {
+                        p1 += 1;
+                        break;
+                    }
+                } while (++p1 && p1.eof() == false);
+
                 if (query->get_cursor()->eof(p1) == false)
                 {
                     string result = query->get_cursor()->get_text().substr(p, (size_t)(p1 - p));
@@ -834,6 +892,7 @@ namespace query
     m->add(chaiscript::fun(static_cast<void(QData::*)(const string&, const string&)>(&QData::set)), "set");
     m->add(chaiscript::fun(static_cast<const string& (QData::*)(const string&) const>(&QData::get)), "get");
     m->add(chaiscript::fun(static_cast<VectorString(QData::*)(const string&) const>(&QData::get_vector)), "get_vector");
+    m->add(chaiscript::fun(static_cast<bool (QData::*)(const string&) const>(&QData::exists)), "exists");
     m->add(chaiscript::fun(static_cast<void(QData::*)()>(&QData::reset_all_data)), "reset");
     m->add(chaiscript::fun(static_cast<void(QData::*)(const string&)>(&QData::reset_data)), "reset");
     m->add(chaiscript::fun(static_cast<size_t(QData::*)() const>(&QData::size)), "size");
@@ -892,6 +951,12 @@ namespace query
     m->add(chaiscript::user_type<Word>(), "Word");
     m->add(chaiscript::base_class<QueryBase, Word>());
     m->add(chaiscript::type_conversion<Word, bool>([](const Word& q) { return q.execute(); }));
+
+    m->add(chaiscript::constructor<CStr(Query*)>(), "CStr");
+    m->add(chaiscript::constructor<CStr(Query*, const std::string&)>(), "CStr");
+    m->add(chaiscript::user_type<CStr>(), "CStr");
+    m->add(chaiscript::base_class<QueryBase, CStr>());
+    m->add(chaiscript::type_conversion<CStr, bool>([](const CStr& q) { return q.execute(); }));
 
     m->add(chaiscript::constructor<Number(Query*)>(), "Number");
     m->add(chaiscript::constructor<Number(Query*, const std::string&)>(), "Number");
