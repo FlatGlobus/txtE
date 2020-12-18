@@ -64,7 +64,7 @@ def load_ids(cursor)
 	{
 		if(SkipSpace(q, true) && Match(q, "#define") && Is(q, iscsym, "ID") && Number(q, "ID_NUM"))
 		{
-			var d = ResItem(q.get("ID"),	to_int(q.get("ID_NUM")), ++line);
+			var d = ResItem(q.get("ID"), to_int(q.get("ID_NUM")), ++line);
 			IDs[q.get("ID")] = d;
 		}
 	}
@@ -109,7 +109,7 @@ def load_rc(cursor, IDs, rc)
 	{
 		if(rc.get_line_size(cursor) > 16)//filter lines
 		{
-			//found ||= gives an error
+			//"found ||=" gives an error
 			//BITMAP
 			found = cursor.move_to_line_begin() && Is(q, iscsym, "ID") && Match(q, "BITMAP") && Match(q, "\"") && to_map(q, IDs, BITMAP) ;
 			//ICON

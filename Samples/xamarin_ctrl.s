@@ -11,7 +11,7 @@ var query = Query(cursor);
 //starts from first line, class declaration can't be here
 while(cursor.next_line())
 {
-	if(SkipSpace(query, true) && Match(query, "public") && ZeroOne(query, Match(query, "partial")) && Match(query, "class") && Is(query, iscsym, "class_name") && Match(query, ":") && Match(query, "SKCanvasView"))
+	if(SkipSpace(query, true) && ZeroOne(query, Match(query, "public")) && ZeroOne(query, Match(query, "partial")) && Match(query, "class") && Is(query, iscsym, "class_name") && Match(query, ":") && Is(query, iscsym))
 	{
 		print("found class : " + query.get("class_name"));
 		cursor.label("class_decl");
@@ -28,8 +28,9 @@ var templ = "\tpublic static readonly BindableProperty {{prop_name}}Property = \
 
 while(cursor.next_line())
 {
+
 	cursor.label("line");
-	if(SkipSpace(query, true) && Match(query,"//[prop") && Is(query, iscsym, "prop_name") && Is(query, iscsym, "prop_type") && AnyNot(query, " ]", "def_val") && Match(query, "]") && source.contains("BindableProperty " + query.get("prop_name") + "Property") == false)
+	if(SkipSpace(query, true) && Match(query,"//[prop") && Is(query, iscsym, "prop_name") && Is(query, iscsym, "prop_type") && AnyNot(query, "]", "def_val") && Match(query, "]") && source.contains("BindableProperty " + query.get("prop_name") + "Property") == false)
 	{
 		print("generate property : " + query.get("prop_name"));
 		source.insert_line(cursor, Mustache(templ).render(query));
@@ -40,13 +41,13 @@ while(cursor.next_line())
 	}
 }
 
-var str	= "\n\tprivate static void OnPropertyChanged(BindableObject bindable, object oldVal, object newVal)\n";
-str += "\t{\n";
-str += "\t\tvar bar = bindable as GradientBar;\n";
-str += "\t\tbar?.InvalidateSurface();\n";
-str += "\t}";
+var templ2 = "\n\tprivate static void OnPropertyChanged(BindableObject bindable, object oldVal, object newVal)\n";
+templ2 += "\t{\n";
+templ2 += "\t\tvar ctrl = bindable as {{class_name}};\n";
+templ2 += "\t\tctrl?.InvalidateSurface();\n";
+templ2 += "\t}";
 
-source.contains("OnPropertyChanged(BindableObject") == false && cursor.goto_label("class_decl") && cursor.move_to("{", "}", find) && cursor.prev_line() && source.insert_line(cursor, str);
+source.contains("OnPropertyChanged(BindableObject") == false && cursor.goto_label("class_decl") && cursor.move_to("{", "}", find) && cursor.prev_line() && source.insert_line(cursor, Mustache(templ2).render(query));
 
 source.write();
 print("end");

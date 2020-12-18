@@ -22,7 +22,7 @@ namespace query
 
     void QData::set(const std::string& key, const std::string& val)
     {
-        TRACE_FUNC;
+        //TRACE_FUNC;
         if (key.empty())
             throw std::runtime_error("Query::set: key is empty");
 
@@ -31,7 +31,7 @@ namespace query
 
     const string& QData::get(const std::string& key) const
     {
-        TRACE_FUNC;
+        //TRACE_FUNC;
         auto val = (data_vector.begin() + current_data)->find(key);
         if (val != (data_vector.begin() + current_data)->end())
             return val->second;
@@ -41,7 +41,7 @@ namespace query
 
     VectorString QData::get_vector(const std::string& key) const
     {
-        TRACE_FUNC;
+        //TRACE_FUNC;
         VectorString vs;
 
         for (auto& m : data_vector)
@@ -72,7 +72,7 @@ namespace query
 
     void QData::reset_all_data()
     {
-        TRACE_FUNC;
+        //TRACE_FUNC;
         if (freeze == false)
         {
             data_vector.clear();
@@ -82,7 +82,7 @@ namespace query
 
     void QData::reset_data(const std::string& key)
     {
-        TRACE_FUNC;
+        //TRACE_FUNC;
         if (key.size() && freeze == false)
             (data_vector.begin() + current_data)->erase(key);
     }
@@ -94,14 +94,14 @@ namespace query
 
     void QData::next_data()
     {
-        TRACE_FUNC;
+        //TRACE_FUNC;
         data_vector.push_back(qdata_map());
         current_data = data_vector.size() - 1;
     }
 
     void QData::set_current(size_t idx)
     {
-        TRACE_FUNC;
+        //TRACE_FUNC;
         if (idx < data_vector.size())
             current_data = idx;
     }
@@ -213,7 +213,7 @@ namespace query
     bool Match::execute() const
     {
         TRACE_FUNC;
-
+        TRACE_OUT << "pattern = " << pattern TRACE_END;
         if (QueryBase::execute())
         {
             string text = query->get_cursor()->get_text().substr(query->get_cursor()->get_pos(), pattern.size());
@@ -317,14 +317,14 @@ namespace query
                     ++found_qty;
                     if (count != -1 && count == found_qty)
                     {
-                        ++i;
+                        //++i;
                         break;
                     }
                     continue;
                 }
                 else
                 {
-                    ++i;
+                    //++i;
                     break;
                 }
             }
